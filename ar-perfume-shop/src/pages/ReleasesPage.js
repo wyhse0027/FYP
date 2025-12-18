@@ -1,13 +1,18 @@
-import { useState, useEffect, useRef } from "react";
+// src/pages/ReleasesPage.jsx
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import http from "../lib/http";
+
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination, EffectCoverflow } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/effect-coverflow";
 
 export default function ReleasesPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const startX = useRef(0);
-  const endX = useRef(0);
 
   useEffect(() => {
     http
@@ -25,41 +30,25 @@ export default function ReleasesPage() {
       });
   }, []);
 
-  const nextSlide = () =>
-    setCurrentIndex((prev) => (prev + 1) % products.length);
-  const prevSlide = () =>
-    setCurrentIndex((prev) => (prev - 1 + products.length) % products.length);
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full bg-[#0c1a3a] flex items-center justify-center">
+        <p className="text-white text-center">Loading releases...</p>
+      </div>
+    );
+  }
 
-  // --- Touch gesture handling ---
-  const handleTouchStart = (e) => {
-    startX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchMove = (e) => {
-    endX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    const distance = endX.current - startX.current;
-    if (Math.abs(distance) > 80) {
-      if (distance > 0) prevSlide();
-      else nextSlide();
-    }
-    startX.current = 0;
-    endX.current = 0;
-  };
-
-  if (loading)
-    return <p className="text-white text-center mt-10">Loading releases...</p>;
+  if (!products.length) {
+    return (
+      <div className="min-h-screen w-full bg-[#0c1a3a] flex items-center justify-center">
+        <p className="text-white text-center">No releases found.</p>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="min-h-screen w-full bg-[#0c1a3a] text-white flex flex-col items-center overflow-hidden"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      {/* --- Top Header (Back Button + Centered Title) --- */}
+    <div className="min-h-screen w-full bg-[#0c1a3a] text-white flex flex-col items-center">
+      {/* Top Header */}
       <div className="relative w-full flex items-center justify-center py-6 bg-[#0c1a3a] border-b border-white/10">
         <Link
           to="/"
@@ -72,127 +61,60 @@ export default function ReleasesPage() {
         </h1>
       </div>
 
-      {/* --- DESKTOP FLEXIBLE FULLSCREEN CAROUSEL --- */}
-      <div className="relative hidden md:flex justify-center items-center w-full h-screen mt-4 perspective-[3000px]">
-        {/* Navigation arrows */}
-        <button
-          onClick={prevSlide}
-          className="absolute left-6 lg:left-12 z-30 text-5xl text-gray-300 hover:text-white transition"
+      {/* Swiper slider (desktop + mobile) */}
+      <div className="w-full max-w-[1600px] flex-1 flex items-center px-4 md:px-10 py-8 md:py-12">
+        <Swiper
+          modules={[Autoplay, Pagination, EffectCoverflow]}
+          effect="coverflow"
+          grabCursor={true}
+          centeredSlides={true}
+          loop={true}
+          slidesPerView={1}
+          breakpoints={{
+            768: { slidesPerView: 1 },
+            1024: { slidesPerView: 1 },
+          }}
+          coverflowEffect={{
+            rotate: 25,
+            stretch: 0,
+            depth: 250,
+            modifier: 1,
+            slideShadows: true,
+          }}
+          autoplay={{
+            delay: 5000,
+            disableOnInteraction: false, // ✅ keeps auto-turn even after swipe
+          }}
+          pagination={{ clickable: true }}
+          className="w-full"
         >
-          ❮
-        </button>
-
-        <div className="relative flex justify-center items-center w-full h-full">
-          {products.map((p, index) => {
-            const total = products.length;
-            const offset = (index - currentIndex + total) % total;
-            const isActive = offset === 0;
-
-            // spacing and depth (responsive)
-            const sideOffset = window.innerWidth * 0.25;
-            const depth = 300;
-
-            // transform
-            let transform = "";
-            let opacity = 1;
-            let zIndex = 1;
-            let pointerEvents = "none";
-            let scale = 0.85;
-
-            if (isActive) {
-              transform = "translateX(0px) translateZ(350px)";
-              opacity = 1;
-              scale = 1;
-              zIndex = 20;
-              pointerEvents = "auto";
-            } else if (offset === 1 || offset === -total + 1) {
-              transform = `translateX(${sideOffset}px) translateZ(${depth}px) rotateY(-10deg)`;
-              opacity = 0.8;
-              zIndex = 10;
-            } else if (offset === total - 1 || offset === -1) {
-              transform = `translateX(-${sideOffset}px) translateZ(${depth}px) rotateY(10deg)`;
-              opacity = 0.8;
-              zIndex = 10;
-            } else {
-              transform = "translateZ(-800px) scale(0.7)";
-              opacity = 0;
-              zIndex = 0;
-            }
-
-            return (
-              <div
-                key={p.id}
-                className="absolute transition-all duration-700 ease-in-out transform-gpu"
-                style={{
-                  transform: `${transform} scale(${scale})`,
-                  opacity,
-                  zIndex,
-                  pointerEvents,
-                }}
-              >
-                {isActive ? (
-                  <Link to={`/product/${p.id}`}>
-                    <img
-                      src={p.promo_image}
-                      alt={p.name}
-                      className="
-                        w-[70vw]
-                        h-[39vw]
-                        object-cover
-                        rounded-2xl
-                        shadow-2xl
-                        border border-white/10
-                        max-w-[1600px]
-                        max-h-[900px]
-                      "
-                    />
-                  </Link>
-                ) : (
-                  <img
-                    src={p.promo_image}
-                    alt={p.name}
-                    className="
-                        w-[70vw]
-                        h-[39vw]
-                        object-cover
-                        rounded-2xl
-                        shadow-xl
-                        border border-white/10
-                        max-w-[1600px]
-                        max-h-[900px]
-                      "
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Next arrow */}
-        <button
-          onClick={nextSlide}
-          className="absolute right-6 lg:right-12 z-30 text-5xl text-gray-300 hover:text-white transition"
-        >
-          ❯
-        </button>
-      </div>
-
-      {/* --- MOBILE STACK VIEW (with swipe support) --- */}
-      <div className="flex md:hidden flex-col gap-6 w-full px-5 py-6">
-        {products.map((p) => (
-          <Link key={p.id} to={`/product/${p.id}`}>
-            <div className="relative rounded-2xl overflow-hidden shadow-lg">
-              <img
-                src={p.promo_image}
-                alt={p.name}
-                className="w-full h-[240px] sm:h-[300px] object-cover"
-              />
-              <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/70 to-transparent p-4">
-                <p className="text-lg font-semibold">{p.name}</p>
-              </div>
-            </div>
-          </Link>
-        ))}
+          {products.map((p) => (
+            <SwiperSlide key={p.id}>
+              <Link to={`/product/${p.id}`}>
+                <div className="relative w-full flex justify-center">
+                <img
+                  src={p.promo_image}
+                  alt={p.name}
+                  className="
+                    max-w-full
+                    w-auto
+                    max-h-[80vh]
+                    object-contain
+                    rounded-2xl
+                    shadow-2xl
+                    border border-white/10
+                  "
+                />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 md:p-6">
+                    <h2 className="text-xl md:text-2xl font-semibold">
+                      {p.name}
+                    </h2>
+                  </div>
+                </div>
+              </Link>
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
     </div>
   );

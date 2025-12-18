@@ -1,19 +1,58 @@
+// src/pages/admin/AdminARManagement.js
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import http from "../../lib/http";
+import PageHeader from "../../components/PageHeader";
+import { IoClose, IoAlertCircle, IoCheckmarkCircle } from "react-icons/io5";
+
+// ─────────────────────────────────────────────
+// Toast (bottom-right)
+// ─────────────────────────────────────────────
+function Toast({ message, type = "success", onClose }) {
+  useEffect(() => {
+    const t = setTimeout(onClose, 3000);
+    return () => clearTimeout(t);
+  }, [onClose]);
+
+  const color =
+    type === "error"
+      ? "bg-red-600/90 border-red-400"
+      : "bg-green-600/90 border-green-400";
+
+  return (
+    <div
+      className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg text-white ${color}`}
+    >
+      {type === "error" ? (
+        <IoAlertCircle size={22} />
+      ) : (
+        <IoCheckmarkCircle size={22} />
+      )}
+      <p className="font-medium">{message}</p>
+      <button
+        onClick={onClose}
+        className="ml-3 opacity-80 hover:opacity-100"
+      >
+        <IoClose size={18} />
+      </button>
+    </div>
+  );
+}
 
 export default function AdminARManagement() {
   const [experiences, setExperiences] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
-  const [message, setMessage] = useState("");
+  const [toast, setToast] = useState(null);
+  const navigate = useNavigate();
 
   // ─── Fetch all AR experiences ────────────────────────
   async function fetchAR() {
     try {
       const res = await http.get("/ar/");
       setExperiences(res.data);
+      setError(null);
     } catch (err) {
       console.error("Failed to load AR experiences:", err);
       setError("Failed to load AR experiences.");
@@ -35,9 +74,16 @@ export default function AdminARManagement() {
           exp.id === id ? { ...exp, enabled: !currentState } : exp
         )
       );
+      setToast({
+        type: "success",
+        message: `AR experience ${!currentState ? "enabled" : "disabled"} successfully.`,
+      });
     } catch (err) {
       console.error("Failed to update AR state:", err);
-      setMessage("❌ Failed to update AR experience state.");
+      setToast({
+        type: "error",
+        message: "Failed to update AR experience state.",
+      });
     }
   }
 
@@ -46,11 +92,17 @@ export default function AdminARManagement() {
     try {
       await http.delete(`/ar/${id}/`);
       setConfirmDelete(null);
-      setMessage("✅ AR experience deleted successfully!");
+      setToast({
+        type: "success",
+        message: "AR experience deleted successfully.",
+      });
       fetchAR();
     } catch (err) {
       console.error("Failed to delete AR experience:", err);
-      setMessage("❌ Failed to delete AR experience.");
+      setToast({
+        type: "error",
+        message: "Failed to delete AR experience.",
+      });
     }
   }
 
@@ -72,9 +124,7 @@ export default function AdminARManagement() {
   return (
     <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 lg:px-16">
       <div className="max-w-6xl mx-auto py-8">
-        <h1 className="text-3xl font-bold mb-8 text-center">
-          AR Experience Management
-        </h1>
+        <PageHeader title="AR Experience Management" />
 
         <Link
           to="/admin/ar-management/new"
@@ -82,20 +132,6 @@ export default function AdminARManagement() {
         >
           + Add New AR
         </Link>
-
-        {message && (
-          <div className="mt-4 text-center">
-            <span
-              className={`inline-block px-4 py-2 rounded-lg text-sm font-semibold ${
-                message.startsWith("✅")
-                  ? "bg-green-600/40 text-green-300"
-                  : "bg-red-600/40 text-red-300"
-              }`}
-            >
-              {message}
-            </span>
-          </div>
-        )}
 
         {experiences.length === 0 ? (
           <div className="text-center text-gray-300 py-20">
@@ -224,6 +260,15 @@ export default function AdminARManagement() {
           </div>
         )}
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

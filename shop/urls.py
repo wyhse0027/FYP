@@ -13,7 +13,8 @@ from .views import (
     AdminProductMediaViewSet, AdminOrderViewSet,
     AdminQuizViewSet, AdminQuizQuestionViewSet, AdminQuizAnswerViewSet,
     ARExperienceViewSet, ARDeleteMarkerView, ARDeleteGLBView, ARDeleteMindView,
-    AdminReviewViewSet, SiteAboutViewSet, RetailerViewSet,
+    AdminReviewViewSet, SiteAboutViewSet, RetailerViewSet, AdminPaymentViewSet,
+    ScentPersonaViewSet,
     AdminCategoryList,
 )
 
@@ -30,6 +31,7 @@ router.register("quizzes", QuizViewSet, basename="quiz")
 router.register("ar", ARExperienceViewSet, basename="ar-experience")
 router.register("site/about", SiteAboutViewSet, basename="site-about")
 router.register("retailers", RetailerViewSet, basename="retailers")
+router.register("scent-personas", ScentPersonaViewSet, basename="scent-personas")
 
 # ─── Admin Routers ─────────────────────────────────────────
 admin_router = DefaultRouter()
@@ -41,7 +43,8 @@ admin_router.register("quizzes", AdminQuizViewSet, basename="admin-quizzes")
 admin_router.register("quiz-questions", AdminQuizQuestionViewSet, basename="admin-quiz-questions")
 admin_router.register("quiz-answers", AdminQuizAnswerViewSet, basename="admin-quiz-answers")
 admin_router.register("reviews", AdminReviewViewSet, basename="admin-reviews")
-
+admin_router.register("payments", AdminPaymentViewSet, basename="admin-payments")
+admin_router.register("scent-personas", ScentPersonaViewSet, basename="admin-scent-personas")
 
 # ─── URL Patterns ──────────────────────────────────────────
 urlpatterns = [

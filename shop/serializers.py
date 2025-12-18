@@ -12,30 +12,71 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import (
     User, Product, ProductMedia, ARExperience, Review, ReviewMedia,
     Cart, CartItem, Order, OrderItem, Payment,
-    Quiz, QuizQuestion, QuizAnswer, QuizResult, SiteAbout, Retailer
+    Quiz, QuizQuestion, QuizAnswer, QuizResult, SiteAbout, Retailer,
+    ScentPersona,
 )
 
 User = get_user_model()
 
+# put this near the top of serializers.py
+class StringListField(serializers.Field):
+    """
+    Accepts:
+      - a real list: ["citrus", "marine"]
+      - a JSON string: '["citrus", "marine"]'
+      - a comma string: "citrus, marine"
+    Always returns a clean Python list of strings.
+    """
+    def to_internal_value(self, data):
+        if data is None or data == "":
+            return []
+
+        # Already list/tuple (eg. multipart sending multiple keys)
+        if isinstance(data, (list, tuple)):
+            items = data
+        elif isinstance(data, str):
+            # Try JSON first
+            try:
+                parsed = json.loads(data)
+                if isinstance(parsed, (list, tuple)):
+                    items = parsed
+                else:
+                    # not a list -> treat as comma string
+                    items = [data]
+            except Exception:
+                # "citrus, marine" case
+                items = [v.strip() for v in data.split(",") if v.strip()]
+        else:
+            items = [data]
+
+        return [str(v).strip() for v in items if str(v).strip()]
+
+    def to_representation(self, value):
+        if not value:
+            return []
+        if isinstance(value, (list, tuple)):
+            return [str(v) for v in value]
+        return [str(value)]
+
+
 # ─── Users ───────────────────────
 class UserSerializer(serializers.ModelSerializer):
-    avatar = serializers.SerializerMethodField(read_only=True)
+    avatar = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = User
         fields = [
             "id", "username", "email", "phone", "avatar", "role",
-            "address_line1", "postal_code", "city", "state", "country",
+            "address_line1", "address_line2", "postal_code", "city", "state", "country",
             "last_login", "date_joined"
         ]
         read_only_fields = ["id", "role"]
 
-    def get_avatar(self, obj):
+    def get_avatar_url(self, obj):
         request = self.context.get("request")
         if obj.avatar:
-            return request.build_absolute_uri(obj.avatar.url) if request else obj.avatar.url
+            return request.build_absolute_uri(obj.avatar.url)
         return None
-
 
 class UserSignupSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)
@@ -95,12 +136,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
-    def validate_email(self, value):
-        if not User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("No account with this email.")
-        return value
-
-
 class PasswordResetConfirmSerializer(serializers.Serializer):
     uid = serializers.CharField()
     token = serializers.CharField()
@@ -124,6 +159,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         user.set_password(self.validated_data["new_password"])
         user.save()
         return user
+
 
 
 # ─── Products & AR ───────────────
@@ -160,6 +196,8 @@ class ProductSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False,
     )
+    rating_avg = serializers.FloatField(read_only=True)
+    rating_count = serializers.IntegerField(read_only=True)
 
     # ✅ writable tags
     tags = serializers.JSONField(required=False)
@@ -167,17 +205,17 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            "id", "name", "category", "price",
+            "id", "name", "category", "target", "price",
             "stock", "description",
             "promo_image", "card_image",
             "promo_image_file", "card_image_file", "gallery_files",
             "tags", "media_gallery",
-            "ar_experience", "created_at"
+            "ar_experience", "created_at",
+            "rating_avg","rating_count",
         ]
 
     # ─── Helpers ─────────────────────────────
     def get_ar_experience(self, obj):
-        from .serializers import ARExperienceSerializer
         experience = ARExperience.objects.filter(product=obj).first()
         if not experience:
             return None
@@ -364,32 +402,59 @@ class ReviewMediaSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    product = ProductSerializer(read_only=True)
-    media_gallery = ReviewMediaSerializer(many=True, read_only=True)
 
-    files = serializers.ListField(
-        child=serializers.FileField(max_length=100000, allow_empty_file=False, use_url=False),
+    # what you return
+    product = ProductSerializer(read_only=True)
+
+    # what you accept in POST
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(),
+        source="product",          # fills validated_data["product"]
         write_only=True,
-        required=False,
     )
+
+    media_gallery = ReviewMediaSerializer(many=True, read_only=True)
 
     class Meta:
         model = Review
         fields = [
-            "id", "user", "product", "rating",
-            "comment", "media_gallery", "files", "created_at"
+            "id",
+            "user",
+            "product",      # read-only nested
+            "product_id",   # write-only FK
+            "rating",
+            "comment",
+            "media_gallery",
+            "files",
+            "created_at",
         ]
+        read_only_fields = ["id", "user", "media_gallery", "created_at"]
+
+    files = serializers.ListField(
+        child=serializers.FileField(
+            max_length=100000,
+            allow_empty_file=False,
+            use_url=False
+        ),
+        write_only=True,
+        required=False,
+    )
 
     def create(self, validated_data):
         request = self.context.get("request")
         files = validated_data.pop("files", [])
+        # validated_data now includes "product" from product_id
         review = Review.objects.create(user=request.user, **validated_data)
 
         for f in files:
             ReviewMedia.objects.create(
                 review=review,
                 file=f,
-                type="VIDEO" if hasattr(f, "content_type") and f.content_type.startswith("video") else "IMAGE",
+                type=(
+                    "VIDEO"
+                    if getattr(f, "content_type", "").startswith("video")
+                    else "IMAGE"
+                ),
             )
 
         return review
@@ -473,38 +538,79 @@ class OrderSerializer(serializers.ModelSerializer):
     state = serializers.CharField(required=True)
     country = serializers.CharField(required=True)
 
+    payment = serializers.SerializerMethodField()
+
     class Meta:
         model = Order
         fields = [
-            "id", "user", "status", "total", "items",
-            "fullname", "phone", "line1", "line2",
-            "postcode", "city", "state", "country",
+            "id",
+            "user",
+            "status",
+            "total",
+            "items",
+            "fullname",
+            "phone",
+            "line1",
+            "line2",
+            "postcode",
+            "city",
+            "state",
+            "country",
             "created_at",
+            "payment",
         ]
-        read_only_fields = ["id", "user", "status", "total", "created_at"]
+        read_only_fields = ["id", "user", "status", "total", "created_at", "payment"]
 
+    def get_payment(self, obj):
+        """
+        Compact payment summary for frontend:
+        { method, status, transaction_id, created_at, amount }
+        """
+        try:
+            p = obj.payment
+        except Payment.DoesNotExist:
+            return None
+
+        return {
+            "method": p.method,
+            "status": p.status,
+            "transaction_id": p.transaction_id,
+            "amount": str(p.amount),
+            "created_at": p.created_at,
+        }
+    
     def create(self, validated_data):
-        items_data = validated_data.pop("items", [])
-        user = self.context["request"].user
+        """
+        Create Order + OrderItems, compute total, decrement stock.
+        Order starts as TO_PAY.
+        """
+        request = self.context["request"]
+        user = request.user
 
+        items_data = validated_data.pop("items", [])
         order = Order.objects.create(user=user, status="TO_PAY", **validated_data)
 
         total = 0
         for item_data in items_data:
             product = item_data["product"]
-            quantity = item_data["quantity"]
+            qty = item_data["quantity"]
 
-            if product.stock < quantity:
+            if product.stock < qty:
                 raise serializers.ValidationError(
                     {"detail": f"Not enough stock for {product.name}. Remaining: {product.stock}"}
                 )
 
-            product.stock -= quantity
+            product.stock -= qty
             product.save()
 
             price = product.price
-            OrderItem.objects.create(order=order, product=product, quantity=quantity, price=price)
-            total += quantity * float(price)
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=qty,
+                price=price,
+            )
+            total += float(price) * qty
 
         order.total = total
         order.save()
@@ -514,16 +620,25 @@ class OrderSerializer(serializers.ModelSerializer):
 class PaymentSerializer(serializers.ModelSerializer):
     order = OrderSerializer(read_only=True)
     order_id = serializers.PrimaryKeyRelatedField(
-        queryset=Order.objects.all(), source="order", write_only=True
+        queryset=Order.objects.all(),
+        source="order",
+        write_only=True,
     )
 
     class Meta:
         model = Payment
         fields = [
-            "id", "order", "order_id", "method",
-            "amount", "status", "transaction_id", "created_at",
+            "id",
+            "order",
+            "order_id",
+            "method",
+            "amount",
+            "status",
+            "transaction_id",
+            "created_at",
         ]
-        read_only_fields = ["id", "order", "created_at"]
+        read_only_fields = ["id", "order", "amount", "status", "transaction_id", "created_at"]
+
 
 
 # ─── Quiz Serializers ───────────────
@@ -546,21 +661,39 @@ class QuizSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quiz
-        fields = ["id", "title", "questions"]
-
+        fields = ["id", "title", "label", "audience", "questions"]
 
 class QuizResultSerializer(serializers.ModelSerializer):
     recommended_products = ProductSerializer(many=True, read_only=True)
+    persona = serializers.SerializerMethodField()
 
     class Meta:
         model = QuizResult
-        fields = ["id", "recommended_category", "recommended_products", "created_at"]
+        fields = ["id", "recommended_category", "recommended_products", "persona", "created_at"]
+    
+    def get_persona(self, obj):
+        from .models import ScentPersona
+
+        try:
+            persona = ScentPersona.objects.get(category=obj.recommended_category)
+        except ScentPersona.DoesNotExist:
+            return None
+
+        return ScentPersonaSerializer(persona, context=self.context).data
 
 # ─── Admin Quiz Serializers (Writable) ───────────────
 class AdminQuizSerializer(serializers.ModelSerializer):
+    allowed_products = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(),
+        many=True,
+        required=False
+    )
+
     class Meta:
         model = Quiz
-        fields = ["id", "title", "created_at"]
+        fields = ["id", "title", "label", "audience", "allowed_products", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
 
 
 class AdminQuizQuestionSerializer(serializers.ModelSerializer):
@@ -579,6 +712,53 @@ class AdminQuizAnswerSerializer(serializers.ModelSerializer):
         model = QuizAnswer
         fields = ["id", "question", "question_text", "answer_text", "category"]
         read_only_fields = ["id", "question_text"]
+
+class ScentPersonaSerializer(serializers.ModelSerializer):
+    # Expose URLs for images
+    image_url = serializers.SerializerMethodField()
+    cover_image_url = serializers.SerializerMethodField()
+
+    # ✅ Frontend sends/reads "description", but we store it in `tagline`
+    description = serializers.CharField(
+        source="tagline",
+        required=False,
+        allow_blank=True
+    )
+
+    # ✅ NEW:
+    scent_notes = StringListField(required=False)
+    occasions = StringListField(required=False)
+
+    class Meta:
+        model = ScentPersona
+        fields = [
+            "id",
+            "category",
+            "persona_name",
+            "description",      # <-> tagline
+            "scent_notes",
+            "occasions",
+            "image",
+            "image_url",
+            "cover_image",
+            "cover_image_url",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "updated_at"]
+
+    # ---------- URL helpers ----------
+    def _url(self, file_field):
+        request = self.context.get("request")
+        if file_field:
+            return request.build_absolute_uri(file_field.url) if request else file_field.url
+        return None
+
+    def get_image_url(self, obj):
+        return self._url(obj.image)
+
+    def get_cover_image_url(self, obj):
+        return self._url(obj.cover_image)
+
 
 class SiteAboutSerializer(serializers.ModelSerializer):
     hero_image = serializers.ImageField(required=False, allow_null=True)

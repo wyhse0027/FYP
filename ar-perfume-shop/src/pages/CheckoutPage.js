@@ -1,6 +1,5 @@
-// src/pages/CheckoutPage.js
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import ConfirmModal from "../components/ConfirmModal";
 import { useCart } from "../context/CartContext";
@@ -11,32 +10,32 @@ const formatMYR = (num) =>
   new Intl.NumberFormat("ms-MY", {
     style: "currency",
     currency: "MYR",
-  }).format(num);
+  }).format(Number(num || 0));
 
 const PAYMENT_METHODS = {
   COD: "COD",
   CARD: "CARD",
   FPX: "FPX",
-  EWALLET: "EWALLET",
+  EWALLET: "E_WALLET",
 };
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const existingOrderId = searchParams.get("order"); // if set => pay existing order
+  const isExistingPayFlow = !!existingOrderId;
+
+  // selected cart item IDs from query (?items=1,2,3)
+  const selectedItemsParam = searchParams.get("items");
+  const selectedCartItemIds = selectedItemsParam
+    ? selectedItemsParam
+        .split(",")
+        .map((v) => parseInt(v, 10))
+        .filter(Boolean)
+    : null;
+
   const { cartItems = [], clearCart } = useCart?.() || {};
-
-  // Normalize items
-  const items = (cartItems || []).map((it) => ({
-    id: it.product?.id || it.id,
-    name: it.product?.name || it.name,
-    price: Number(it.product?.price || it.price),
-    qty: Number(it.quantity),
-    cartItemId: it.id,
-  }));
-
-  // Totals
-  const subtotal = items.reduce((t, i) => t + i.price * i.qty, 0);
-  const shipping = subtotal > 200 ? 0 : 10;
-  const total = subtotal + shipping;
+  const [existingOrder, setExistingOrder] = useState(null);
 
   // Address state
   const [addr, setAddr] = useState({
@@ -50,11 +49,87 @@ export default function CheckoutPage() {
     country: "Malaysia",
   });
 
-  // Payment + modal state
+  // Payment + modal + result state
   const [pm, setPm] = useState(PAYMENT_METHODS.COD);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [payNow, setPayNow] = useState(false); // ✅ track pay now / pay later
-  const isValid =
+  const [payNow, setPayNow] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Result panels
+  const [paidOrderId, setPaidOrderId] = useState(null); // Pay & Place / Pay existing
+  const [invoiceOrderId, setInvoiceOrderId] = useState(null); // Pay Later
+
+  // Load existing order for "PAY" flow
+  useEffect(() => {
+    if (!isExistingPayFlow) return;
+
+    const fetchOrder = async () => {
+      try {
+        const res = await http.get(`orders/${existingOrderId}/`);
+        const o = res.data;
+
+        if (o.status !== "TO_PAY") {
+          navigate("/orders?tab=TO_PAY", { replace: true });
+          return;
+        }
+
+        setExistingOrder(o);
+
+        setAddr({
+          fullname: o.fullname || "",
+          phone: o.phone || "",
+          line1: o.line1 || "",
+          line2: o.line2 || "",
+          postcode: o.postcode || "",
+          city: o.city || "",
+          state: o.state || "",
+          country: o.country || "Malaysia",
+        });
+      } catch (err) {
+        console.error("Failed to load order:", err);
+        navigate("/orders?tab=TO_PAY", { replace: true });
+      }
+    };
+
+    fetchOrder();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isExistingPayFlow, existingOrderId]);
+
+  // Items & totals
+  const items = isExistingPayFlow
+    ? (existingOrder?.items || []).map((i) => ({
+        id: i.product?.id,
+        name: i.product?.name,
+        price: Number(i.price),
+        qty: Number(i.quantity),
+      }))
+    : (cartItems || [])
+        .filter((it) =>
+          selectedCartItemIds ? selectedCartItemIds.includes(it.id) : true
+        )
+        .map((it) => ({
+          id: it.product?.id || it.id,
+          name: it.product?.name || it.name,
+          price: Number(it.product?.price || it.price),
+          qty: Number(it.quantity),
+          cartItemId: it.id,
+        }));
+
+  const subtotal = items.reduce((t, i) => t + i.price * i.qty, 0);
+
+  const existingTotal =
+    isExistingPayFlow && existingOrder ? Number(existingOrder.total || 0) : null;
+
+  const shipping = isExistingPayFlow
+    ? Math.max((existingTotal || 0) - subtotal, 0)
+    : subtotal > 200
+    ? 0
+    : 10;
+
+  const total =
+    isExistingPayFlow && existingTotal != null ? existingTotal : subtotal + shipping;
+
+  const newOrderAddressValid =
     addr.fullname &&
     addr.phone &&
     addr.line1 &&
@@ -62,14 +137,41 @@ export default function CheckoutPage() {
     addr.city &&
     addr.state;
 
-  // Place order
-  const placeOrder = async () => {
+  const isValid =
+    items.length > 0 && (isExistingPayFlow ? !!existingOrder : newOrderAddressValid);
+
+  const payExistingOrder = async () => {
+    if (!isExistingPayFlow || !existingOrderId || !existingOrder) return;
+
     try {
-      const payload = {
-        items: items.map((i) => ({
-          product_id: i.id,
-          quantity: i.qty,
-        })),
+      setLoading(true);
+      const res = await http.post(`orders/${existingOrderId}/pay/`, {
+        method: pm,
+        success: true,
+      });
+      setPaidOrderId(res.data.id);
+    } catch (err) {
+      console.error("❌ Existing order payment failed:", err);
+      const msg =
+        err.response?.data?.error ||
+        err.response?.data?.detail ||
+        "Payment update failed. Please try again.";
+      alert(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const placeOrder = async () => {
+    if (!isValid || isExistingPayFlow) return;
+
+    const effectivePayNow = payNow && pm !== PAYMENT_METHODS.COD;
+
+    try {
+      setLoading(true);
+
+      const orderPayload = {
+        items: items.map((i) => ({ product_id: i.id, quantity: i.qty })),
         fullname: addr.fullname,
         phone: addr.phone,
         line1: addr.line1,
@@ -80,202 +182,423 @@ export default function CheckoutPage() {
         country: addr.country,
       };
 
-      console.log("📦 Sending order payload:", payload);
-      const orderRes = await http.post("orders/", payload);
+      const orderRes = await http.post("orders/", orderPayload);
       const order = orderRes.data;
 
-      // Payment record
-      const payPayload = {
-        order_id: order.id,
-        method: pm,
-        amount: total,
-        status: payNow ? "PAID" : "PENDING",
-      };
-      await http.post("payments/", payPayload);
+      if (effectivePayNow) {
+        try {
+          const payRes = await http.post(`orders/${order.id}/pay/`, {
+            method: pm,
+            success: true,
+          });
 
-      // If pay now → immediately mark as shipped
-      if (payNow) {
-        await http.post(`orders/${order.id}/pay/`);
+          if (typeof clearCart === "function") clearCart();
+          setPaidOrderId(payRes.data.id);
+          return;
+        } catch (err) {
+          console.error("❌ Pay & Place failed:", err);
+          const data = err.response?.data || {};
+          if (data.detail === "Payment failed.") {
+            alert(
+              "Payment failed. Your order is created but still unpaid. You can retry from 'To Pay'."
+            );
+            if (data.order?.id) setInvoiceOrderId(data.order.id);
+          } else {
+            alert(
+              data.error ||
+                data.detail ||
+                "Error during payment. Please check your order in 'To Pay'."
+            );
+          }
+          return;
+        }
       }
 
       if (typeof clearCart === "function") clearCart();
-
-      navigate("/orders?tab=" + (payNow ? "TO_SHIP" : "TO_PAY"));
+      setInvoiceOrderId(order.id);
     } catch (err) {
       console.error("❌ Order placement failed:", err);
-      if (err.response) {
+      if (err.response?.data) {
         alert("Error placing order: " + JSON.stringify(err.response.data));
       } else {
         alert("Error placing order: " + err.message);
       }
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen w-full bg-[#0c1a3a] px-6 md:px-12 lg:px-16">
-      <div className="mx-auto w-full max-w-screen-2xl py-6 text-[18px] md:text-[19px] lg:text-[20px]">
-        <PageHeader title="Checkout" />
+  const payNowEnabled = isExistingPayFlow
+    ? isValid && !loading
+    : isValid && !loading && pm !== PAYMENT_METHODS.COD;
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left: Address + Payment */}
-          <div className="lg:col-span-2 grid gap-4">
-            {/* Address */}
-            <section className="bg-white/5 p-4 rounded-xl">
-              <h2 className="font-semibold text-white mb-3">Delivery Address</h2>
-              <div className="grid grid-cols-1 gap-2 text-white">
-                <input
-                  className="bg-white/10 p-3 rounded-lg text-lg placeholder-white/60"
-                  placeholder="Full name"
-                  value={addr.fullname}
-                  onChange={(e) => setAddr({ ...addr, fullname: e.target.value })}
-                />
-                <input
-                  className="bg-white/10 p-3 rounded-lg text-lg placeholder-white/60"
-                  placeholder="Phone"
-                  value={addr.phone}
-                  onChange={(e) => setAddr({ ...addr, phone: e.target.value })}
-                />
-                <input
-                  className="bg-white/10 p-3 rounded-lg text-lg placeholder-white/60"
-                  placeholder="Address line 1"
-                  value={addr.line1}
-                  onChange={(e) => setAddr({ ...addr, line1: e.target.value })}
-                />
-                <input
-                  className="bg-white/10 p-3 rounded-lg text-lg placeholder-white/60"
-                  placeholder="Address line 2 (optional)"
-                  value={addr.line2}
-                  onChange={(e) => setAddr({ ...addr, line2: e.target.value })}
-                />
-                <div className="grid grid-cols-2 gap-2">
+  const confirmIsPayNow =
+    isExistingPayFlow ||
+    (payNow && !isExistingPayFlow && pm !== PAYMENT_METHODS.COD);
+
+  const paymentOptions = [
+    { key: PAYMENT_METHODS.COD, label: "Cash on Delivery", hint: "Pay when it arrives" },
+    { key: PAYMENT_METHODS.CARD, label: "Card", hint: "Visa / Mastercard" },
+    { key: PAYMENT_METHODS.FPX, label: "FPX", hint: "Online banking" },
+    { key: PAYMENT_METHODS.EWALLET, label: "E-Wallet", hint: "Touch 'n Go / etc" },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 relative overflow-hidden">
+      {/* Decorative blobs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-cyan-400/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-0 w-64 h-64 bg-white/5 rounded-full blur-2xl" />
+      </div>
+
+      <div className="relative z-10 px-6 md:px-12 lg:px-16 py-8">
+        <div className="mx-auto w-full max-w-screen-2xl text-[18px] md:text-[19px] lg:text-[20px]">
+          {/* Header (keep PageHeader) */}
+          <div className="mb-6">
+            <PageHeader title={isExistingPayFlow ? "COMPLETE PAYMENT" : "SECURE CHECKOUT"} />
+            <p className="text-white/60 mt-2">
+              {isExistingPayFlow
+                ? "Finalize your pending order"
+                : "Complete your purchase securely"}
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-5 gap-6">
+            {/* Left: Address + Payment */}
+            <div className="lg:col-span-3 space-y-6">
+              {/* Address */}
+              <section className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-2xl">
+                <h2 className="font-semibold text-white mb-4">Delivery Address</h2>
+
+                <div className="grid md:grid-cols-2 gap-3 text-white">
                   <input
-                    className="bg-white/10 p-3 rounded-lg text-lg placeholder-white/60"
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-4 text-white placeholder-white/40
+                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
+                    placeholder="Full name"
+                    value={addr.fullname}
+                    disabled={isExistingPayFlow}
+                    onChange={(e) => setAddr({ ...addr, fullname: e.target.value })}
+                  />
+                  <input
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-4 text-white placeholder-white/40
+                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
+                    placeholder="Phone"
+                    value={addr.phone}
+                    disabled={isExistingPayFlow}
+                    onChange={(e) => setAddr({ ...addr, phone: e.target.value })}
+                  />
+
+                  <div className="md:col-span-2">
+                    <input
+                      className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-4 text-white placeholder-white/40
+                                 focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
+                      placeholder="Address line 1"
+                      value={addr.line1}
+                      disabled={isExistingPayFlow}
+                      onChange={(e) => setAddr({ ...addr, line1: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <input
+                      className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-4 text-white placeholder-white/40
+                                 focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
+                      placeholder="Address line 2 (optional)"
+                      value={addr.line2}
+                      disabled={isExistingPayFlow}
+                      onChange={(e) => setAddr({ ...addr, line2: e.target.value })}
+                    />
+                  </div>
+
+                  <input
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-4 text-white placeholder-white/40
+                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
                     placeholder="Postcode"
                     value={addr.postcode}
+                    disabled={isExistingPayFlow}
                     onChange={(e) => setAddr({ ...addr, postcode: e.target.value })}
                   />
                   <input
-                    className="bg-white/10 p-3 rounded-lg text-lg placeholder-white/60"
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-4 text-white placeholder-white/40
+                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
                     placeholder="City"
                     value={addr.city}
+                    disabled={isExistingPayFlow}
                     onChange={(e) => setAddr({ ...addr, city: e.target.value })}
                   />
+                  <input
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-4 text-white placeholder-white/40
+                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
+                    placeholder="State"
+                    value={addr.state}
+                    disabled={isExistingPayFlow}
+                    onChange={(e) => setAddr({ ...addr, state: e.target.value })}
+                  />
+                  <input
+                    className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-4 text-white placeholder-white/40
+                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
+                    placeholder="Country"
+                    value={addr.country}
+                    disabled={isExistingPayFlow}
+                    onChange={(e) => setAddr({ ...addr, country: e.target.value })}
+                  />
                 </div>
-                <input
-                  className="bg-white/10 p-3 rounded-lg text-lg placeholder-white/60"
-                  placeholder="State"
-                  value={addr.state}
-                  onChange={(e) => setAddr({ ...addr, state: e.target.value })}
-                />
-                <input
-                  className="bg-white/10 p-3 rounded-lg text-lg placeholder-white/60"
-                  placeholder="Country"
-                  value={addr.country}
-                  onChange={(e) => setAddr({ ...addr, country: e.target.value })}
-                />
-              </div>
-            </section>
+              </section>
 
-            {/* Payment */}
-            <section className="bg-white/5 p-4 rounded-xl">
-              <h2 className="font-semibold text-white mb-3">Payment Method</h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 text-white">
-                {[
-                  { key: PAYMENT_METHODS.COD, label: "Cash on delivery" },
-                  { key: PAYMENT_METHODS.CARD, label: "Card (demo)" },
-                  { key: PAYMENT_METHODS.FPX, label: "FPX (demo)" },
-                  { key: PAYMENT_METHODS.EWALLET, label: "eWallet (demo)" },
-                ].map((opt) => (
-                  <label
-                    key={opt.key}
-                    className={`p-3 rounded-lg border text-lg cursor-pointer ${
-                      pm === opt.key ? "border-sky-500" : "border-white/10"
-                    }`}
+              {/* Payment */}
+              <section className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-2xl">
+                <h2 className="font-semibold text-white mb-4">Payment Method</h2>
+
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {paymentOptions.map((opt) => {
+                    const selected = pm === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => setPm(opt.key)}
+                        className={`text-left p-4 rounded-xl border transition-all duration-300 ${
+                          selected
+                            ? "bg-sky-500/20 border-sky-400/50 shadow-lg shadow-sky-500/10"
+                            : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className={`font-semibold ${selected ? "text-white" : "text-white/80"}`}>
+                              {opt.label}
+                            </p>
+                            <p className="text-sm text-white/50 mt-1">{opt.hint}</p>
+                          </div>
+                          <div
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              selected ? "border-sky-300 bg-sky-300" : "border-white/30"
+                            }`}
+                          >
+                            {selected && <div className="w-2 h-2 bg-slate-900 rounded-full" />}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {!isExistingPayFlow && pm === PAYMENT_METHODS.COD && (
+                  <p className="text-amber-300/80 text-sm mt-4">
+                    COD orders will be paid upon delivery. Online payment is disabled.
+                  </p>
+                )}
+              </section>
+            </div>
+
+            {/* Right: Summary */}
+            <aside className="lg:col-span-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-2xl h-max sticky top-6">
+              <h2 className="font-semibold text-white mb-4">Order Summary</h2>
+
+              <div className="space-y-2 text-white/75">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span className="text-white">{formatMYR(subtotal)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Shipping</span>
+                  <span className="text-white">{shipping === 0 ? "FREE" : formatMYR(shipping)}</span>
+                </div>
+              </div>
+
+              <div className="flex justify-between text-xl font-extrabold text-white pt-4 mt-4 border-t border-white/10">
+                <span>Total</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-cyan-300">
+                  {formatMYR(total)}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 mt-6">
+                <button
+                  onClick={() =>
+                    navigate(isExistingPayFlow ? "/orders?tab=TO_PAY" : "/cart")
+                  }
+                  className="w-full py-4 rounded-xl font-bold bg-white/10 text-white hover:bg-white/15 transition disabled:opacity-50"
+                  disabled={loading}
+                >
+                  RETURN
+                </button>
+
+                {!isExistingPayFlow && (
+                  <button
+                    disabled={!isValid || loading}
+                    onClick={() => {
+                      setPayNow(false);
+                      setConfirmOpen(true);
+                    }}
+                    className={`w-full py-4 rounded-xl font-extrabold text-lg transition-all duration-300
+                      flex items-center justify-center gap-3 ${
+                        isValid && !loading
+                          ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
+                          : "bg-white/10 text-white/40 cursor-not-allowed"
+                      }`}
                   >
-                    <input
-                      type="radio"
-                      className="mr-3 scale-125 align-middle"
-                      checked={pm === opt.key}
-                      onChange={() => setPm(opt.key)}
-                    />
-                    {opt.label}
-                  </label>
-                ))}
+                    {loading ? (
+                      <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      "PLACE ORDER (Pay Later)"
+                    )}
+                  </button>
+                )}
+
+                <button
+                  disabled={!payNowEnabled}
+                  onClick={() => {
+                    if (isExistingPayFlow) {
+                      setConfirmOpen(true);
+                    } else {
+                      setPayNow(true);
+                      setConfirmOpen(true);
+                    }
+                  }}
+                  className={`w-full py-4 rounded-xl font-extrabold text-lg transition-all duration-300
+                    flex items-center justify-center gap-3 ${
+                      payNowEnabled
+                        ? "bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40"
+                        : "bg-white/10 text-white/40 cursor-not-allowed"
+                    }`}
+                >
+                  {loading ? (
+                    <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : isExistingPayFlow ? (
+                    "PAY NOW"
+                  ) : (
+                    "PAY & PLACE ORDER"
+                  )}
+                </button>
               </div>
-            </section>
+            </aside>
           </div>
-
-          {/* Right: Summary */}
-          <aside className="bg-white/5 p-4 rounded-xl h-max sticky top-4 text-white">
-            <h2 className="font-semibold mb-3">Order Summary</h2>
-            <div className="flex justify-between mb-1">
-              <span>Subtotal</span>
-              <span>{formatMYR(subtotal)}</span>
-            </div>
-            <div className="flex justify-between mb-1">
-              <span>Shipping</span>
-              <span>{formatMYR(shipping)}</span>
-            </div>
-            <div className="flex justify-between font-semibold text-lg mt-2">
-              <span>Total</span>
-              <span>{formatMYR(total)}</span>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 mt-5">
-              {/* Cancel/Return */}
-              <button
-                onClick={() => navigate("/cart")}
-                className="w-full py-4 rounded-xl font-bold bg-white/10 text-white text-lg"
-              >
-                RETURN
-              </button>
-
-              {/* Place Order - Pay Later */}
-              <button
-                disabled={!isValid || items.length === 0}
-                onClick={() => {
-                  setPayNow(false);
-                  setConfirmOpen(true);
-                }}
-                className={`w-full py-4 rounded-xl font-extrabold text-lg ${
-                  isValid && items.length > 0 ? "bg-amber-500" : "bg-gray-600"
-                }`}
-              >
-                PLACE ORDER (Pay Later)
-              </button>
-
-              {/* Pay & Place Order */}
-              <button
-                disabled={!isValid || items.length === 0}
-                onClick={() => {
-                  setPayNow(true);
-                  setConfirmOpen(true);
-                }}
-                className={`w-full py-4 rounded-xl font-extrabold text-lg ${
-                  isValid && items.length > 0 ? "bg-emerald-600" : "bg-gray-600"
-                }`}
-              >
-                PAY & PLACE ORDER
-              </button>
-            </div>
-          </aside>
         </div>
       </div>
 
       {/* Confirm modal */}
       <ConfirmModal
         open={confirmOpen}
-        title={payNow ? "Pay & Place Order?" : "Place Order?"}
+        title={confirmIsPayNow ? "Confirm Payment?" : "Place Order?"}
         message={`Total to pay: ${formatMYR(total)}${
-          payNow ? " (charged now)" : " (pay later)"
+          confirmIsPayNow
+            ? isExistingPayFlow
+              ? " (confirm this payment method)"
+              : " (charged now)"
+            : " (pay later)"
         }`}
-        confirmText={payNow ? "Pay Now" : "Place Order"}
+        confirmText={confirmIsPayNow ? "Confirm" : "Place Order"}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => {
           setConfirmOpen(false);
-          placeOrder();
+          if (isExistingPayFlow) payExistingOrder();
+          else placeOrder();
         }}
       />
+
+      {/* Panel: Payment Successful / Method Confirmed */}
+      {paidOrderId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 rounded-3xl p-8 w-full max-w-md text-center shadow-2xl border border-white/20">
+            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30">
+              <span className="text-white text-3xl font-black">✓</span>
+            </div>
+            <h2 className="text-2xl font-extrabold mb-2 text-white">Order Updated</h2>
+            <p className="text-white/70 mb-6">Your order #{paidOrderId} has been processed.</p>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await http.get(`orders/${paidOrderId}/receipt-pdf/`, {
+                      responseType: "blob",
+                    });
+                    const blob = new Blob([res.data], { type: "application/pdf" });
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = `order_${paidOrderId}.pdf`;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+                  } catch (err) {
+                    console.error("Failed to download PDF:", err);
+                    alert("Unable to download PDF. Please try again.");
+                  }
+                }}
+                className="flex-1 py-3 rounded-xl font-semibold bg-white/10 text-white border border-white/20 hover:bg-white/20 transition"
+              >
+                Download PDF
+              </button>
+
+              <button
+                onClick={() => {
+                  setPaidOrderId(null);
+                  navigate("/orders?tab=TO_SHIP");
+                }}
+                className="flex-1 py-3 rounded-xl font-semibold bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:opacity-95 transition"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Panel: Pay Later (invoice) */}
+      {invoiceOrderId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 rounded-3xl p-8 w-full max-w-md text-center shadow-2xl border border-white/20">
+            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30">
+              <span className="text-white text-3xl font-black">★</span>
+            </div>
+            <h2 className="text-2xl font-extrabold mb-2 text-white">Order Placed</h2>
+            <p className="text-white/70 mb-6">
+              Your order #{invoiceOrderId} has been created. You can pay later with any available payment method.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await http.get(`orders/${invoiceOrderId}/receipt-pdf/`, {
+                      responseType: "blob",
+                    });
+                    const blob = new Blob([res.data], { type: "application/pdf" });
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = `invoice_order_${invoiceOrderId}.pdf`;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+                  } catch (err) {
+                    console.error("Failed to download invoice:", err);
+                    alert("Unable to download invoice. Please try again.");
+                  }
+                }}
+                className="flex-1 py-3 rounded-xl font-semibold bg-white/10 text-white border border-white/20 hover:bg-white/20 transition"
+              >
+                Download Invoice
+              </button>
+
+              <button
+                onClick={() => {
+                  setInvoiceOrderId(null);
+                  navigate("/orders?tab=TO_PAY");
+                }}
+                className="flex-1 py-3 rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:opacity-95 transition"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

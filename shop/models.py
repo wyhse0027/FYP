@@ -3,13 +3,19 @@ from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.utils import timezone
+from django.apps import apps
 
 # ─── User Management ───────────────────────────────
+class UserRole(models.TextChoices):
+    USER = "user", "User"
+    ADMIN = "admin", "Admin"
+
 class User(AbstractUser):
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     # Address broken into parts
     address_line1 = models.CharField(max_length=255, blank=True, null=True)
+    address_line2 = models.CharField(max_length=255, blank=True, null=True)
     postal_code = models.CharField(max_length=20, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
     state = models.CharField(max_length=100, blank=True, null=True)
@@ -17,8 +23,8 @@ class User(AbstractUser):
 
     role = models.CharField(
         max_length=20,
-        choices=[("user", "User"), ("admin", "Admin")],
-        default="user"
+        choices=UserRole.choices,
+        default=UserRole.USER,
     )
 
     def __str__(self):
@@ -27,8 +33,20 @@ class User(AbstractUser):
 
 # ─── Product Management ────────────────────────────
 class Product(models.Model):
+    TARGET_CHOICES = [
+        ("MEN", "Men"),
+        ("WOMEN", "Women"),
+        ("UNISEX", "Unisex"),
+    ]
+
     name = models.CharField(max_length=200)
     category = models.CharField(max_length=100)
+    target = models.CharField(
+        max_length=10,
+        choices=TARGET_CHOICES,
+        default="UNISEX",
+        help_text="Primary audience / positioning."
+    )
     price = models.DecimalField(max_digits=8, decimal_places=2)
     stock = models.PositiveIntegerField(default=0)
     description = models.TextField()
@@ -178,20 +196,80 @@ class Payment(models.Model):
         ("E_WALLET", "E-Wallet"),
         ("COD", "Cash on Delivery"),
     ]
-    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="payment")
+
+    STATUS_CHOICES = [
+        ("PENDING", "Pending"),
+        ("SUCCESS", "Success"),
+        ("FAILED", "Failed"),
+        ("CANCELLED", "Cancelled"),
+    ]
+
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="payment"
+    )
     method = models.CharField(max_length=20, choices=METHOD_CHOICES)
+
+    # Always mirrors order.total (set server-side)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=20, default="PENDING")
-    transaction_id = models.CharField(max_length=100, blank=True, null=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="PENDING"
+    )
+
+    transaction_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Reference from payment gateway or simulated ID"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"Payment for Order {self.order_id} - {self.status}"
 
 # ─── Quiz & Reviews ───────────────────────────────
 # shop/models.py
 
+# models.py
+
 class Quiz(models.Model):
-    """A quiz definition, global (not tied to one user)."""
+    AUDIENCE_CHOICES = [
+        ("ANY", "Any"),
+        ("MEN", "Men"),
+        ("WOMEN", "Women"),
+        ("UNISEX", "Unisex"),
+    ]
+
     title = models.CharField(max_length=200, default="Fragrance Quiz")
+
+    # Shown in UI as a badge/label, *purely visual*
+    label = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Optional badge, e.g. 'For Women', 'Gift Finder', 'Unisex Only'."
+    )
+
+    # Real filter: how this quiz restricts audience (optional)
+    audience = models.CharField(
+        max_length=10,
+        choices=AUDIENCE_CHOICES,
+        default="ANY",
+        help_text="If set, recommendations will be filtered by product.target."
+    )
+
+    # Whitelist: hard control for which products this quiz is allowed to recommend
+    allowed_products = models.ManyToManyField(
+        Product,
+        blank=True,
+        related_name="quizzes_whitelist",
+        help_text="If set, only these products can be recommended by this quiz."
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -217,16 +295,15 @@ class QuizQuestion(models.Model):
 def get_category_choices():
     """
     Dynamically fetch distinct product categories.
-    This ensures quiz answer dropdown matches real product categories.
     Safe even during migrations/startup.
     """
     try:
         from django.db import connection
-        # ✅ Prevent crash if Product table not yet created
+
         if "shop_product" not in connection.introspection.table_names():
             return [("Fresh", "Fresh"), ("Bold", "Bold")]
 
-        from .models import Product
+        Product = apps.get_model("shop", "Product")
         categories = Product.objects.values_list("category", flat=True).distinct()
         return [(c, c) for c in categories if c]
     except Exception as e:
@@ -269,6 +346,43 @@ class QuizResult(models.Model):
         return f"{self.user.username if self.user else 'Unknown'} - {self.recommended_category}"
 
 
+class ScentPersona(models.Model):
+    """
+    Admin-editable persona for a given product category.
+    The `category` string MUST match Product.category values.
+    """
+    category = models.CharField(
+        max_length=100,
+        unique=True,
+        choices=get_category_choices,   # 🔥 dynamic dropdown from Product.category
+        help_text="Choose one of the existing Product.category values."
+    )
+
+    persona_name = models.CharField(max_length=150)
+    tagline = models.TextField(blank=True)
+    scent_notes = models.JSONField(default=list, blank=True)
+    occasions = models.JSONField(default=list, blank=True)
+
+    image = models.ImageField(
+        upload_to="personas/",
+        blank=True,
+        null=True,
+        help_text="Square/portrait image representing this persona."
+    )
+    cover_image = models.ImageField(
+        upload_to="personas/covers/",
+        blank=True,
+        null=True,
+        help_text="Wide background image for quiz result hero."
+    )
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["category"]
+
+    def __str__(self):
+        return f"{self.category} → {self.persona_name}"
 
 # models.py
 class Review(models.Model):

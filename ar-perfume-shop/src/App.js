@@ -15,7 +15,7 @@ const ShopPage = page("ShopPage");
 const ProductPage = page("ProductPage");
 const ComparePage = page("ComparePage");
 const QuizPage = page("QuizPage");
-const ARViewer = page("ARViewer"); // ✅ NEW — AR viewer route
+const ARViewer = page("ARViewer");
 
 // ─── Auth pages ───
 const LoginPage = page("LoginPage");
@@ -49,11 +49,19 @@ const AdminAREditPage = adminPage("AdminAREditPage");
 const AdminReviewPage = adminPage("AdminReviewPage");
 const AdminAboutPage = adminPage("AdminAboutPage");
 const AdminRetailersPage = adminPage("AdminRetailersPage");
+const AdminPaymentsPage = adminPage("AdminPaymentsPage");
+const AdminScentPersonaPage = adminPage("AdminScentPersonaPage");
 
 function App() {
   return (
     <AuthProvider>
-      <Suspense fallback={<div style={{ color: "#fff", padding: 16 }}>Loading…</div>}>
+      <Suspense
+        fallback={
+          <div style={{ color: "#fff", padding: 16 }}>
+            Loading…
+          </div>
+        }
+      >
         <Routes>
           <Route path="/" element={<Layout />}>
             {/* ─── Public Pages ─── */}
@@ -63,12 +71,15 @@ function App() {
             <Route path="product/:id" element={<ProductPage />} />
             <Route path="compare" element={<ComparePage />} />
             <Route path="quiz" element={<QuizPage />} />
-            <Route path="arview/:slug" element={<ARViewer />} /> {/* ✅ ADDED HERE */}
+            <Route path="arview/:slug" element={<ARViewer />} />
 
             {/* ─── Auth Pages ─── */}
             <Route path="login" element={<LoginPage />} />
             <Route path="signup" element={<SignupPage />} />
-            <Route path="forgot-password" element={<ForgotPasswordPage />} />
+            <Route
+              path="forgot-password"
+              element={<ForgotPasswordPage />}
+            />
             <Route
               path="reset-password/:uid/:token"
               element={<ResetPasswordConfirmPage />}
@@ -106,7 +117,9 @@ function App() {
               ["admin/products/new", AdminProductFormPage],
               ["admin/products/:id/edit", AdminProductFormPage],
               ["admin/orders", AdminOrdersPage],
+              ["admin/payments", AdminPaymentsPage],         
               ["admin/quiz-management", AdminQuizManagement],
+              ["admin/scent-personas", AdminScentPersonaPage],
               ["admin/ar-management", AdminARManagement],
               ["admin/ar-management/new", AdminAREditPage],
               ["admin/ar-management/:id/edit", AdminAREditPage],
@@ -128,7 +141,12 @@ function App() {
             {/* ─── Redirects ─── */}
             <Route
               path="my-orders"
-              element={<Navigate to="/orders?tab=TO_BUY" replace />}
+              element={
+                <Navigate
+                  to="/orders?tab=TO_BUY"
+                  replace
+                />
+              }
             />
           </Route>
         </Routes>

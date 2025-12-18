@@ -9,7 +9,28 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
 
-  /* 👇 ADD THIS LINE 👇 */
-  background-color: #595b5f; /* This is Tailwind's light grey color (gray-100) */
+/* ================================
+   REMOVE BROWSER PASSWORD ICONS
+   (keep ONLY your custom Eye icon)
+   ================================ */
+
+/* Edge / IE built-in password reveal */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+/* Chrome / Edge (Chromium) autofill & credential icons */
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-textfield-decoration-container {
+  display: none !important;
+  visibility: hidden;
+}
+
+/* When password becomes text (show password ON) */
+input[type="text"]::-ms-reveal,
+input[type="text"]::-ms-clear {
+  display: none;
 }

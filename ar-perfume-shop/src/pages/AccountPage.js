@@ -1,40 +1,58 @@
-// src/pages/AccountPage.js
-import React, { useEffect, useState } from "react";
+// src/pages/AccountPage.jsx
+import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "../components/PageHeader";
 import {
   IoPencilOutline,
   IoCubeOutline,
   IoSettingsOutline,
   IoLogOutOutline,
+  IoSparkles,
+  IoClose,
 } from "react-icons/io5";
-import http from "../lib/http"; // axios wrapper with JWT
 import { useAuth } from "../context/AuthContext";
 
+function Toast({ message, type = "success", onClose }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 30, scale: 0.96 }}
+      className={`fixed bottom-6 right-6 z-[60] px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm ${
+        type === "error"
+          ? "bg-red-500/90 border-red-400/30"
+          : "bg-emerald-500/90 border-emerald-400/30"
+      } text-white`}
+    >
+      <div className="flex items-center gap-3">
+        <IoSparkles className="text-xl" />
+        <span className="font-medium">{message}</span>
+        <button onClick={onClose} className="text-white/70 hover:text-white ml-2">
+          <IoClose className="text-xl" />
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function AccountPage() {
-  const [profile, setProfile] = useState(null);
-  const { logout, isAuthed } = useAuth();
+  const { user, isAuthed, logout, fetchProfile } = useAuth();
   const navigate = useNavigate();
 
-  // Fetch logged-in user info
+  // If authed but user not loaded yet, fetch it
   useEffect(() => {
-    if (isAuthed) {
-      http
-        .get("me/") // backend endpoint for current user
-        .then((res) => setProfile(res.data))
-        .catch((err) => {
-          console.error("Error fetching profile:", err);
-          setProfile(null);
-        });
-    }
+    if (isAuthed) fetchProfile?.();   // ✅ always refresh
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthed]);
 
+  useEffect(() => {
+    console.log("Account user:", user);
+  }, [user]);
+
   const handleLogout = () => {
-    try {
-      logout?.();
-    } finally {
-      navigate("/login", { replace: true });
-    }
+    logout?.();
+    navigate("/login", { replace: true });
   };
 
   const menu = [
@@ -46,77 +64,129 @@ export default function AccountPage() {
   // Guest view
   if (!isAuthed) {
     return (
-      <div className="min-h-screen w-full bg-[#0c1a3a] flex flex-col items-center justify-center text-white px-6">
-        <h1 className="text-3xl font-bold mb-4">You are not logged in</h1>
-        <p className="mb-6 opacity-80">Please log in to access your account.</p>
-        <Link
-          to="/login"
-          className="px-6 py-3 bg-sky-500 rounded-xl font-semibold hover:bg-sky-600 transition"
-        >
-          Go to Login
-        </Link>
+      <div className="min-h-screen bg-luxury-navy flex items-center justify-center px-6">
+        <div className="w-full max-w-md bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-3xl p-8 text-white text-center backdrop-blur-sm">
+          <div className="text-luxury-gold text-4xl mb-3">✨</div>
+          <h1 className="text-2xl font-bold mb-2 text-luxury-gold">You are not logged in</h1>
+          <p className="text-luxury-silver mb-6">Please log in to access your account.</p>
+          <Link
+            to="/login"
+            className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-luxury-gold to-luxury-gold/80 text-luxury-navy rounded-2xl font-bold shadow-lg shadow-luxury-gold/20"
+          >
+            Go to Login
+          </Link>
+        </div>
       </div>
     );
   }
 
   // Loading state
-  if (!profile) {
-    return <div className="text-white p-6">Loading account...</div>;
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-luxury-navy flex items-center justify-center px-6">
+        <div className="w-full max-w-md bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-3xl p-8 text-center backdrop-blur-sm">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+            className="w-14 h-14 mx-auto mb-4 border-2 border-luxury-gold border-t-transparent rounded-full"
+          />
+          <p className="text-luxury-silver">Loading account…</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0c1a3a] px-6 md:px-10 lg:px-16">
-      <div className="mx-auto w-full max-w-[1600px] py-8 text-white">
-        <PageHeader title="ACCOUNT" />
+    <div className="min-h-screen bg-luxury-navy text-white relative overflow-hidden">
+      {/* Background glow (same vibe as ProductPage) */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[640px] h-[640px] bg-luxury-gold/5 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-[520px] h-[520px] bg-luxury-accent/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
+      </div>
 
-        <div className="grid lg:grid-cols-3 gap-10 items-stretch">
-          {/* LEFT — avatar + username */}
-          <section className="bg-white/5 rounded-2xl p-8 flex flex-col items-center justify-center min-h-[640px]">
-            <div className="relative w-[320px] h-[320px] xl:w-[360px] xl:h-[360px] rounded-full overflow-hidden border-8 border-white/80 shadow-2xl">
-              <img
-                src={
-                  profile.avatar ||
-                  "https://i.pravatar.cc/600?u=" + profile.username
-                }
-                alt="User avatar"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-4 bg-black/50 backdrop-blur px-6 py-2 rounded-full font-bold">
-                {profile.username}
-              </div>
-            </div>
-          </section>
+      <div className="relative z-10 px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
+        <div className="max-w-screen-2xl mx-auto py-6">
+          <PageHeader title="ACCOUNT" backTo="/" />
+        </div>
 
-          {/* RIGHT — tiles */}
-          <section className="lg:col-span-2 bg-white/5 rounded-2xl p-8 min-h-[640px] flex flex-col">
-            <div className="w-full grid grid-rows-3 gap-6 flex-1">
-              {menu.map(({ to, icon: Icon, label }) => (
-                <Link
-                  key={label}
-                  to={to}
-                  aria-label={label}
-                  className="group h-28 md:h-32 flex items-center justify-center gap-5 rounded-2xl bg-white/10 hover:bg-white/15 transition-colors shadow-sm focus:outline-none focus:ring-4 focus:ring-sky-400/30"
-                >
-                  <Icon className="text-4xl md:text-5xl text-white/90 group-hover:text-white" />
-                  <span className="text-2xl md:text-3xl font-semibold tracking-wide">
-                    {label}
-                  </span>
-                </Link>
-              ))}
-            </div>
-
-            {/* BIG Logout CTA */}
-            <button
-              type="button"
-              onClick={handleLogout}
-              aria-label="Log Out"
-              className="mt-6 w-full h-20 md:h-24 rounded-2xl bg-rose-600/90 hover:bg-rose-500 transition-colors shadow-md
-                         flex items-center justify-center gap-4 focus:outline-none focus:ring-4 focus:ring-rose-400/40"
+        <div className="max-w-screen-2xl mx-auto pb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            {/* LEFT card */}
+            <motion.section
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.45 }}
+              className="bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-sm"
             >
-              <IoLogOutOutline className="text-3xl md:text-4xl" />
-              <span className="text-xl md:text-2xl font-bold">Log Out</span>
-            </button>
-          </section>
+              <div className="flex flex-col items-center text-center">
+                <div className="relative w-56 h-56 rounded-full overflow-hidden border border-luxury-gold/30 shadow-2xl">
+                  <img
+                    src={user.avatar || `https://i.pravatar.cc/600?u=${user.username}`}
+                    alt="User avatar"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                </div>
+
+                <h2 className="mt-6 text-3xl font-bold text-luxury-gold">{user.username}</h2>
+                {user.email && <p className="mt-2 text-luxury-silver text-sm">{user.email}</p>}
+
+                <div className="mt-6 w-full bg-white/5 border border-white/10 rounded-2xl p-4">
+                  <p className="text-luxury-silver text-sm leading-relaxed">
+                    Manage your profile, orders, and settings from one place.
+                  </p>
+                </div>
+              </div>
+            </motion.section>
+
+            {/* RIGHT menu */}
+            <motion.section
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.45, delay: 0.05 }}
+              className="lg:col-span-2 bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-sm flex flex-col"
+            >
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-luxury-gold">Quick Actions</h3>
+                <p className="text-luxury-silver text-sm mt-1">
+                  Tap a card to continue.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 flex-1">
+                {menu.map(({ to, icon: Icon, label }, idx) => (
+                  <Link
+                    key={label}
+                    to={to}
+                    className="group bg-white/5 hover:bg-white/10 border border-white/10 hover:border-luxury-gold/30 rounded-3xl p-6 transition-all duration-300 shadow-lg shadow-black/20"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-luxury-gold/10 border border-luxury-gold/20 flex items-center justify-center mb-4">
+                      <Icon className="text-2xl text-luxury-gold" />
+                    </div>
+                    <div className="text-lg font-semibold text-white group-hover:text-luxury-gold transition-colors">
+                      {label}
+                    </div>
+                    <div className="text-xs text-luxury-silver mt-2">
+                      {idx === 0
+                        ? "Track and manage your orders"
+                        : idx === 1
+                        ? "Update your profile details"
+                        : "Security & account preferences"}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="mt-6 w-full py-4 rounded-2xl bg-red-500/80 hover:bg-red-500 transition-all duration-300 font-bold flex items-center justify-center gap-3"
+              >
+                <IoLogOutOutline className="text-2xl" />
+                Log Out
+              </button>
+            </motion.section>
+          </div>
         </div>
       </div>
     </div>

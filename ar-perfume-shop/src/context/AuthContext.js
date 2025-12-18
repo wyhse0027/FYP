@@ -1,49 +1,125 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+// src/context/AuthContext.js
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import http from "../lib/http";
 import axios from "axios";
 
 const AuthContext = createContext(null);
 
+const LS = {
+  ACCESS: "access",
+  REFRESH: "refresh",
+  USER: "user",
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem("user");
+    const saved = localStorage.getItem(LS.USER);
     return saved ? JSON.parse(saved) : null;
   });
-  const [access, setAccess] = useState(localStorage.getItem("access") || "");
-  const [refresh, setRefresh] = useState(localStorage.getItem("refresh") || "");
 
-  // 🔄 Fetch current user profile
+  const [access, setAccess] = useState(() => localStorage.getItem(LS.ACCESS) || "");
+  const [refresh, setRefresh] = useState(() => localStorage.getItem(LS.REFRESH) || "");
+
+  const [loadingUser, setLoadingUser] = useState(false);
+
+  // prevent duplicate profile calls
+  const fetchingRef = useRef(false);
+
+  const persistAuth = ({ access, refresh, user }) => {
+    if (access) localStorage.setItem(LS.ACCESS, access);
+    if (refresh) localStorage.setItem(LS.REFRESH, refresh);
+    if (user) localStorage.setItem(LS.USER, JSON.stringify(user));
+
+    setAccess(access || "");
+    setRefresh(refresh || "");
+    setUser(user || null);
+  };
+
+  const clearAuth = () => {
+    localStorage.removeItem(LS.ACCESS);
+    localStorage.removeItem(LS.REFRESH);
+    localStorage.removeItem(LS.USER);
+
+    setAccess("");
+    setRefresh("");
+    setUser(null);
+  };
+
+  // ---- OPTIONAL: refresh access token if expired (SimpleJWT default endpoint: token/refresh/) ----
+  const refreshAccessToken = async () => {
+    const r = localStorage.getItem(LS.REFRESH);
+    if (!r) throw new Error("No refresh token");
+
+    const res = await http.post("token/refresh/", { refresh: r });
+    const newAccess = res.data?.access;
+    if (!newAccess) throw new Error("Refresh failed (no access returned)");
+
+    localStorage.setItem(LS.ACCESS, newAccess);
+    setAccess(newAccess);
+    return newAccess;
+  };
+
+  // 🔄 Fetch current user profile (safe + retry once)
   const fetchProfile = async () => {
-    if (!access) {
+    const token = localStorage.getItem(LS.ACCESS);
+    if (!token) {
       setUser(null);
+      localStorage.removeItem(LS.USER);
       return;
     }
+
+    // guard: avoid duplicate calls
+    if (fetchingRef.current) return;
+
+    fetchingRef.current = true;
+    setLoadingUser(true);
+
     try {
       const res = await http.get("me/");
       setUser(res.data);
-      localStorage.setItem("user", JSON.stringify(res.data));
-    } catch {
-      setUser(null);
-      localStorage.removeItem("user");
+      localStorage.setItem(LS.USER, JSON.stringify(res.data));
+    } catch (err) {
+      // If access expired, try refresh once, then retry me/
+      const status = err?.response?.status;
+
+      if (status === 401 && localStorage.getItem(LS.REFRESH)) {
+        try {
+          await refreshAccessToken();
+          const res2 = await http.get("me/");
+          setUser(res2.data);
+          localStorage.setItem(LS.USER, JSON.stringify(res2.data));
+        } catch (e2) {
+          clearAuth();
+        }
+      } else {
+        // any other error: keep it strict
+        clearAuth();
+      }
+    } finally {
+      fetchingRef.current = false;
+      setLoadingUser(false);
     }
   };
 
-  // 🔄 Initial load if token exists
+  // 🔄 Initial load if token exists (only once)
   useEffect(() => {
-    if (!user && localStorage.getItem("access")) {
+    if (localStorage.getItem(LS.ACCESS) && !user) {
       fetchProfile();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 🔄 Refetch when access changes
+  // 🔄 When access changes (login / refresh), refetch profile if needed
   useEffect(() => {
-    fetchProfile();
+    if (access && !user) {
+      fetchProfile();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [access]);
 
-  // 🔄 Global 401 logout listener
+  // 🔄 Global 401 logout listener (kept from your design)
   useEffect(() => {
-    const handleUnauthorized = () => logout();
+    const handleUnauthorized = () => clearAuth();
     window.addEventListener("unauthorized", handleUnauthorized);
     return () => window.removeEventListener("unauthorized", handleUnauthorized);
   }, []);
@@ -57,16 +133,12 @@ export function AuthProvider({ children }) {
       });
 
       const { access, refresh, user } = res.data;
+      persistAuth({ access, refresh, user });
 
-      localStorage.setItem("access", access);
-      localStorage.setItem("refresh", refresh);
-      localStorage.setItem("user", JSON.stringify(user));
+      // If backend doesn't return `user`, fetch it
+      await fetchProfile();
 
-      setAccess(access);
-      setRefresh(refresh);
-      setUser(user);
-
-      return user;
+      return user || JSON.parse(localStorage.getItem(LS.USER) || "null");
     } catch {
       throw new Error("Invalid credentials");
     }
@@ -80,16 +152,11 @@ export function AuthProvider({ children }) {
       });
 
       const { access, refresh, user } = res.data;
+      persistAuth({ access, refresh, user });
 
-      localStorage.setItem("access", access);
-      localStorage.setItem("refresh", refresh);
-      localStorage.setItem("user", JSON.stringify(user));
+      if (!user) await fetchProfile();
 
-      setAccess(access);
-      setRefresh(refresh);
-      setUser(user);
-
-      return user;
+      return user || JSON.parse(localStorage.getItem(LS.USER) || "null");
     } catch (err) {
       console.error("Google login error:", err.response?.data || err);
       throw new Error("Google sign-in failed.");
@@ -100,7 +167,7 @@ export function AuthProvider({ children }) {
   const signup = async ({ email, username, password }) => {
     try {
       await http.post("signup/", { email, username, password });
-      return login({ usernameOrEmail: username, password }); // auto-login
+      return login({ usernameOrEmail: username, password });
     } catch {
       throw new Error("Signup failed");
     }
@@ -108,12 +175,7 @@ export function AuthProvider({ children }) {
 
   // ---- Logout ----
   const logout = () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-    localStorage.removeItem("user");
-    setAccess("");
-    setRefresh("");
-    setUser(null);
+    clearAuth();
   };
 
   // ---- Password Reset ----
@@ -139,11 +201,11 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // ✅ Exported context value
   const value = useMemo(
     () => ({
       user,
       isAuthed: !!access,
+      loadingUser, // useful for UI skeletons
       login,
       loginWithGoogle,
       signup,
@@ -154,7 +216,7 @@ export function AuthProvider({ children }) {
       refresh,
       fetchProfile,
     }),
-    [user, access, refresh]
+    [user, access, refresh, loadingUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

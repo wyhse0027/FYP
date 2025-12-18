@@ -61,7 +61,7 @@ export default function RateOrderPage() {
         if (stars > 0) {
           // ✅ Send review + files in one request
           const formData = new FormData();
-          formData.append("product", pid);
+          formData.append("product_id", pid);
           formData.append("rating", stars);
           formData.append("comment", comments[pid] || "");
           if (files[pid]?.length) {

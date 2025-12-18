@@ -1,35 +1,53 @@
 // src/pages/ComparePage.js
 import React, { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import PageHeader from "../components/PageHeader";
-import http from "../lib/http"; // ✅ axios wrapper with BASE_URL
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { IoArrowBack } from "react-icons/io5";
+import http from "../lib/http";
 import {
   IoSwapHorizontalOutline,
   IoClose,
   IoTrashOutline,
+  IoSparklesOutline,
 } from "react-icons/io5";
 
 /* ---------- helpers ---------- */
-const money = (n) =>
-  typeof n === "number"
-    ? `RM ${n.toFixed(2)}`
-    : typeof n === "string" && n.trim().length
-    ? n
-    : "—";
-
-const listify = (val) => {
-  if (!val) return "—";
-  if (Array.isArray(val)) return val.join(", ");
-  return String(val);
+const money = (n) => {
+  const v = Number(n);
+  return Number.isFinite(v) ? `RM ${v.toFixed(2)}` : "—";
 };
 
-const productImage = (p) => p?.card_image || ""; // ✅ only card_image
+const listify = (val) => {
+  if (val == null) return "—";
+  if (Array.isArray(val)) return val.length ? val.join(", ") : "—";
+  return String(val).trim() || "—";
+};
+
+const productImage = (p) =>
+  p?.card_image || p?.promo_image || p?.media_gallery?.[0]?.file || "";
+
+const parseTags = (tags) => {
+  if (!tags) return [];
+  if (Array.isArray(tags)) return tags;
+  try {
+    const parsed = JSON.parse(tags);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const starBar = (avg) => {
+  const n = Math.max(0, Math.min(5, Math.round(avg)));
+  return "★".repeat(n) + "☆".repeat(5 - n);
+};
 
 /* ---------- main page ---------- */
 export default function ComparePage() {
+  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [picker, setPicker] = useState({ open: false, side: "left" });
   const [products, setProducts] = useState([]);
+  const [details, setDetails] = useState({});
 
   const a = params.get("a");
   const b = params.get("b");
@@ -38,7 +56,12 @@ export default function ComparePage() {
   useEffect(() => {
     http
       .get("products/")
-      .then((res) => setProducts(res.data))
+      .then((res) => {
+        const items = Array.isArray(res.data)
+          ? res.data
+          : res.data.results || [];
+        setProducts(items);
+      })
       .catch((err) => console.error("❌ Error fetching products:", err));
   }, []);
 
@@ -71,95 +94,199 @@ export default function ComparePage() {
 
   const clearBoth = () => setParams(new URLSearchParams(), { replace: true });
 
-  // Values to show
+  // fetch detail (with aggregates) for selected ids
+  const ensureDetail = (id) => {
+    if (!id || details[id]) return;
+    http
+      .get(`products/${id}/`)
+      .then((res) => setDetails((prev) => ({ ...prev, [id]: res.data || {} })))
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    ensureDetail(a);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [a]);
+  useEffect(() => {
+    ensureDetail(b);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [b]);
+
+  const ratingInfo = (id, listItem) => {
+    const d = id ? details[id] : null;
+
+    const avg = Number(
+      (d && d.rating_avg) ?? listItem?.rating_avg ?? listItem?.rating ?? 0
+    );
+    const count = Number((d && d.rating_count) ?? listItem?.rating_count ?? 0);
+
+    return {
+      avg: Number.isFinite(avg) ? avg : 0,
+      count: Number.isFinite(count) ? count : 0,
+    };
+  };
+
   const L = {
+    target: listify(left?.target),
     category: listify(left?.category),
-    tags: listify(left?.tags),
-    size: listify(left?.size || left?.volume),
-    rating: listify(left?.rating),
+    tags: listify(parseTags(left?.tags)),
+    rating: (() => {
+      const { avg, count } = ratingInfo(a, left);
+      return count ? `${starBar(avg)}  ${avg.toFixed(1)} · ${count}` : "—";
+    })(),
     price: money(left?.price),
   };
+
   const R = {
+    target: listify(right?.target),
     category: listify(right?.category),
-    tags: listify(right?.tags),
-    size: listify(right?.size || right?.volume),
-    rating: listify(right?.rating),
+    tags: listify(parseTags(right?.tags)),
+    rating: (() => {
+      const { avg, count } = ratingInfo(b, right);
+      return count ? `${starBar(avg)}  ${avg.toFixed(1)} · ${count}` : "—";
+    })(),
     price: money(right?.price),
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#0c1a3a] px-4 md:px-8 lg:px-12">
-      <div className="mx-auto w-full max-w-screen-2xl py-6">
-        <PageHeader
-          title="Compare"
-          right={
-            <div className="flex gap-3">
-              <button
-                onClick={swap}
-                className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white px-4 py-3 rounded-xl text-base md:text-lg"
-                title="Swap"
-              >
-                <IoSwapHorizontalOutline className="text-xl" />
-                <span className="hidden sm:inline">Swap</span>
-              </button>
-              <button
-                onClick={clearBoth}
-                className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white px-4 py-3 rounded-xl text-base md:text-lg"
-                title="Clear"
-              >
-                <IoTrashOutline className="text-xl" />
-                <span className="hidden sm:inline">Clear</span>
-              </button>
-            </div>
-          }
-        />
+    <div className="min-h-screen w-full text-white bg-[#0c1a3a] relative overflow-hidden">
+      {/* blue/white ambience + small gold accent glow */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-24 left-1/3 w-[520px] h-[520px] rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -bottom-32 right-1/4 w-[520px] h-[520px] rounded-full bg-white/5 blur-3xl" />
+        <div className="absolute top-1/2 left-0 w-[420px] h-[420px] rounded-full bg-[rgba(212,175,55,0.08)] blur-3xl" />
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-white">
+      <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-4 md:px-8 lg:px-12 py-10">
+        <div className="mb-6">
+          <button
+            onClick={() => navigate("/shop")} // change to your shop route
+            className="
+              group
+              flex items-center justify-center
+              w-12 h-12 rounded-full
+              border border-[rgba(212,175,55,0.5)]
+              bg-[#0c1a3a]
+              hover:bg-white/10
+              transition-all duration-300
+            "
+            aria-label="Back to shop"
+          >
+            <IoArrowBack
+              className="
+                text-xl
+                text-white
+                group-hover:text-[rgba(212,175,55,0.95)]
+                transition-colors
+              "
+            />
+          </button>
+        </div>
+
+        {/* HERO HEADER (like screenshot layout) */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 text-[rgba(212,175,55,0.95)] text-xs md:text-sm font-semibold tracking-[0.35em] uppercase">
+            <span className="text-[rgba(212,175,55,0.95)]">👑</span>
+            <span>Side by Side</span>
+            <span className="text-[rgba(212,175,55,0.95)]">👑</span>
+          </div>
+
+          <h1 className="mt-4 text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
+            <span className="text-white">Compare </span>
+            <span className="text-[rgba(212,175,55,0.95)]">Fragrances</span>
+          </h1>
+
+          <p className="mt-3 text-white/70 text-base md:text-lg max-w-2xl mx-auto">
+            Discover the perfect scent by comparing our exquisite collection
+          </p>
+
+          {/* centered action buttons */}
+          <div className="mt-7 flex items-center justify-center gap-4">
+            <button
+              onClick={swap}
+              className="inline-flex items-center gap-2 rounded-full px-6 py-3
+                         bg-white/10 border border-white/15
+                         hover:bg-white/15 transition"
+              title="Swap"
+            >
+              <IoSwapHorizontalOutline className="text-xl text-[rgba(212,175,55,0.95)]" />
+              <span className="font-semibold">Swap</span>
+            </button>
+
+            <button
+              onClick={clearBoth}
+              className="inline-flex items-center gap-2 rounded-full px-6 py-3
+                         bg-white/10 border border-white/15
+                         hover:bg-white/15 transition"
+              title="Clear"
+            >
+              <IoTrashOutline className="text-xl text-white/80" />
+              <span className="font-semibold">Clear</span>
+            </button>
+          </div>
+        </div>
+
+        {/* GRID (same layout as screenshot: left card / specs / right card) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* LEFT CARD */}
           <div className="lg:col-span-3">
             <ProductPanel
               product={left}
-              placeholder="Select product"
+              placeholder="Select First Fragrance"
               onChange={() => setPicker({ open: true, side: "left" })}
               onRemove={() => setSide("left", null)}
             />
           </div>
 
           {/* CENTER COMPARISON */}
-          <div className="lg:col-span-6 bg-white/5 rounded-2xl p-6 md:p-8">
-            <h3 className="text-center font-extrabold text-2xl md:text-3xl mb-6">
-              Specifications
-            </h3>
+          <div className="lg:col-span-6 rounded-3xl p-6 md:p-8 bg-white/10 border border-white/10 backdrop-blur-sm">
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <IoSparklesOutline className="text-[rgba(212,175,55,0.95)] text-xl" />
+              <h3 className="text-center font-extrabold text-2xl md:text-3xl">
+                Specifications
+              </h3>
+              <IoSparklesOutline className="text-[rgba(212,175,55,0.95)] text-xl" />
+            </div>
 
+            <SpecRowTriple label="Target" left={L.target} right={R.target} />
             <SpecRowTriple label="Category" left={L.category} right={R.category} />
             <SpecRowTriple label="Tags" left={L.tags} right={R.tags} />
-            <SpecRowTriple label="Size" left={L.size} right={R.size} />
             <SpecRowTriple label="Rating" left={L.rating} right={R.rating} />
-            <SpecRowTriple label="Price" left={L.price} right={R.price} />
+            <SpecRowTriple label="Price" left={L.price} right={R.price} isPrice />
+
+            {!left && !right && (
+              <div className="text-center py-12 text-white/60">
+                <div className="mx-auto mb-4 h-16 w-16 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center">
+                  <div className="h-7 w-7 rounded-md border border-white/20" />
+                </div>
+                <div className="text-lg">Select fragrances to compare</div>
+              </div>
+            )}
           </div>
 
           {/* RIGHT CARD */}
           <div className="lg:col-span-3">
             <ProductPanel
               product={right}
-              placeholder="Select product"
+              placeholder="Select Second Fragrance"
               onChange={() => setPicker({ open: true, side: "right" })}
               onRemove={() => setSide("right", null)}
             />
           </div>
         </div>
-      </div>
 
-      {picker.open && (
-        <ProductPicker
-          products={products}
-          onClose={() => setPicker({ open: false, side: "left" })}
-          onPick={(id) => {
-            setSide(picker.side, id);
-            setPicker({ open: false, side: "left" });
-          }}
-        />
-      )}
+        {/* Picker Modal */}
+        {picker.open && (
+          <ProductPicker
+            products={products}
+            onClose={() => setPicker({ open: false, side: "left" })}
+            onPick={(id) => {
+              setSide(picker.side, id);
+              setPicker({ open: false, side: "left" });
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -170,56 +297,100 @@ function ProductPanel({ product, placeholder, onChange, onRemove }) {
   const img = productImage(product);
 
   return (
-    <div className="bg-white/5 rounded-2xl p-5 h-full">
-      <div className="flex items-center justify-between mb-4">
-        <div className="font-bold text-lg md:text-xl text-center w-full">
-          {title}
+    <div className="rounded-3xl p-6 bg-white/10 border border-white/10 backdrop-blur-sm">
+      <div className="flex items-start justify-between mb-4">
+        <div className="min-w-0">
+          <div className="font-extrabold text-xl truncate">{title}</div>
+          {product?.category && (
+            <div className="text-sm text-white/70 mt-1">{product.category}</div>
+          )}
         </div>
+
         <div className="shrink-0 ml-3 flex gap-2">
           <button
             onClick={onChange}
-            className="text-sm md:text-base px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15"
+            className="text-sm px-4 py-2 rounded-full
+                       bg-white/10 border border-white/15
+                       hover:bg-white/15 transition
+                       text-[rgba(212,175,55,0.95)] font-semibold"
           >
-            Change
+            {product ? "Change" : "Select"}
           </button>
+
           {product && (
             <button
               onClick={onRemove}
-              className="text-sm md:text-base px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15"
+              className="p-2 rounded-full bg-white/10 border border-white/15
+                         hover:bg-white/15 transition"
               title="Remove"
             >
-              <IoClose className="text-xl" />
+              <IoClose className="text-xl text-white/80" />
             </button>
           )}
         </div>
       </div>
 
-      <div className="rounded-2xl overflow-hidden bg-black/10 aspect-[4/3] flex items-center justify-center mb-5">
+      <div className="relative rounded-2xl overflow-hidden bg-black/20 aspect-[4/3] mb-5 border border-white/10">
         {product ? (
-          <img src={img} alt={title} className="w-full h-full object-contain" />
+          <>
+            <img
+              src={img}
+              alt={title}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          </>
         ) : (
-          <div className="opacity-60 text-center px-4">No product selected</div>
+          <div className="w-full h-full flex flex-col items-center justify-center text-white/55 px-4 text-center gap-3">
+            <div className="h-14 w-14 rounded-2xl border border-white/15 bg-white/5 flex items-center justify-center">
+              <div className="h-7 w-7 rounded-md border border-white/20" />
+            </div>
+            <div className="text-sm">No fragrance selected</div>
+          </div>
         )}
       </div>
 
-      <div className="text-center">
-        <div className="text-sm md:text-base opacity-80">Price</div>
-        <div className="text-xl md:text-2xl font-bold mt-0.5">
+      <div className="text-center pt-3 border-t border-white/10">
+        <div className="text-sm text-white/60">Price</div>
+        <div className="text-2xl font-extrabold mt-1 text-[rgba(212,175,55,0.95)]">
           {product ? money(product.price) : "—"}
         </div>
+
+        {/* subtle gold underline like screenshot */}
+        <div className="mt-3 mx-auto h-[2px] w-10 bg-[rgba(212,175,55,0.7)]/80 rounded-full" />
       </div>
     </div>
   );
 }
 
-function SpecRowTriple({ label, left, right }) {
+function SpecRowTriple({ label, left, right, isPrice }) {
+  if ((left === "—" || left == null) && (right === "—" || right == null))
+    return null;
+
   return (
-    <div className="grid grid-cols-3 gap-4 items-center py-4 md:py-5 border-b border-white/10 last:border-0">
-      <div className="text-center text-lg md:text-xl break-words">{left}</div>
-      <div className="text-center font-extrabold text-xl md:text-2xl tracking-wide">
-        {label}
+    <div className="grid grid-cols-3 gap-4 items-center py-4 border-b border-white/10 last:border-0">
+      <div
+        className={`text-center break-words ${
+          isPrice ? "text-[rgba(212,175,55,0.95)] text-lg font-extrabold" : "text-white/90"
+        }`}
+      >
+        {left}
       </div>
-      <div className="text-center text-lg md:text-xl break-words">{right}</div>
+
+      <div className="text-center">
+        <span className="inline-block px-4 py-1.5 rounded-full bg-white/10 border border-white/10 font-extrabold">
+          {label}
+        </span>
+      </div>
+
+      <div
+        className={`text-center break-words ${
+          isPrice ? "text-[rgba(212,175,55,0.95)] text-lg font-extrabold" : "text-white/90"
+        }`}
+      >
+        {right}
+      </div>
     </div>
   );
 }
@@ -227,33 +398,55 @@ function SpecRowTriple({ label, left, right }) {
 /* ---------- Picker Modal ---------- */
 function ProductPicker({ products, onPick, onClose }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-      <div className="w-full max-w-4xl bg-[#0b1a38] rounded-2xl p-5 text-white">
-        <div className="flex items-center justify-between mb-4">
-          <div className="font-semibold text-xl">Select product</div>
-          <button onClick={onClose} className="text-3xl leading-none">
-            <IoClose />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="w-full max-w-5xl rounded-3xl overflow-hidden bg-[#0b1a38] border border-white/10 text-white">
+        <div className="p-6 border-b border-white/10 flex items-center justify-between">
+          <div className="font-extrabold text-xl">
+            Select <span className="text-[rgba(212,175,55,0.95)]">Fragrance</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full bg-white/10 border border-white/10 hover:bg-white/15 transition"
+          >
+            <IoClose className="text-2xl text-white/85" />
           </button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {products.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => onPick(p.id)}
-              className="bg-white/10 hover:bg-white/15 rounded-2xl p-3 text-left"
-            >
-              <div className="rounded-xl overflow-hidden bg-black/10 aspect-[4/5] mb-3 flex items-center justify-center">
-                <img
-                  src={p.card_image} // ✅ use card_image only
-                  alt={p.name}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <div className="font-semibold text-lg">{p.name}</div>
-              <div className="text-sm opacity-70">{money(p.price)}</div>
-            </button>
-          ))}
+        <div className="p-6 max-h-[65vh] overflow-y-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {products.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => onPick(p.id)}
+                className="rounded-2xl p-3 text-left bg-white/10 border border-white/10
+                           hover:bg-white/15 transition"
+              >
+                <div className="rounded-xl overflow-hidden bg-black/20 aspect-[4/5] mb-3 border border-white/10">
+                  <img
+                    src={
+                      p.card_image || p.promo_image || p?.media_gallery?.[0]?.file || ""
+                    }
+                    alt={p.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+
+                <div className="font-semibold text-lg text-white line-clamp-1">
+                  {p.name}
+                </div>
+                <div className="text-sm text-[rgba(212,175,55,0.95)] mt-1 font-semibold">
+                  {money(p.price)}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {!products?.length && (
+            <div className="text-center py-10 text-white/60">
+              No products found.
+            </div>
+          )}
         </div>
       </div>
     </div>

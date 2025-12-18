@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import http from "../lib/http";
 import { IoLocationOutline, IoTimeOutline, IoCallOutline } from "react-icons/io5";
 
 export default function RetailersPage() {
   const [retailers, setRetailers] = useState([]);
   const [expanded, setExpanded] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     http
@@ -18,8 +19,8 @@ export default function RetailersPage() {
     <div className="min-h-screen w-full bg-[#081534] px-6 md:px-10 lg:px-16 py-10 flex flex-col items-center">
       {/* Top Header */}
       <div className="w-full max-w-[1500px] flex items-center justify-between mb-10">
-        <Link
-          to="/settings"
+        <button
+          onClick={() => navigate(-1)}
           className="flex items-center justify-center rounded-full hover:bg-white/10 transition p-2"
           title="Back"
         >
@@ -32,7 +33,7 @@ export default function RetailersPage() {
           >
             <path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
           </svg>
-        </Link>
+        </button>
 
         <h1 className="text-5xl font-serif text-white text-center flex-1 drop-shadow-lg tracking-wide">
           Retailers

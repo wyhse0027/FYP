@@ -10,42 +10,68 @@ export default function AdminDashboardPage() {
     quizzes: 0,
     ar: 0,
     reviews: 0,
+    retailers: 0,
+    payments: 0,
+    scentPersonas: 0,
   });
+
+  const getCount = (res) => {
+    const data = res.data;
+    if (Array.isArray(data)) return data.length;
+    if (typeof data?.count === "number") return data.count;
+    if (Array.isArray(data?.results)) return data.results.length;
+    return 0;
+  };
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        const [usersRes, productsRes, ordersRes, quizzesRes, arRes, reviewsRes, retailersRes] = await Promise.all([
+        const [
+          usersRes,
+          productsRes,
+          ordersRes,
+          paymentsRes,
+          quizzesRes,
+          scentPersonasRes,
+          arRes,
+          reviewsRes,
+          retailersRes,
+        ] = await Promise.all([
           http.get("/admin/users/"),
           http.get("/products/"),
-          http.get("/admin/orders/"), // ✅ use admin endpoint
-          http.get("/admin/quizzes/"), // ✅ new quiz count
+          http.get("/admin/orders/"),
+          http.get("/admin/payments/"),
+          http.get("/admin/quizzes/"),
+          http.get("/admin/scent-personas/"),
           http.get("/ar/"),
-          http.get("/admin/reviews/"), 
+          http.get("/admin/reviews/"),
           http.get("/retailers/"),
         ]);
 
         setStats({
-          users: Array.isArray(usersRes.data) ? usersRes.data.length : 0,
-          products: Array.isArray(productsRes.data) ? productsRes.data.length : 0,
-          orders: Array.isArray(ordersRes.data) ? ordersRes.data.length : 0,
-          quizzes: Array.isArray(quizzesRes.data) ? quizzesRes.data.length : 0,
-          ar: Array.isArray(arRes.data) ? arRes.data.length : 0,
-          reviews: reviewsRes.data.length || 0,
-          retailers: retailersRes.data.length,
+          users: getCount(usersRes),
+          products: getCount(productsRes),
+          orders: getCount(ordersRes),
+          payments: getCount(paymentsRes),
+          quizzes: getCount(quizzesRes),
+          scentPersonas: getCount(scentPersonasRes),
+          ar: getCount(arRes),
+          reviews: getCount(reviewsRes),
+          retailers: getCount(retailersRes),
         });
       } catch (err) {
         console.error("Failed to load dashboard stats:", err);
       }
     }
+
     fetchStats();
   }, []);
+
 
   return (
     <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 lg:px-16">
       <div className="max-w-6xl mx-auto py-6">
         <h1 className="text-3xl font-bold mb-8 text-center">ADMIN DASHBOARD</h1>
-
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Users */}
           <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
@@ -83,31 +109,55 @@ export default function AdminDashboardPage() {
             </Link>
           </div>
 
-          {/* ✅ Quiz Management */}
+          {/* Payments */}
+          <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
+            <h2 className="text-4xl font-bold">{stats.payments}</h2>
+            <p className="opacity-70">Payments</p>
+            <Link
+              to="/admin/payments"
+              className="mt-4 inline-block px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700 font-semibold transition"
+            >
+              Manage Payments
+            </Link>
+          </div>
+
+          {/* Quiz Management */}
           <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
             <h2 className="text-4xl font-bold">{stats.quizzes}</h2>
-            <p className="opacity-70">Quiz Management</p>
+            <p className="opacity-70">Quizzes</p>
             <Link
               to="/admin/quiz-management"
               className="mt-4 inline-block px-4 py-2 bg-yellow-600 rounded-lg hover:bg-yellow-700 font-semibold transition"
             >
-              Manage Quiz
+              Manage Quizzes
             </Link>
           </div>
 
-          {/* ✅ AR Management */}
+          {/* Scent Personas */}
+          <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
+            <h2 className="text-4xl font-bold">{stats.scentPersonas}</h2>
+            <p className="opacity-70">Scent Personas</p>
+            <Link
+              to="/admin/scent-personas"
+              className="mt-4 inline-block px-4 py-2 bg-pink-600 rounded-lg hover:bg-pink-700 font-semibold transition"
+            >
+              Manage Scent Personas
+            </Link>
+          </div>
+
+          {/* AR Management */}
           <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
             <h2 className="text-4xl font-bold">{stats.ar}</h2>
             <p className="opacity-70">AR Experiences</p>
             <Link
               to="/admin/ar-management"
-              className="mt-4 inline-block px-4 py-2 bg-pink-600 rounded-lg hover:bg-pink-700 font-semibold transition"
+              className="mt-4 inline-block px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-700 font-semibold transition"
             >
               Manage AR
             </Link>
           </div>
 
-          {/* ✅ Review Management */}
+          {/* Review Management */}
           <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
             <h2 className="text-4xl font-bold">{stats.reviews}</h2>
             <p className="opacity-70">User Reviews</p>
@@ -119,19 +169,7 @@ export default function AdminDashboardPage() {
             </Link>
           </div>
 
-          {/* ✅ About Management */}
-          <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
-            <h2 className="text-4xl font-bold">About</h2>
-            <p className="opacity-70">Site Information</p>
-            <Link
-              to="/admin/about"
-              className="mt-4 inline-block px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 font-semibold transition"
-            >
-              Manage About Page
-            </Link>
-          </div>
-
-          {/* ✅ Retailers Management */}
+          {/* Retailers Management */}
           <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
             <h2 className="text-4xl font-bold">{stats.retailers}</h2>
             <p className="opacity-70">Retailers</p>
@@ -143,6 +181,17 @@ export default function AdminDashboardPage() {
             </Link>
           </div>
 
+          {/* About Management */}
+          <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
+            <h2 className="text-4xl font-bold">About</h2>
+            <p className="opacity-70">Site Information</p>
+            <Link
+              to="/admin/about"
+              className="mt-4 inline-block px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 font-semibold transition"
+            >
+              Manage About Page
+            </Link>
+          </div>
         </div>
       </div>
     </div>

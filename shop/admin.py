@@ -5,7 +5,8 @@ from .models import (
     User, Product, ARExperience,
     Cart, CartItem, Order, OrderItem, Payment,
     Quiz, QuizQuestion, QuizAnswer, QuizResult,
-    Review, ProductMedia, ReviewMedia, SiteAbout, Retailer
+    Review, ProductMedia, ReviewMedia, SiteAbout, Retailer,
+    ScentPersona,
 )
 
 # ─── User Admin ───────────────────────────
@@ -14,14 +15,14 @@ class UserAdmin(DjangoUserAdmin):
     fieldsets = DjangoUserAdmin.fieldsets + (
         ("Profile", {
             "fields": (
-                "avatar", "phone", "address_line1", "postal_code",
+                "avatar", "phone", "address_line1", "address_line2", "postal_code",
                 "city", "state", "country", "role"
             )
         }),
     )
     list_display = ("username", "email", "role", "phone", "last_login", "is_active")
     list_filter = ("role", "is_active", "is_staff")
-    search_fields = ("username", "email", "phone")
+    search_fields = ("username", "email", "phone", "address_line1", "address_line2")
 
 
 # ─── Product & AR ─────────────────────────
@@ -131,6 +132,46 @@ class QuizResultAdmin(admin.ModelAdmin):
     list_filter = ("recommended_category", "created_at")
     search_fields = ("user__username", "quiz__title")
 
+@admin.register(ScentPersona)
+class ScentPersonaAdmin(admin.ModelAdmin):
+    list_display = ("category", "persona_name", "updated_at", "image_preview")
+    search_fields = ("category", "persona_name", "tagline")
+    list_filter = ("updated_at",)
+
+    readonly_fields = ("updated_at", "image_preview_display")
+
+    fieldsets = (
+        ("Link to Category", {
+            "fields": ("category",)
+        }),
+        ("Persona Content", {
+            "fields": ("persona_name", "tagline", "scent_notes", "occasions")
+        }),
+        ("Images", {
+            "fields": ("image", "cover_image", "image_preview_display")
+        }),
+        ("System Info", {
+            "fields": ("updated_at",)
+        }),
+    )
+
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" width="50" height="50" style="object-fit:cover;border-radius:6px;" />',
+                obj.image.url
+            )
+        return "-"
+    image_preview.short_description = "Image"
+
+    def image_preview_display(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" width="200" style="object-fit:cover;border-radius:10px;" />',
+                obj.image.url
+            )
+        return "No image uploaded yet."
+    image_preview_display.short_description = "Persona Image Preview"
 
 
 # ─── Reviews ──────────────────────────────

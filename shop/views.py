@@ -1,5 +1,6 @@
 from collections import Counter
 import json
+from io import BytesIO
 from rest_framework import viewsets, permissions, status, generics, parsers, mixins, filters, serializers
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import OrderingFilter
@@ -7,22 +8,28 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import BasePermission, IsAdminUser, AllowAny
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
-from django.db.models import Q
+from django.db.models import Avg, Count, Q
+from django.http import HttpResponse
+from django.utils import timezone
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import update_last_login
 from django.core.files.storage import default_storage
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import mm
 
 from .models import (
     Product, Review, Cart, Order, Payment, CartItem, ReviewMedia,
     Quiz, QuizAnswer, QuizQuestion, QuizResult, ProductMedia, ARExperience,
-    SiteAbout, Retailer
+    SiteAbout, Retailer, ScentPersona, 
 )
 from .serializers import (
     ProductSerializer, ReviewSerializer, CartSerializer,
@@ -33,6 +40,7 @@ from .serializers import (
     QuizSerializer, QuizResultSerializer, ProductMediaSerializer,
     AdminQuizSerializer, AdminQuizAnswerSerializer, AdminQuizQuestionSerializer,
     ARExperienceSerializer, SiteAboutSerializer, RetailerSerializer, 
+    ScentPersonaSerializer, 
 )
 
 User = get_user_model()
@@ -67,22 +75,44 @@ class PasswordResetRequestView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = User.objects.get(email=serializer.validated_data["email"])
+        email = serializer.validated_data["email"]
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # Do NOT leak whether email exists
+            return Response(
+                {"detail": "If the email exists, a reset link has been sent."},
+                status=status.HTTP_200_OK,
+            )
+
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
 
-        reset_link = f"{request.build_absolute_uri('/')}reset-password/{uid}/{token}/"
+        # use frontend URL, not backend
+        frontend_base = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+        reset_link = f"{frontend_base}/reset-password/{uid}/{token}"
+
+        message = (
+            "You requested a password reset for your account.\n\n"
+            f"Click the link below to set a new password:\n{reset_link}\n\n"
+            "If you did not request this, you can ignore this email."
+        )
 
         send_mail(
             "Password Reset",
-            f"Click here to reset your password: {reset_link}",
+            message,
             settings.DEFAULT_FROM_EMAIL,
             [user.email],
         )
-        return Response({"detail": "Password reset email sent"})
+
+        return Response(
+            {"detail": "If the email exists, a reset link has been sent."},
+            status=status.HTTP_200_OK,
+        )
 
 
-# ─── Password Reset (Confirm) ──────────────
+# ─── Password Reset (Confirm) ──────a────────
 class PasswordResetConfirmView(generics.GenericAPIView):
     serializer_class = PasswordResetConfirmSerializer
     permission_classes = [permissions.AllowAny]
@@ -97,6 +127,7 @@ class PasswordResetConfirmView(generics.GenericAPIView):
 # ─── Current Logged-In User ────────────────
 class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get(self, request):
         serializer = UserSerializer(request.user, context={"request": request})
@@ -114,6 +145,7 @@ class MeView(APIView):
         return Response(serializer.data)
 
 
+
 class UpdateMeView(generics.UpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -124,14 +156,32 @@ class UpdateMeView(generics.UpdateAPIView):
 
 # ─── Products ──────────────────────────────
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
     permission_classes = [permissions.AllowAny]
+    serializer_class = ProductSerializer
+
+    # keep this for router/basename
+    queryset = Product.objects.all()
+
+    def get_queryset(self):
+        return (
+            Product.objects
+            .all()
+            .annotate(
+                # NOTE: Review -> Product has related_name="reviews"
+                rating_avg=Avg('reviews__rating'),
+                rating_count=Count(
+                    'reviews__id',
+                    filter=Q(reviews__rating__isnull=False),
+                    distinct=True,
+                ),
+            )
+            .order_by('id')
+        )
 
     def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context.update({"request": self.request})
-        return context
+        ctx = super().get_serializer_context()
+        ctx.update({"request": self.request})
+        return ctx
 
 
 # ─── Reviews ───────────────────────────────
@@ -205,44 +255,216 @@ class OrderViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
 
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx["request"] = self.request
+        return ctx
+
     def perform_create(self, serializer):
-        serializer.save()
+        # Let the serializer handle setting user/status
+        order = serializer.save()
+
+        # Ensure every order has a Payment row so it appears in admin payments
+        if not hasattr(order, "payment"):
+            Payment.objects.create(
+                order=order,
+                amount=order.total,
+                method="COD",   # placeholder, updated in pay()
+                status="PENDING",
+            )
 
     @action(detail=True, methods=["post"])
     def pay(self, request, pk=None):
+        """
+        Handle payment result for this order.
+
+        Expected body (from frontend / gateway):
+        {
+          "method": "CARD" | "FPX" | "E_WALLET" | "COD",
+          "success": true/false,           # REQUIRED for online methods
+          "transaction_id": "optional-gw-id"
+        }
+        """
         order = self.get_object()
+
         if order.status != "TO_PAY":
-            return Response({"error": "Order cannot be paid."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Order cannot be paid."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        method = request.data.get("method")
+        txid = request.data.get("transaction_id")
+        success_raw = request.data.get("success", True)
+
+        # Normalize success to bool
+        if isinstance(success_raw, str):
+            success = success_raw.lower() in ["1", "true", "yes", "y"]
+        else:
+            success = bool(success_raw)
+
+        valid_methods = ["COD", "CARD", "FPX", "E_WALLET"]
+        if method not in valid_methods:
+            return Response(
+                {"error": "Invalid or missing payment method."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        payment = getattr(order, "payment", None)
+        is_paid = bool(payment and payment.status == "SUCCESS")
+
+        # Ensure a Payment object exists
+        if payment is None:
+            payment = Payment.objects.create(
+                order=order,
+                amount=order.total,
+                method=method,
+                status="PENDING",
+            )
+
+        # Always sync latest data
+        payment.method = method
+        payment.amount = order.total
+        if txid:
+            payment.transaction_id = txid
+
+        # ── COD logic (no FAILED here; you collect on delivery) ─────────────
+        if method == "COD":
+            # Treat as order confirmed, to be paid on delivery
+            payment.status = "PENDING"
+            order.status = "TO_SHIP"
+            payment.save()
+            order.save()
+            return Response(
+                OrderSerializer(order, context={"request": request}).data
+            )
+
+        # ── Online methods: success/fail is explicit ────────────────────────
+        if not success:
+            # Mark payment attempt as FAILED, keep order payable
+            payment.status = "FAILED"
+            payment.save()
+
+            # You can choose to leave as TO_PAY (allow retry) or auto-cancel.
+            # Here: keep TO_PAY so user can try again.
+            order.status = "TO_PAY"
+            order.save()
+
+            return Response(
+                {
+                    "detail": "Payment failed.",
+                    "order": OrderSerializer(order, context={"request": request}).data,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # If success == True for online methods → mark as paid
+        payment.status = "SUCCESS"
+        if not payment.transaction_id:
+            payment.transaction_id = (
+                f"PAY-{timezone.now().strftime('%Y%m%d%H%M%S')}-{order.id}"
+            )
+
         order.status = "TO_SHIP"
+
+        payment.save()
         order.save()
-        return Response(OrderSerializer(order).data)
+
+        return Response(
+            OrderSerializer(order, context={"request": request}).data
+        )
 
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):
+        """
+        Cancel order (if TO_PAY / TO_SHIP), restock items, sync payment.
+        """
         order = self.get_object()
+
         if order.status not in ["TO_PAY", "TO_SHIP"]:
             return Response({"error": "Order cannot be cancelled."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Restock
+        for item in order.items.all():
+            product = item.product
+            product.stock += item.quantity
+            product.save()
+
+        # Update payment if exists
+        try:
+            payment = order.payment
+            if payment.status in ["PENDING", "SUCCESS"]:
+                payment.status = "CANCELLED"
+                payment.save()
+        except Payment.DoesNotExist:
+            pass
+
         order.status = "CANCELLED"
         order.save()
-        return Response(OrderSerializer(order).data)
+
+        return Response(OrderSerializer(order, context={"request": request}).data)
 
     @action(detail=True, methods=["post"])
     def ship(self, request, pk=None):
+        """
+        Mark order as shipped.
+        For non-COD: require successful payment.
+        (In a real system this should be admin-only.)
+        """
         order = self.get_object()
+
         if order.status != "TO_SHIP":
             return Response({"error": "Order cannot be shipped."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            payment = order.payment
+        except Payment.DoesNotExist:
+            return Response({"error": "No payment record."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if payment.method != "COD" and payment.status != "SUCCESS":
+            return Response({"error": "Payment not successful."}, status=status.HTTP_400_BAD_REQUEST)
+
         order.status = "TO_RECEIVE"
         order.save()
-        return Response(OrderSerializer(order).data)
+        return Response(OrderSerializer(order, context={"request": request}).data)
 
     @action(detail=True, methods=["post"])
     def deliver(self, request, pk=None):
+        """
+        Customer confirms the order is received.
+
+        - Moves TO_RECEIVE -> TO_RATE.
+        - If COD: mark payment as SUCCESS here (cash collected).
+        """
         order = self.get_object()
+
         if order.status != "TO_RECEIVE":
-            return Response({"error": "Order cannot be delivered."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Order cannot be delivered."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Mark order as ready to rate
         order.status = "TO_RATE"
+
+        # If COD, confirm payment now
+        try:
+          payment = order.payment
+        except Payment.DoesNotExist:
+          payment = None
+
+        if payment and payment.method == "COD" and payment.status != "SUCCESS":
+            payment.status = "SUCCESS"
+            if not payment.transaction_id:
+                payment.transaction_id = (
+                    f"COD-{timezone.now().strftime('%Y%m%d%H%M%S')}-{order.id}"
+                )
+            payment.save()
+
         order.save()
-        return Response(OrderSerializer(order).data)
+        return Response(
+            OrderSerializer(order, context={"request": request}).data
+        )
 
     @action(detail=True, methods=["post"])
     def complete(self, request, pk=None):
@@ -251,14 +473,221 @@ class OrderViewSet(viewsets.ModelViewSet):
             return Response({"error": "Order cannot be completed."}, status=status.HTTP_400_BAD_REQUEST)
         order.status = "COMPLETED"
         order.save()
-        return Response(OrderSerializer(order).data)
+        return Response(OrderSerializer(order, context={"request": request}).data)
+    
 
+    @action(detail=True, methods=["get"], url_path="receipt-pdf")
+    def receipt_pdf(self, request, pk=None):
+        """
+        Generate a PDF for this order.
+
+        - If payment is SUCCESS -> acts as a Payment Receipt.
+        - If payment is COD / PENDING -> acts as Order Confirmation / Invoice.
+        - Always accessible only by the order owner (enforced by get_queryset()).
+        """
+        order = self.get_object()
+        payment = getattr(order, "payment", None)
+
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+
+        # ─── Header / Brand ─────────────────────────────────
+        y = height - 30 * mm
+        p.setFont("Helvetica-Bold", 18)
+        p.drawString(25 * mm, y, "GERAIN CHAN OFFICIAL STORE")
+
+        # Decide document title based on payment status
+        is_paid = bool(payment and payment.status == "SUCCESS")
+        doc_title = "Payment Receipt" if is_paid else "Order Confirmation / Invoice"
+
+        y -= 8 * mm
+        p.setFont("Helvetica", 11)
+        p.drawString(25 * mm, y, doc_title)
+
+        # ─── Order Details ──────────────────────────────────
+        y -= 10 * mm
+        p.setFont("Helvetica", 10)
+        p.drawString(25 * mm, y, f"Order ID: {order.id}")
+        y -= 5 * mm
+        p.drawString(
+            25 * mm,
+            y,
+            f"Order Date: {order.created_at.strftime('%Y-%m-%d %H:%M')}",
+        )
+        y -= 5 * mm
+        p.drawString(25 * mm, y, f"Order Status: {order.status}")
+
+        # ─── Customer / Shipping Info ───────────────────────
+        y -= 10 * mm
+        p.setFont("Helvetica-Bold", 11)
+        p.drawString(25 * mm, y, "Bill To / Ship To:")
+        p.setFont("Helvetica", 10)
+
+        address_lines = [
+            order.fullname,
+            f"Phone: {order.phone}",
+            order.line1,
+            order.line2 or "",
+            f"{order.postcode} {order.city}",
+            f"{order.state}, {order.country}",
+        ]
+        for line in address_lines:
+            if line:
+                y -= 5 * mm
+                p.drawString(25 * mm, y, line)
+
+        # ─── Items Header ───────────────────────────────────
+        y -= 10 * mm
+        p.setFont("Helvetica-Bold", 11)
+        p.drawString(25 * mm, y, "Items")
+        p.setFont("Helvetica", 10)
+
+        y -= 6 * mm
+        p.drawString(25 * mm, y, "Product")
+        p.drawString(110 * mm, y, "Qty")
+        p.drawString(130 * mm, y, "Price")
+        p.drawString(160 * mm, y, "Total")
+
+        y -= 4 * mm
+        p.line(25 * mm, y, 185 * mm, y)
+
+        # ─── Items List ─────────────────────────────────────
+        for item in order.items.all():
+            line_total = float(item.price) * item.quantity
+
+            y -= 7 * mm
+            if y < 40 * mm:
+                p.showPage()
+                p.setFont("Helvetica", 10)
+                y = height - 30 * mm
+
+                # re-draw columns header on new page
+                p.setFont("Helvetica-Bold", 11)
+                p.drawString(25 * mm, y, "Items (cont.)")
+                p.setFont("Helvetica", 10)
+                y -= 6 * mm
+                p.drawString(25 * mm, y, "Product")
+                p.drawString(110 * mm, y, "Qty")
+                p.drawString(130 * mm, y, "Price")
+                p.drawString(160 * mm, y, "Total")
+                y -= 4 * mm
+                p.line(25 * mm, y, 185 * mm, y)
+
+            p.drawString(25 * mm, y, item.product.name[:40])
+            p.drawString(112 * mm, y, str(item.quantity))
+            p.drawRightString(150 * mm, y, f"RM {float(item.price):.2f}")
+            p.drawRightString(185 * mm, y, f"RM {line_total:.2f}")
+
+        # ─── Total ──────────────────────────────────────────
+        y -= 10 * mm
+        p.line(120 * mm, y, 185 * mm, y)
+        y -= 6 * mm
+        p.setFont("Helvetica-Bold", 11)
+        p.drawRightString(150 * mm, y, "Total:")
+        p.drawRightString(185 * mm, y, f"RM {float(order.total):.2f}")
+
+        # ─── Payment Info ───────────────────────────────────
+        y -= 12 * mm
+        p.setFont("Helvetica-Bold", 11)
+        p.drawString(25 * mm, y, "Payment")
+        p.setFont("Helvetica", 10)
+
+        if payment:
+            method = payment.method
+            status = payment.status
+            txid = payment.transaction_id or "-"
+        else:
+            method = "N/A"
+            status = "N/A"
+            txid = "-"
+
+        y -= 6 * mm
+        p.drawString(25 * mm, y, f"Method: {method}")
+        y -= 5 * mm
+        p.drawString(25 * mm, y, f"Status: {status}")
+
+        # Only show TX ID for successful non-COD payments
+        if is_paid and method != "COD":
+            y -= 5 * mm
+            p.drawString(25 * mm, y, f"Transaction ID: {txid}")
+
+        # ─── Footer ─────────────────────────────────────────
+        y -= 15 * mm
+        p.setFont("Helvetica-Oblique", 9)
+
+        if is_paid:
+            p.drawString(
+                25 * mm,
+                y,
+                "Thank you for your payment and for shopping with GERAIN CHAN.",
+            )
+        elif method == "COD":
+            p.drawString(
+                25 * mm,
+                y,
+                "Thank you for your order. For COD, please pay the amount due upon delivery.",
+            )
+        else:
+            p.drawString(
+                25 * mm,
+                y,
+                "Thank you for your order. Payment is pending.",
+            )
+
+        p.showPage()
+        p.save()
+        buffer.seek(0)
+
+        filename = f"order_{order.id}.pdf"
+        response = HttpResponse(buffer, content_type="application/pdf")
+        response["Content-Disposition"] = f'inline; filename="{filename}"'
+        return response
 
 # ─── Payments ──────────────────────────────
 class PaymentViewSet(viewsets.ModelViewSet):
-    queryset = Payment.objects.all()
+    queryset = Payment.objects.select_related("order", "order__user")
     serializer_class = PaymentSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return Payment.objects.none()
+        if user.is_staff or user.is_superuser:
+            return self.queryset
+        # Normal user: only see own payments
+        return self.queryset.filter(order__user=user)
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        order = serializer.validated_data["order"]
+
+        # Security: order must belong to current user
+        if order.user != user:
+            raise PermissionDenied("You cannot create a payment for this order.")
+
+        # One payment per order
+        if hasattr(order, "payment"):
+            raise serializers.ValidationError({"detail": "Payment already exists for this order."})
+
+        # Amount & status are server-controlled
+        serializer.save(
+            amount=order.total,
+            status="PENDING",
+        )
+
+    def update(self, request, *args, **kwargs):
+        # Only admins can directly edit payments
+        if not (request.user.is_staff or request.user.is_superuser):
+            raise PermissionDenied("Only admins can modify payments directly.")
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        # Only admins can delete (DFD 6.6)
+        if not (request.user.is_staff or request.user.is_superuser):
+            raise PermissionDenied("Only admins can delete payments.")
+        return super().destroy(request, *args, **kwargs)
 
 
 # ─── Quizzes ───────────────────────────────
@@ -275,27 +704,50 @@ class QuizSubmitView(APIView):
         quiz_id = request.data.get("quiz")
         answers = request.data.get("answers", [])
 
+        quiz = get_object_or_404(Quiz, id=quiz_id)
+
         selected_answers = QuizAnswer.objects.filter(id__in=answers)
-        category_counts = Counter([ans.category for ans in selected_answers])
+        if not selected_answers.exists():
+            return Response({"error": "No answers provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not category_counts:
-            return Response({"error": "No answers provided"}, status=400)
+        category_counts = Counter(
+            [a.category for a in selected_answers if a.category]
+        )
+        top_category = category_counts.most_common(1)[0][0] if category_counts else None
 
-        top_category = category_counts.most_common(1)[0][0]
-        products = Product.objects.filter(category=top_category)
+        products_qs = Product.objects.all()
 
-        quiz = Quiz.objects.get(id=quiz_id)
+        # 1) category filter from answers
+        if top_category:
+            products_qs = products_qs.filter(category=top_category)
+
+        # 2) audience filter from quiz -> product.target
+        if quiz.audience == "MEN":
+            products_qs = products_qs.filter(target__in=["MEN", "UNISEX"])
+        elif quiz.audience == "WOMEN":
+            products_qs = products_qs.filter(target__in=["WOMEN", "UNISEX"])
+        elif quiz.audience == "UNISEX":
+            products_qs = products_qs.filter(target="UNISEX")
+        # ANY = no restriction
+
+        # 3) whitelist (tight control)
+        allowed_ids = list(quiz.allowed_products.values_list("id", flat=True))
+        if allowed_ids:
+            products_qs = products_qs.filter(id__in=allowed_ids)
+
+        products_qs = products_qs.distinct()
+
+        # create result row
         result = QuizResult.objects.create(
             user=request.user,
             quiz=quiz,
-            recommended_category=top_category,
+            recommended_category=top_category or "",
         )
-        result.recommended_products.set(products)
+        result.recommended_products.set(products_qs)
 
-        return Response({
-            "category": top_category,
-            "products": ProductSerializer(products, many=True, context={"request": request}).data,
-        })
+        # 🔥 return full result including persona
+        serializer = QuizResultSerializer(result, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # ─── Admin User Management ───────────────────────────────
@@ -373,9 +825,9 @@ class AdminOrderViewSet(viewsets.ModelViewSet):
     
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        instance.file.delete(save=False)  # remove from storage
         instance.delete()
-        return Response({"detail": "Media deleted"}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"detail": "Order deleted"}, status=status.HTTP_204_NO_CONTENT)
+
 
 # ─── Admin Quiz Management ───────────────────────────────
 class AdminQuizViewSet(viewsets.ModelViewSet):
@@ -404,6 +856,46 @@ def AdminCategoryList(request):
     """
     cats = list(Product.objects.values_list("category", flat=True).distinct())
     return Response(sorted(cats))
+
+class ScentPersonaViewSet(viewsets.ModelViewSet):
+    """
+    Public:
+      - GET /scent-personas/
+      - GET /scent-personas/{id}/
+      - GET /scent-personas/?category=FRESH
+
+    Admin:
+      - POST /admin/scent-personas/
+      - PATCH/PUT /admin/scent-personas/{id}/
+      - DELETE /admin/scent-personas/{id}/
+    """
+    queryset = ScentPersona.objects.all().order_by("category", "persona_name")
+    serializer_class = ScentPersonaSerializer
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [permissions.AllowAny()]
+        return [permissions.IsAdminUser()]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        category = self.request.query_params.get("category")
+        if category:
+            qs = qs.filter(category__iexact=category)
+        return qs
+
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx["request"] = self.request
+        return ctx
+    
+    @action(detail=False, methods=["get"], url_path="by-category/(?P<category>[^/]+)")
+    def by_category(self, request, category=None):
+        persona = get_object_or_404(ScentPersona, category__iexact=category)
+        serializer = self.get_serializer(persona)
+        return Response(serializer.data)
+
 
 # ─── AR ───────────────────────────────
 class ARExperienceViewSet(viewsets.ModelViewSet):
@@ -551,3 +1043,93 @@ class RetailerViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class AdminPaymentViewSet(viewsets.ModelViewSet):
+    queryset = Payment.objects.select_related("order", "order__user")
+    serializer_class = PaymentSerializer
+    permission_classes = [IsAdminUser]
+
+    def update(self, request, *args, **kwargs):
+        """
+        Admin can edit payment fields like status/method/transaction_id.
+
+        We do NOT rely on PaymentSerializer writable config here because for
+        normal users these fields should stay server-controlled.
+
+        Also keeps the related order in a consistent state:
+
+        - SUCCESS (non-COD) + order TO_PAY -> order TO_SHIP
+        - FAILED -> ensure order is TO_PAY so user can retry
+        - CANCELLED -> no automatic order cancel (can be customized)
+        """
+        partial = kwargs.pop("partial", False)
+        payment = self.get_object()
+        data = request.data
+
+        allowed_statuses = ["PENDING", "SUCCESS", "FAILED", "CANCELLED"]
+
+        # Read incoming values (fallback to existing)
+        new_status = data.get("status", payment.status)
+        new_method = data.get("method", payment.method)
+        new_txid = data.get("transaction_id", payment.transaction_id)
+        new_amount = data.get("amount", payment.amount)
+
+        # Validate status
+        if new_status not in allowed_statuses:
+            return Response(
+                {"error": "Invalid status"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Optionally, validate method if provided
+        if new_method and new_method not in ["COD", "CARD", "FPX", "E_WALLET"]:
+            return Response(
+                {"error": "Invalid method"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # --- Apply changes to Payment ---
+        payment.status = new_status
+        payment.method = new_method
+        payment.transaction_id = new_txid
+        payment.amount = new_amount
+        payment.save()
+
+        # --- Sync related Order (non-final only) ---
+        order = payment.order
+        if order and order.status not in ["COMPLETED", "CANCELLED"]:
+            if new_status == "SUCCESS":
+                # For non-COD successful payments: if order was waiting to be paid, move it forward
+                if payment.method != "COD" and order.status == "TO_PAY":
+                    order.status = "TO_SHIP"
+                    order.save()
+
+            elif new_status == "FAILED":
+                # Ensure order is payable again so user can retry
+                if order.status not in ["TO_PAY", "CANCELLED"]:
+                    order.status = "TO_PAY"
+                    order.save()
+
+            elif new_status == "CANCELLED":
+                # Intentionally do nothing to order by default.
+                # You can uncomment this if your business rule wants it.
+                # if order.status == "TO_PAY":
+                #     order.status = "CANCELLED"
+                #     order.save()
+                pass
+
+            # PENDING: no auto-change to order
+
+        # Return updated payment
+        serializer = self.get_serializer(payment)
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Allow admin to delete a payment record.
+        Does NOT touch the order.
+        """
+        instance = self.get_object()
+        instance.delete()
+        return Response({"detail": "Payment deleted"}, status=status.HTTP_204_NO_CONTENT)
+
