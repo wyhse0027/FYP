@@ -7,7 +7,8 @@ from pathlib import Path
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
-
+from backend.ssl_patch import patch_ssl_for_windows_truststore
+patch_ssl_for_windows_truststore()
 
 # ─── Base Directory ───────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -160,12 +161,6 @@ CORS_ALLOW_ALL_ORIGINS = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-# ─── Email Settings ───────────────────────────────────────────────
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-DEFAULT_FROM_EMAIL = "noreply@example.com"
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
-
-
 # ─── Django-Allauth / dj-rest-auth Config ─────────────────────────
 SITE_ID = 1
 REST_USE_JWT = True
@@ -186,3 +181,11 @@ SOCIALACCOUNT_PROVIDERS = {
         "AUTH_PARAMS": {"access_type": "online"},
     }
 }
+
+# ─── Email Settings ───────────────────────────────────────────────
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.console.EmailBackend"
+)
+
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")

@@ -160,3 +160,4 @@ desktop.ini
 # Environment file and examples
 backend/.env
 .env
+sendgrid_test.py
