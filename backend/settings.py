@@ -32,6 +32,16 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only")
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()] if not DEBUG else []
 
+# ─── Koyeb / Reverse proxy HTTPS fix (CSRF admin login) ───────────
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    USE_X_FORWARDED_HOST = True
+
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+
+    # Optional but recommended:
+    SECURE_SSL_REDIRECT = True
 
 # ─── Installed Apps ────────────────────────────────────────────────
 INSTALLED_APPS = [
