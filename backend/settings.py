@@ -17,14 +17,20 @@ if sys.platform.startswith("win"):
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ─── Load Environment Variables ───────────────────────────────────
+# Load OS env first (Koyeb sets env vars here)
 load_dotenv()
-load_dotenv(BASE_DIR / "backend" / ".env")
+
+# Define DEBUG from env
+DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
+
+# Only load local file .env for local development (not GitHub / not Koyeb)
+if DEBUG:
+    load_dotenv(BASE_DIR / "backend" / ".env")
 
 # ─── Security ─────────────────────────────────────────────────────
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only")
-DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
-CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if not DEBUG else []
+ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()] if not DEBUG else []
 
 
 # ─── Installed Apps ────────────────────────────────────────────────
