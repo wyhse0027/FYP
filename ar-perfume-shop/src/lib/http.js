@@ -1,21 +1,21 @@
 // src/lib/http.js
 import axios from "axios";
 
-// Base backend URL from Vite env (dev/prod controlled by env values)
-const ROOT = import.meta.env.VITE_API_BASE_URL;
+// ✅ CRA reads env from process.env.REACT_APP_*
+const ROOT = process.env.REACT_APP_API_BASE_URL;
 
 if (!ROOT) {
-  // Fail fast so you don't silently call "undefined/..."
-  // You will see this immediately in console.
-  throw new Error("Missing VITE_API_BASE_URL. Set it in .env.development and Vercel env vars.");
+  throw new Error(
+    "Missing REACT_APP_API_BASE_URL. Set it in .env.development and Vercel env vars."
+  );
 }
 
-// Normalize: ensure exactly ONE trailing slash at end
+// Normalize trailing slash
 const BASE_URL = ROOT.replace(/\/+$/, "") + "/";
 
 const http = axios.create({
   baseURL: BASE_URL,
-  withCredentials: false, // JWT in Authorization header (not cookies)
+  withCredentials: false, // JWT via Authorization header
 });
 
 // Token helpers
@@ -27,7 +27,7 @@ function logout() {
   window.location.href = "/login";
 }
 
-// Attach access token to all requests
+// Attach access token
 http.interceptors.request.use(
   (config) => {
     const token = getAccess();
@@ -37,7 +37,7 @@ http.interceptors.request.use(
   (err) => Promise.reject(err)
 );
 
-// Refresh token on 401 once
+// Refresh token on 401 (once)
 http.interceptors.response.use(
   (res) => res,
   async (err) => {
@@ -53,7 +53,10 @@ http.interceptors.response.use(
       }
 
       try {
-        const { data } = await axios.post(`${BASE_URL}token/refresh/`, { refresh });
+        const { data } = await axios.post(
+          `${BASE_URL}token/refresh/`,
+          { refresh }
+        );
 
         if (!data?.access) {
           logout();
@@ -61,9 +64,6 @@ http.interceptors.response.use(
         }
 
         localStorage.setItem("access", data.access);
-
-        // Retry original request with new token
-        original.headers = original.headers || {};
         original.headers.Authorization = `Bearer ${data.access}`;
         return http(original);
       } catch (refreshErr) {
