@@ -408,37 +408,17 @@ class ReviewMedia(models.Model):
         return f"{self.review.product.name} - {self.type}"
 
 
-# ✅ Cleanup signal to safely delete file from storage
+# ✅ Cleanup signal (works for Cloudinary + local)
 @receiver(post_delete, sender=ReviewMedia)
 def delete_review_media_file(sender, instance, **kwargs):
     """
-    Safely remove file from storage when ReviewMedia row is deleted.
-    On Windows, this avoids PermissionError by renaming before deletion.
+    Remove file from whatever storage backend is used (Cloudinary or local).
     """
-    import os, uuid
-
-    if instance.file and instance.file.name:
-        file_path = instance.file.path
-        if os.path.exists(file_path):
-            try:
-                # Close file handle if open
-                try:
-                    instance.file.close()
-                except Exception:
-                    pass
-
-                # Rename first to break Windows file lock
-                tmp_path = f"{file_path}.deleted_{uuid.uuid4().hex}"
-                os.rename(file_path, tmp_path)
-
-                # Try deleting renamed file
-                os.remove(tmp_path)
-
-            except PermissionError:
-                # If still locked, leave renamed file for later cleanup
-                print(f"[WARN] File locked, left as: {tmp_path}")
-            except Exception as e:
-                print(f"[ERROR] Unexpected error while deleting media file: {e}")
+    if instance.file:
+        try:
+            instance.file.delete(save=False)
+        except Exception as e:
+            print(f"[WARN] Could not delete media from storage: {e}")
                 
 class SiteAbout(models.Model):
     """Editable 'About Us' section for the website."""
