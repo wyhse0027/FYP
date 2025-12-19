@@ -1,7 +1,6 @@
 // src/context/AuthContext.js
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import http from "../lib/http";
-import axios from "axios";
 
 const AuthContext = createContext(null);
 
@@ -145,17 +144,16 @@ export function AuthProvider({ children }) {
   };
 
   // ---- Google Login ----
-  const loginWithGoogle = async (googleAccessToken) => {
+  const loginWithGoogle = async (idToken) => {
     try {
-      const res = await axios.post("http://127.0.0.1:8000/api/auth/google/", {
-        access_token: googleAccessToken,
+      const res = await http.post("auth/google/", {
+        id_token: idToken,
       });
 
       const { access, refresh, user } = res.data;
       persistAuth({ access, refresh, user });
 
       if (!user) await fetchProfile();
-
       return user || JSON.parse(localStorage.getItem(LS.USER) || "null");
     } catch (err) {
       console.error("Google login error:", err.response?.data || err);

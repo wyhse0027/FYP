@@ -41,15 +41,13 @@ export default function LoginPage() {
       setErr("");
       setBusy(true);
 
-      const accessToken =
-        credentialResponse.access_token || credentialResponse.credential;
-
-      if (!accessToken) {
+      const idToken = credentialResponse.credential;
+      if (!idToken) {
         setErr("Google token missing.");
         return;
       }
 
-      await loginWithGoogle(accessToken);
+      await loginWithGoogle(idToken);
       await mergeCartToBackend();
       navigate("/", { replace: true });
     } catch {
@@ -58,6 +56,7 @@ export default function LoginPage() {
       setBusy(false);
     }
   };
+
 
   return (
     <div className="min-h-screen w-full bg-[#0c1a3a] relative overflow-hidden">

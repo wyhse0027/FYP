@@ -3,11 +3,13 @@ cachetools==6.2.1
 certifi==2025.11.12
 cffi==2.0.0
 charset-normalizer==3.4.4
+cloudinary==1.44.1
 cryptography==46.0.3
 dj-database-url==3.0.1
 dj-rest-auth==7.0.1
 Django==5.2.6
 django-allauth==65.12.1
+django-cloudinary-storage==0.3.0
 django-cors-headers==4.9.0
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
@@ -30,6 +32,7 @@ reportlab==4.4.4
 requests==2.32.5
 rsa==4.9.1
 sendgrid==6.12.5
+six==1.17.0
 sqlparse==0.5.3
 truststore==0.10.4
 tzdata==2025.2
