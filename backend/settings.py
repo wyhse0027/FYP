@@ -10,54 +10,56 @@ from datetime import timedelta
 
 import dj_database_url
 from dotenv import load_dotenv
+import cloudinary
 
+# ───────────────────────────────────────────────────────────────
 # Windows SSL patch (local dev only)
+# ───────────────────────────────────────────────────────────────
 if sys.platform.startswith("win"):
     from backend.ssl_patch import patch_ssl_for_windows_truststore
     patch_ssl_for_windows_truststore()
 
-# ─── Base Directory ───────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# Base Directory
+# ───────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ─── Load Environment Variables ───────────────────────────────────
-# Load OS env first (Koyeb sets env vars here)
-load_dotenv()
+# ───────────────────────────────────────────────────────────────
+# Load Environment Variables
+# ───────────────────────────────────────────────────────────────
+load_dotenv()  # OS env first (Koyeb)
 
-# Define DEBUG from env
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
-# Only load local file .env for local development (not GitHub / not Koyeb)
+# Load local .env ONLY in debug
 if DEBUG:
     load_dotenv(BASE_DIR / "backend" / ".env")
 
-# ─── Helpers: parse comma-separated env lists ─────────────────────
 def env_list(name: str, default: str = ""):
     raw = os.getenv(name, default) or ""
     return [x.strip() for x in raw.split(",") if x.strip()]
 
-# ─── Security ─────────────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# Security
+# ───────────────────────────────────────────────────────────────
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only")
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 
-# In production, CSRF_TRUSTED_ORIGINS should include full origins with scheme:
-# e.g. "https://gerainchan.vercel.app,https://your-backend.koyeb.app"
 CSRF_TRUSTED_ORIGINS = [] if DEBUG else env_list("CSRF_TRUSTED_ORIGINS", "")
 
-# ─── Koyeb / Reverse proxy HTTPS fix (CSRF admin login) ───────────
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     USE_X_FORWARDED_HOST = True
-
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
-
-    # Optional but recommended:
     SECURE_SSL_REDIRECT = True
 
-# ─── Installed Apps ────────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# Installed Apps
+# ───────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
-    # Default Django apps
+    # Django
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -65,7 +67,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    # Third-party apps
+    # Third-party
     "rest_framework",
     "corsheaders",
     "dj_rest_auth",
@@ -76,29 +78,35 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "rest_framework.authtoken",
 
-    # Local apps
+    # Cloudinary
+    "cloudinary",
+    "cloudinary_storage",
+
+    # Local
     "shop",
 ]
 
-# ─── Middleware ───────────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# Middleware
+# ───────────────────────────────────────────────────────────────
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",  # must come first
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-
-    # allauth
     "allauth.account.middleware.AccountMiddleware",
-
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# ─── URL & WSGI ───────────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# URLs / WSGI
+# ───────────────────────────────────────────────────────────────
 ROOT_URLCONF = "backend.urls"
+WSGI_APPLICATION = "backend.wsgi.application"
 
 TEMPLATES = [
     {
@@ -107,7 +115,7 @@ TEMPLATES = [
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
-                "django.template.context_processors.request",  # required by allauth
+                "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ],
@@ -115,9 +123,9 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "backend.wsgi.application"
-
-# ─── Database ─────────────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# Database
+# ───────────────────────────────────────────────────────────────
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
@@ -136,7 +144,11 @@ else:
         }
     }
 
-# ─── Authentication ───────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# Authentication
+# ───────────────────────────────────────────────────────────────
+AUTH_USER_MODEL = "shop.User"
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -144,25 +156,40 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-AUTH_USER_MODEL = "shop.User"
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+)
 
-# ─── Internationalization ─────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# Internationalization
+# ───────────────────────────────────────────────────────────────
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Kuala_Lumpur"
 USE_I18N = True
 USE_TZ = False
 
-# ─── Static & Media Files ─────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# Static & Media (Cloudinary)
+# ───────────────────────────────────────────────────────────────
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", ""),
+    api_key=os.getenv("CLOUDINARY_API_KEY", ""),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET", ""),
+    secure=True,
+)
+
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
 
-# ─── REST Framework Configuration ─────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# Django REST Framework
+# ───────────────────────────────────────────────────────────────
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -173,7 +200,9 @@ REST_FRAMEWORK = {
     ),
 }
 
-# ─── JWT Configuration ────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# JWT
+# ───────────────────────────────────────────────────────────────
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
@@ -182,34 +211,26 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": True,
 }
 
-# ─── Authentication Backends ───────────────────────────────────────
-AUTHENTICATION_BACKENDS = (
-    "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
-)
-
-# ─── CORS Settings ────────────────────────────────────────────────
-# Dev: allow all
+# ───────────────────────────────────────────────────────────────
+# CORS
+# ───────────────────────────────────────────────────────────────
 CORS_ALLOW_ALL_ORIGINS = DEBUG
-
-# Prod: must be explicit list of origins
-# Set env: CORS_ALLOWED_ORIGINS="https://gerainchan.vercel.app,https://another.vercel.app"
 CORS_ALLOWED_ORIGINS = [] if DEBUG else env_list("CORS_ALLOWED_ORIGINS", "")
 
-# ─── Default PK Type ──────────────────────────────────────────────
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# ─── Django-Allauth / dj-rest-auth Config ─────────────────────────
+# ───────────────────────────────────────────────────────────────
+# Allauth / dj-rest-auth
+# ───────────────────────────────────────────────────────────────
 SITE_ID = 1
 REST_USE_JWT = True
 
-# Keep your current settings (warnings only; not fatal)
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = "username_email"
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
-# ─── Google OAuth Setup ───────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# Google OAuth
+# ───────────────────────────────────────────────────────────────
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "APP": {
@@ -222,11 +243,14 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-# ─── Email Settings ───────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────
+# Email
+# ───────────────────────────────────────────────────────────────
 EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND",
     "django.core.mail.backends.console.EmailBackend"
 )
 
-# Optional: frontend url for links/redirects (not for CORS list)
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
