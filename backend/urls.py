@@ -4,6 +4,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+# ✅ add these imports
+from shop.password_reset_sendgrid import (
+    PasswordResetRequestSendGrid,
+    PasswordResetConfirmSendGrid,
+)
+
 urlpatterns = [
     path("admin/", admin.site.urls),
 
@@ -17,6 +23,10 @@ urlpatterns = [
     # ─── User Auth (Email + Social) ─────────────
     path("api/auth/", include("dj_rest_auth.urls")),
     path("api/auth/registration/", include("dj_rest_auth.registration.urls")),
+
+    # ✅ SendGrid password reset (custom)
+    path("api/auth/password-reset/", PasswordResetRequestSendGrid.as_view()),
+    path("api/auth/password-reset-confirm/", PasswordResetConfirmSendGrid.as_view()),
 
     # Allauth for social logins (Google, etc.)
     path("accounts/", include("allauth.urls")),

@@ -178,28 +178,33 @@ export function AuthProvider({ children }) {
     clearAuth();
   };
 
-  // ---- Password Reset ----
+  // ---- Password Reset (SendGrid custom endpoints) ----
   const sendPasswordReset = async (email) => {
     try {
-      await http.post("password-reset/", { email });
+      // ✅ NEW endpoint
+      await http.post("auth/password-reset/", { email });
       return true;
-    } catch {
+    } catch (err) {
+      console.error(err?.response?.data || err);
       throw new Error("Failed to send reset email");
     }
   };
 
   const confirmPasswordReset = async ({ uid, token, newPassword }) => {
     try {
-      await http.post("password-reset/confirm/", {
+      // ✅ NEW endpoint
+      await http.post("auth/password-reset-confirm/", {
         uid,
         token,
         new_password: newPassword,
       });
       return true;
-    } catch {
+    } catch (err) {
+      console.error(err?.response?.data || err);
       throw new Error("Failed to reset password");
     }
   };
+
 
   const value = useMemo(
     () => ({
