@@ -21,6 +21,7 @@ const ShopPage = () => {
   const [selectedGenders, setSelectedGenders] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const { itemCount } = useCart();
 
   useEffect(() => {
@@ -48,8 +49,8 @@ const ShopPage = () => {
   }, [products]);
 
   const genderFilters = [
-    { label: "For Men", value: "MEN" },
-    { label: "For Women", value: "WOMEN" },
+    { label: "Men", value: "MEN" },
+    { label: "Women", value: "WOMEN" },
     { label: "Unisex", value: "UNISEX" },
   ];
 
@@ -91,8 +92,7 @@ const ShopPage = () => {
     });
   }, [products, selectedCategories, selectedGenders]);
 
-  // ✅ Ratings (use rating_avg / rating_count like ProductPage)
-  // Supports a few possible field names just in case your backend differs.
+  // Ratings (support a few possible backend field names)
   const getRatingAvg = (p) => {
     const v =
       p?.rating_avg ??
@@ -121,21 +121,20 @@ const ShopPage = () => {
       .map((_, i) => (
         <span
           key={i}
-          className={i < rounded ? "text-yellow-400" : "text-white/25"}
+          className={i < rounded ? "text-luxury-gold" : "text-white/25"}
         >
           ★
         </span>
       ));
   };
 
-  // Feature cards (no need for repeated top icons)
+  // Feature links: keep in Shop page, but move to bottom
   const featureLinks = [
     {
       to: "/cart",
       icon: IoBagHandleOutline,
       label: "Cart",
       count: itemCount,
-      gradient: "from-white/10 to-white/5",
       accent: "border-sky-500/30 hover:border-sky-300/60",
       iconBg: "bg-sky-400/10",
       iconBorder: "border-sky-400/25",
@@ -144,7 +143,6 @@ const ShopPage = () => {
       to: "/compare",
       icon: IoSwapHorizontalOutline,
       label: "Compare",
-      gradient: "from-white/10 to-white/5",
       accent: "border-sky-500/30 hover:border-sky-300/60",
       iconBg: "bg-sky-400/10",
       iconBorder: "border-sky-400/25",
@@ -153,7 +151,6 @@ const ShopPage = () => {
       to: "/quiz",
       icon: IoSparklesOutline,
       label: "Find Your Scent",
-      gradient: "from-white/10 to-white/5",
       accent: "border-pink-500/30 hover:border-pink-300/60",
       iconBg: "bg-pink-400/10",
       iconBorder: "border-pink-400/25",
@@ -180,82 +177,62 @@ const ShopPage = () => {
         <div className="absolute bottom-0 left-0 w-[520px] h-[520px] bg-pink-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
       </div>
 
-      <div className="relative z-10 w-full px-6 md:px-12 lg:px-16">
+      <div className="relative z-10 w-full px-4 sm:px-6 md:px-12 lg:px-16">
         <div className="mx-auto w-full max-w-screen-2xl py-6 text-[18px] md:text-[19px] lg:text-[20px]">
-          <PageHeader title="SHOP" right={null} />
-
-          {/* Feature cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-            {featureLinks.map((link, idx) => (
-              <motion.div
-                key={link.to}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.08 }}
+          {/* Top bar: cart icon on the right (mobile + desktop) */}
+          <PageHeader
+            title="SHOP"
+            right={
+              <Link
+                to="/cart"
+                className="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition"
+                aria-label="Cart"
               >
-                <Link
-                  to={link.to}
-                  className={`block rounded-2xl border bg-gradient-to-br ${link.gradient} ${link.accent}
-                    transition-all duration-300 overflow-hidden`}
-                >
-                  <div className="p-5 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-11 h-11 rounded-xl flex items-center justify-center
-                          ${link.iconBg} border ${link.iconBorder}`}
-                      >
-                        <link.icon className="text-[22px] text-white/90" />
-                      </div>
+                <IoBagHandleOutline className="text-white/90 text-[22px]" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-luxury-gold text-[#0c1a3a] text-[11px] font-extrabold grid place-items-center shadow">
+                    {itemCount}
+                  </span>
+                )}
+              </Link>
+            }
+          />
 
-                      <div className="leading-none">
-                        <p className="text-white/90 font-semibold tracking-wide">
-                          {link.label}
-                        </p>
-                        {link.count !== undefined && link.count > 0 && (
-                          <p className="text-sky-200 text-sm font-bold mt-1">
-                            {link.count} items
-                          </p>
-                        )}
-                      </div>
-                    </div>
+          {/* ✅ Products first (no feature cards at the top) */}
+          <div className="flex items-center justify-between mb-3 mt-4">
+            <p className="text-white/60 text-sm">
+              Showing{" "}
+              <span className="text-sky-200 font-semibold">{filteredProducts.length}</span>{" "}
+              fragrances
+            </p>
 
-                    <div className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                      <IoChevronForward className="text-white/70 text-xl" />
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+            {hasAnyFilter && (
+              <button
+                onClick={clearAll}
+                className="flex items-center gap-1 text-sm text-white/80 hover:text-white transition"
+              >
+                <IoCloseOutline />
+                Clear
+              </button>
+            )}
           </div>
 
-          {/* Filters */}
+          {/* ✅ Filters (mobile: wrap, smaller; desktop: can still scroll) */}
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4"
+            className="mb-5"
           >
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-3">
               <IoFilterOutline className="text-sky-200 text-xl" />
-              <h2 className="text-white font-semibold tracking-wide drop-shadow-[0_1px_6px_rgba(0,0,0,0.35)]">
-                Filters
-              </h2>
-
-              {hasAnyFilter && (
-                <button
-                  onClick={clearAll}
-                  className="ml-auto flex items-center gap-1 text-sm text-white/80 hover:text-white transition"
-                >
-                  <IoCloseOutline />
-                  Clear all
-                </button>
-              )}
+              <h2 className="text-white font-semibold tracking-wide">Filters</h2>
             </div>
 
-            {/* Pills */}
-            <div className="flex items-center gap-4 overflow-x-auto whitespace-nowrap pb-4 scrollbar-thin scrollbar-thumb-slate-600/70 text-[16px] sm:text-[17px] font-semibold">
+            {/* MOBILE: flex-wrap chips. MD+: horizontal scroll is OK */}
+            <div className="flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-4 md:overflow-x-auto md:whitespace-nowrap pb-2 md:pb-4 md:scrollbar-thin md:scrollbar-thumb-slate-600/70 text-[14px] sm:text-[15px] font-semibold">
               <button
                 onClick={clearAll}
-                className={`px-7 py-3 rounded-full border-2 transition-all duration-200 shadow-sm
+                className={`px-4 py-2 md:px-7 md:py-3 rounded-full border-2 transition-all duration-200 shadow-sm
                   ${
                     !hasAnyFilter
                       ? "bg-white text-blue-900 border-white shadow-white/40"
@@ -271,7 +248,7 @@ const ShopPage = () => {
                   <button
                     key={`cat-${cat}`}
                     onClick={() => toggleCategory(cat)}
-                    className={`px-7 py-3 rounded-full border-2 transition-all duration-200 shadow-sm
+                    className={`px-4 py-2 md:px-7 md:py-3 rounded-full border-2 transition-all duration-200 shadow-sm
                       ${
                         active
                           ? "bg-sky-400 text-blue-900 border-sky-300 shadow-sky-400/40"
@@ -289,7 +266,7 @@ const ShopPage = () => {
                   <button
                     key={`gender-${g.value}`}
                     onClick={() => toggleGender(g.value)}
-                    className={`px-7 py-3 rounded-full border-2 transition-all duration-200 shadow-sm
+                    className={`px-4 py-2 md:px-7 md:py-3 rounded-full border-2 transition-all duration-200 shadow-sm
                       ${
                         active
                           ? "bg-pink-400 text-blue-900 border-pink-300 shadow-pink-400/40"
@@ -305,7 +282,7 @@ const ShopPage = () => {
                 <div className="relative inline-block">
                   <details className="group">
                     <summary
-                      className={`list-none px-7 py-3 rounded-full border-2 cursor-pointer select-none transition-all duration-200 shadow-sm
+                      className={`list-none px-4 py-2 md:px-7 md:py-3 rounded-full border-2 cursor-pointer select-none transition-all duration-200 shadow-sm
                         ${
                           overflowHasActive
                             ? "bg-sky-400 text-blue-900 border-sky-300 shadow-sky-400/40"
@@ -340,33 +317,16 @@ const ShopPage = () => {
             </div>
           </motion.div>
 
-          {/* Results count */}
-          <div className="flex items-center justify-between mb-6">
-            <p className="text-white/60 text-sm">
-              Showing{" "}
-              <span className="text-sky-200 font-semibold">
-                {filteredProducts.length}
-              </span>{" "}
-              fragrances
-            </p>
-          </div>
-
-          {/* Products */}
+          {/* ✅ Products grid */}
           <AnimatePresence mode="popLayout">
             {filteredProducts.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-20"
-              >
-                <p className="text-white/60 text-lg">
-                  No products found for this filter.
-                </p>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
+                <p className="text-white/60 text-lg">No products found for this filter.</p>
               </motion.div>
             ) : (
               <motion.div
                 layout
-                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 auto-rows-fr"
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5 md:gap-6 auto-rows-fr"
               >
                 {filteredProducts.map((product, idx) => {
                   const avg = getRatingAvg(product);
@@ -383,8 +343,8 @@ const ShopPage = () => {
                     >
                       <Link to={`/product/${product.id}`} className="block h-full group">
                         <div className="relative h-full rounded-2xl border border-white/10 overflow-hidden bg-gradient-to-br from-white/10 to-white/5 hover:border-sky-300/40 transition-all duration-500">
-                          {/* Image */}
-                          <div className="aspect-[4/5] p-4 flex items-center justify-center bg-gradient-to-b from-transparent to-black/20">
+                          {/* Image (bigger on mobile: less padding + better aspect) */}
+                          <div className="aspect-[4/5] p-2 sm:p-3 md:p-4 flex items-center justify-center bg-gradient-to-b from-transparent to-black/20">
                             <motion.img
                               src={
                                 product.card_image ||
@@ -393,53 +353,55 @@ const ShopPage = () => {
                                 "/placeholder.png"
                               }
                               alt={product.name}
-                              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
+                              className="w-full h-full object-contain group-hover:scale-[1.06] transition-transform duration-700"
+                              loading="lazy"
                             />
                           </div>
 
-                          {/* Hover overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#0c1a3a]/95 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
                           {/* Info */}
-                          <div className="relative p-4 bg-gradient-to-t from-black/40 to-transparent flex flex-col gap-2">
+                          <div className="relative p-3 sm:p-4 bg-gradient-to-t from-black/45 to-transparent flex flex-col gap-2 min-w-0">
+                            {/* Category (gold, readable) */}
                             {product.category && (
-                              <span className="inline-block px-2 py-0.5 text-[10px] uppercase tracking-wider text-sky-200 bg-sky-400/10 rounded-full border border-sky-400/20 w-fit">
+                              <span className="inline-block px-2.5 py-1 text-[10px] uppercase tracking-wider text-luxury-gold bg-luxury-panel/60 rounded-full border border-luxury-gold/25 w-fit">
                                 {String(product.category).trim()}
                               </span>
                             )}
 
-                            <h3 className="text-white font-bold text-base leading-snug line-clamp-2 group-hover:text-sky-200 transition-colors">
+                            <h3 className="text-white font-bold text-[13px] sm:text-[14px] md:text-base leading-snug line-clamp-2 group-hover:text-sky-200 transition-colors">
                               {product.name}
                             </h3>
 
+                            {/* Target */}
                             {product.target && (
-                              <div>
-                                <span className="inline-block px-3 py-1 rounded-full text-[9px] bg-blue-900/70 text-sky-300 uppercase tracking-wide">
-                                  {String(product.target).toUpperCase() === "MEN"
-                                    ? "For Men"
-                                    : String(product.target).toUpperCase() === "WOMEN"
-                                    ? "For Women"
-                                    : "Unisex"}
-                                </span>
-                              </div>
+                              <span className="inline-block px-3 py-1 rounded-full text-[9px] bg-blue-900/70 text-sky-300 uppercase tracking-wide w-fit">
+                                {String(product.target).toUpperCase() === "MEN"
+                                  ? "For Men"
+                                  : String(product.target).toUpperCase() === "WOMEN"
+                                  ? "For Women"
+                                  : "Unisex"}
+                              </span>
                             )}
 
-                            {/* ✅ Rating row */}
-                            <div className="flex items-center gap-2">
-                              <div className="flex text-lg">{renderStars(avg)}</div>
-                              <span className="text-white/60 text-xs">
+                            {/* Rating (no clipping: smaller + wrap-safe) */}
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="flex text-base leading-none flex-none">
+                                {renderStars(avg)}
+                              </div>
+
+                              <span className="text-white/60 text-[12px] leading-none whitespace-nowrap">
                                 {avg > 0 ? avg.toFixed(1) : "0.0"}
                                 {count != null ? ` (${count})` : ""}
                               </span>
                             </div>
 
-                            <div className="flex items-center justify-between mt-1">
-                              <p className="text-white font-extrabold text-xl">
+                            {/* Price row (more breathing room) */}
+                            <div className="flex items-center justify-between gap-3 mt-1">
+                              <p className="text-white font-extrabold text-lg sm:text-xl leading-none">
                                 RM {product.price}
                               </p>
 
-                              <div className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:border-white transition-all duration-300">
-                                <IoChevronForward className="text-white group-hover:text-blue-900 text-2xl transition-colors" />
+                              <div className="flex-none w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:border-white transition-all duration-300">
+                                <IoChevronForward className="text-white group-hover:text-blue-900 text-xl transition-colors" />
                               </div>
                             </div>
                           </div>
@@ -451,6 +413,76 @@ const ShopPage = () => {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* ✅ Features moved to bottom (still in Shop page) */}
+          <div className="mt-10 pb-10">
+            <h3 className="text-white/80 font-semibold tracking-wide mb-3">Quick tools</h3>
+
+            {/* Mobile: icons only */}
+            <div className="grid grid-cols-3 gap-3 md:hidden">
+              {featureLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`relative rounded-2xl border bg-white/5 ${link.accent} transition-all duration-300 overflow-hidden`}
+                  aria-label={link.label}
+                >
+                  <div className="p-4 flex items-center justify-center">
+                    <div
+                      className={`w-12 h-12 rounded-2xl flex items-center justify-center ${link.iconBg} border ${link.iconBorder}`}
+                    >
+                      <link.icon className="text-[24px] text-white/90" />
+                    </div>
+                  </div>
+
+                  {link.count !== undefined && link.count > 0 && (
+                    <span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-luxury-gold text-[#0c1a3a] text-[11px] font-extrabold grid place-items-center shadow">
+                      {link.count}
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </div>
+
+            {/* Desktop: nicer labeled cards */}
+            <div className="hidden md:grid grid-cols-3 gap-4">
+              {featureLinks.map((link, idx) => (
+                <motion.div
+                  key={link.to}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.06 }}
+                >
+                  <Link
+                    to={link.to}
+                    className={`block rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 ${link.accent}
+                      transition-all duration-300 overflow-hidden`}
+                  >
+                    <div className="p-5 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-11 h-11 rounded-xl flex items-center justify-center ${link.iconBg} border ${link.iconBorder}`}
+                        >
+                          <link.icon className="text-[22px] text-white/90" />
+                        </div>
+
+                        <div className="leading-none">
+                          <p className="text-white/90 font-semibold tracking-wide">{link.label}</p>
+                          {link.count !== undefined && link.count > 0 && (
+                            <p className="text-sky-200 text-sm font-bold mt-1">{link.count} items</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                        <IoChevronForward className="text-white/70 text-xl" />
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

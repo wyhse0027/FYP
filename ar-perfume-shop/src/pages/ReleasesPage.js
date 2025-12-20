@@ -46,7 +46,7 @@ export default function ReleasesPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#0c1a3a] text-white flex flex-col items-center">
-      {/* Top Header (fixed overlap: 3-column layout) */}
+      {/* Top Header (no overlap + allow 2 lines, no "...") */}
       <div className="w-full border-b border-white/10 bg-[#0c1a3a]">
         <div className="mx-auto w-full max-w-[1600px] px-4 md:px-10 py-4 md:py-6">
           <div className="grid grid-cols-[44px_1fr_44px] items-center">
@@ -58,8 +58,11 @@ export default function ReleasesPage() {
               <span className="text-2xl leading-none">‹</span>
             </Link>
 
-            <h1 className="text-center text-lg sm:text-xl md:text-3xl font-extrabold uppercase tracking-wide text-white truncate px-2">
-              GERAIN CHAN RELEASES
+            {/* Allow wrapping up to 2 lines, centered */}
+            <h1 className="text-center text-lg sm:text-xl md:text-3xl font-extrabold uppercase tracking-wide text-white px-2 leading-snug">
+              <span className="block line-clamp-2 break-words">
+                GERAIN CHAN RELEASES
+              </span>
             </h1>
 
             {/* spacer keeps title perfectly centered */}
