@@ -544,8 +544,15 @@ export default function MainPage() {
 
                           {/* Optional: show category only if you want extra info (kept subtle) */}
                           {product.category ? (
-                            <p className="text-white/55 text-[10px] sm:text-[11px] md:text-xs tracking-[0.18em] uppercase line-clamp-1">
-                              {product.category}
+                            <p
+                              className="
+                                text-luxury-gold/95
+                                text-[10px] sm:text-[11px] md:text-xs
+                                tracking-[0.18em] uppercase line-clamp-1
+                                drop-shadow-[0_1px_6px_rgba(212,175,55,0.35)]
+                              "
+                            >
+                              {String(product.category).trim()}
                             </p>
                           ) : null}
                         </div>
