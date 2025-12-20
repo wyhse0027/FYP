@@ -92,7 +92,7 @@ const ShopPage = () => {
     });
   }, [products, selectedCategories, selectedGenders]);
 
-  // Ratings (support a few possible backend field names)
+  // Ratings
   const getRatingAvg = (p) => {
     const v =
       p?.rating_avg ??
@@ -103,42 +103,19 @@ const ShopPage = () => {
     return Number(v) || 0;
   };
 
-  const getRatingCount = (p) => {
-    const v =
-      p?.rating_count ??
-      p?.reviews_count ??
-      p?.review_count ??
-      p?.ratingCount ??
-      null;
-    const n = Number(v);
-    return Number.isFinite(n) ? n : null;
-  };
-
   const renderStars = (avg = 0) => {
     const rounded = Math.round(Number(avg) || 0);
     return Array(5)
       .fill(0)
       .map((_, i) => (
-        <span
-          key={i}
-          className={i < rounded ? "text-luxury-gold" : "text-white/25"}
-        >
+        <span key={i} className={i < rounded ? "text-luxury-gold" : "text-white/25"}>
           ★
         </span>
       ));
   };
 
-  // Feature links: keep in Shop page, but move to bottom
-  const featureLinks = [
-    {
-      to: "/cart",
-      icon: IoBagHandleOutline,
-      label: "Cart",
-      count: itemCount,
-      accent: "border-sky-500/30 hover:border-sky-300/60",
-      iconBg: "bg-sky-400/10",
-      iconBorder: "border-sky-400/25",
-    },
+  // Quick tools (remove Cart; keep Compare + Quiz)
+  const quickTools = [
     {
       to: "/compare",
       icon: IoSwapHorizontalOutline,
@@ -179,18 +156,31 @@ const ShopPage = () => {
 
       <div className="relative z-10 w-full px-4 sm:px-6 md:px-12 lg:px-16">
         <div className="mx-auto w-full max-w-screen-2xl py-6 text-[18px] md:text-[19px] lg:text-[20px]">
-          {/* Top bar: cart icon on the right (mobile + desktop) */}
+          {/* Top bar: cart icon on the right (md+ double size) */}
           <PageHeader
             title="SHOP"
             right={
               <Link
                 to="/cart"
-                className="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition"
                 aria-label="Cart"
+                className="
+                  relative inline-flex items-center justify-center
+                  w-10 h-10 md:w-20 md:h-20
+                  rounded-full bg-white/5 border border-white/10
+                  hover:bg-white/10 transition
+                "
               >
-                <IoBagHandleOutline className="text-white/90 text-[22px]" />
+                <IoBagHandleOutline className="text-white/90 text-[22px] md:text-[44px]" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-luxury-gold text-[#0c1a3a] text-[11px] font-extrabold grid place-items-center shadow">
+                  <span
+                    className="
+                      absolute -top-1 -right-1
+                      min-w-[18px] h-[18px] px-1
+                      md:min-w-[24px] md:h-[24px] md:text-[12px]
+                      rounded-full bg-luxury-gold text-[#0c1a3a]
+                      text-[11px] font-extrabold grid place-items-center shadow
+                    "
+                  >
                     {itemCount}
                   </span>
                 )}
@@ -198,7 +188,7 @@ const ShopPage = () => {
             }
           />
 
-          {/* ✅ Products first (no feature cards at the top) */}
+          {/* Products first */}
           <div className="flex items-center justify-between mb-3 mt-4">
             <p className="text-white/60 text-sm">
               Showing{" "}
@@ -217,18 +207,13 @@ const ShopPage = () => {
             )}
           </div>
 
-          {/* ✅ Filters (mobile: wrap, smaller; desktop: can still scroll) */}
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-5"
-          >
+          {/* Filters */}
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="mb-5">
             <div className="flex items-center gap-3 mb-3">
               <IoFilterOutline className="text-sky-200 text-xl" />
               <h2 className="text-white font-semibold tracking-wide">Filters</h2>
             </div>
 
-            {/* MOBILE: flex-wrap chips. MD+: horizontal scroll is OK */}
             <div className="flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-4 md:overflow-x-auto md:whitespace-nowrap pb-2 md:pb-4 md:scrollbar-thin md:scrollbar-thumb-slate-600/70 text-[14px] sm:text-[15px] font-semibold">
               <button
                 onClick={clearAll}
@@ -317,7 +302,7 @@ const ShopPage = () => {
             </div>
           </motion.div>
 
-          {/* ✅ Products grid */}
+          {/* Products grid */}
           <AnimatePresence mode="popLayout">
             {filteredProducts.length === 0 ? (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
@@ -330,7 +315,6 @@ const ShopPage = () => {
               >
                 {filteredProducts.map((product, idx) => {
                   const avg = getRatingAvg(product);
-                  const count = getRatingCount(product);
 
                   return (
                     <motion.div
@@ -343,7 +327,7 @@ const ShopPage = () => {
                     >
                       <Link to={`/product/${product.id}`} className="block h-full group">
                         <div className="relative h-full rounded-2xl border border-white/10 overflow-hidden bg-gradient-to-br from-white/10 to-white/5 hover:border-sky-300/40 transition-all duration-500">
-                          {/* Image (bigger on mobile: less padding + better aspect) */}
+                          {/* Image */}
                           <div className="aspect-[4/5] p-2 sm:p-3 md:p-4 flex items-center justify-center bg-gradient-to-b from-transparent to-black/20">
                             <motion.img
                               src={
@@ -358,9 +342,13 @@ const ShopPage = () => {
                             />
                           </div>
 
-                          {/* Info */}
-                          <div className="relative p-3 sm:p-4 bg-gradient-to-t from-black/45 to-transparent flex flex-col gap-2 min-w-0">
-                            {/* Category (gold, readable) */}
+                          {/* Info
+                              IMPORTANT FIX for your "dark blue cutting" issue:
+                              - remove bg-gradient-to-t block background here
+                              - keep it transparent + consistent padding
+                          */}
+                          <div className="relative p-3 sm:p-4 flex flex-col gap-2 min-w-0">
+                            {/* Category */}
                             {product.category && (
                               <span className="inline-block px-2.5 py-1 text-[10px] uppercase tracking-wider text-luxury-gold bg-luxury-panel/60 rounded-full border border-luxury-gold/25 w-fit">
                                 {String(product.category).trim()}
@@ -382,19 +370,14 @@ const ShopPage = () => {
                               </span>
                             )}
 
-                            {/* Rating (no clipping: smaller + wrap-safe) */}
+                            {/* ✅ Rating: stars only (no digits) */}
                             <div className="flex items-center gap-2 min-w-0">
                               <div className="flex text-base leading-none flex-none">
                                 {renderStars(avg)}
                               </div>
-
-                              <span className="text-white/60 text-[12px] leading-none whitespace-nowrap">
-                                {avg > 0 ? avg.toFixed(1) : "0.0"}
-                                {count != null ? ` (${count})` : ""}
-                              </span>
                             </div>
 
-                            {/* Price row (more breathing room) */}
+                            {/* Price row */}
                             <div className="flex items-center justify-between gap-3 mt-1">
                               <p className="text-white font-extrabold text-lg sm:text-xl leading-none">
                                 RM {product.price}
@@ -414,64 +397,52 @@ const ShopPage = () => {
             )}
           </AnimatePresence>
 
-          {/* ✅ Features moved to bottom (still in Shop page) */}
+          {/* Quick tools (no cart) */}
           <div className="mt-10 pb-10">
             <h3 className="text-white/80 font-semibold tracking-wide mb-3">Quick tools</h3>
 
             {/* Mobile: icons only */}
-            <div className="grid grid-cols-3 gap-3 md:hidden">
-              {featureLinks.map((link) => (
+            <div className="grid grid-cols-2 gap-3 md:hidden">
+              {quickTools.map((tool) => (
                 <Link
-                  key={link.to}
-                  to={link.to}
-                  className={`relative rounded-2xl border bg-white/5 ${link.accent} transition-all duration-300 overflow-hidden`}
-                  aria-label={link.label}
+                  key={tool.to}
+                  to={tool.to}
+                  className={`relative rounded-2xl border bg-white/5 ${tool.accent} transition-all duration-300 overflow-hidden`}
+                  aria-label={tool.label}
                 >
                   <div className="p-4 flex items-center justify-center">
                     <div
-                      className={`w-12 h-12 rounded-2xl flex items-center justify-center ${link.iconBg} border ${link.iconBorder}`}
+                      className={`w-12 h-12 rounded-2xl flex items-center justify-center ${tool.iconBg} border ${tool.iconBorder}`}
                     >
-                      <link.icon className="text-[24px] text-white/90" />
+                      <tool.icon className="text-[24px] text-white/90" />
                     </div>
                   </div>
-
-                  {link.count !== undefined && link.count > 0 && (
-                    <span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-luxury-gold text-[#0c1a3a] text-[11px] font-extrabold grid place-items-center shadow">
-                      {link.count}
-                    </span>
-                  )}
                 </Link>
               ))}
             </div>
 
-            {/* Desktop: nicer labeled cards */}
-            <div className="hidden md:grid grid-cols-3 gap-4">
-              {featureLinks.map((link, idx) => (
+            {/* Desktop: full with labels */}
+            <div className="hidden md:grid grid-cols-2 gap-4">
+              {quickTools.map((tool, idx) => (
                 <motion.div
-                  key={link.to}
+                  key={tool.to}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.06 }}
                 >
                   <Link
-                    to={link.to}
-                    className={`block rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 ${link.accent}
+                    to={tool.to}
+                    className={`block rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 ${tool.accent}
                       transition-all duration-300 overflow-hidden`}
                   >
                     <div className="p-5 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-11 h-11 rounded-xl flex items-center justify-center ${link.iconBg} border ${link.iconBorder}`}
+                          className={`w-11 h-11 rounded-xl flex items-center justify-center ${tool.iconBg} border ${tool.iconBorder}`}
                         >
-                          <link.icon className="text-[22px] text-white/90" />
+                          <tool.icon className="text-[22px] text-white/90" />
                         </div>
-
-                        <div className="leading-none">
-                          <p className="text-white/90 font-semibold tracking-wide">{link.label}</p>
-                          {link.count !== undefined && link.count > 0 && (
-                            <p className="text-sky-200 text-sm font-bold mt-1">{link.count} items</p>
-                          )}
-                        </div>
+                        <p className="text-white/90 font-semibold tracking-wide">{tool.label}</p>
                       </div>
 
                       <div className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
