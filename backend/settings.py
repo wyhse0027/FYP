@@ -11,6 +11,7 @@ from datetime import timedelta
 import dj_database_url
 from dotenv import load_dotenv
 import cloudinary
+from urllib.parse import urlparse
 
 # ───────────────────────────────────────────────────────────────
 # Windows SSL patch (local dev only)
@@ -31,13 +32,15 @@ load_dotenv()  # OS env first (Koyeb)
 
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
-# Load local .env ONLY in debug
+# Load local .env ONLY in debug (your local dev)
 if DEBUG:
     load_dotenv(BASE_DIR / "backend" / ".env")
+
 
 def env_list(name: str, default: str = ""):
     raw = os.getenv(name, default) or ""
     return [x.strip() for x in raw.split(",") if x.strip()]
+
 
 # ───────────────────────────────────────────────────────────────
 # Security
@@ -54,6 +57,7 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = True
+
 
 # ───────────────────────────────────────────────────────────────
 # Installed Apps
@@ -78,13 +82,17 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "rest_framework.authtoken",
 
-    # Cloudinary
+    # django-storages (for R2 S3)
+    "storages",
+
+    # Cloudinary (for images)
     "cloudinary",
     "cloudinary_storage",
 
     # Local
     "shop",
 ]
+
 
 # ───────────────────────────────────────────────────────────────
 # Middleware
@@ -101,6 +109,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
 
 # ───────────────────────────────────────────────────────────────
 # URLs / WSGI
@@ -123,6 +132,7 @@ TEMPLATES = [
     },
 ]
 
+
 # ───────────────────────────────────────────────────────────────
 # Database
 # ───────────────────────────────────────────────────────────────
@@ -144,6 +154,7 @@ else:
         }
     }
 
+
 # ───────────────────────────────────────────────────────────────
 # Authentication
 # ───────────────────────────────────────────────────────────────
@@ -161,6 +172,7 @@ AUTHENTICATION_BACKENDS = (
     "allauth.account.auth_backends.AuthenticationBackend",
 )
 
+
 # ───────────────────────────────────────────────────────────────
 # Internationalization
 # ───────────────────────────────────────────────────────────────
@@ -169,12 +181,17 @@ TIME_ZONE = "Asia/Kuala_Lumpur"
 USE_I18N = True
 USE_TZ = False
 
+
 # ───────────────────────────────────────────────────────────────
-# Static & Media (Cloudinary)
+# Static files
 # ───────────────────────────────────────────────────────────────
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+
+# ───────────────────────────────────────────────────────────────
+# Cloudinary (Images)
+# ───────────────────────────────────────────────────────────────
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", ""),
     api_key=os.getenv("CLOUDINARY_API_KEY", ""),
@@ -182,6 +199,8 @@ cloudinary.config(
     secure=True,
 )
 
+# Cloudinary is DEFAULT for Django media (ImageField / FileField),
+# but we will override big files (.glb/.mind/.apk) per-field using R2 storage.
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
@@ -191,8 +210,43 @@ STORAGES = {
     },
 }
 
+
+# ───────────────────────────────────────────────────────────────
+# Cloudflare R2 (S3-compatible) for big files
+# ───────────────────────────────────────────────────────────────
+R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID", "")
+R2_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID", "")
+R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY", "")
+R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME", "")
+
+# IMPORTANT:
+# Use Public Development URL for local testing (r2.dev) OR your custom domain in production.
+# Example:
+#   R2_PUBLIC_BASE_URL=https://pub-xxxxxx.r2.dev
+#   OR https://assets.yourdomain.com
+R2_PUBLIC_BASE_URL = os.getenv("R2_PUBLIC_BASE_URL", "").rstrip("/")
+
+AWS_S3_CUSTOM_DOMAIN = urlparse(R2_PUBLIC_BASE_URL).netloc if R2_PUBLIC_BASE_URL else ""
+AWS_S3_URL_PROTOCOL = "https:"
+
+AWS_S3_ENDPOINT_URL = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com" if R2_ACCOUNT_ID else ""
+AWS_ACCESS_KEY_ID = R2_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY = R2_SECRET_ACCESS_KEY
+AWS_STORAGE_BUCKET_NAME = R2_BUCKET_NAME
+
+AWS_S3_REGION_NAME = "auto"
+AWS_S3_SIGNATURE_VERSION = "s3v4"
+AWS_S3_ADDRESSING_STYLE = "virtual"
+AWS_DEFAULT_ACL = None
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_FILE_OVERWRITE = False
+AWS_S3_VERIFY = True
+
+
+# File upload limits
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
+
 
 # ───────────────────────────────────────────────────────────────
 # Django REST Framework
@@ -207,6 +261,7 @@ REST_FRAMEWORK = {
     ),
 }
 
+
 # ───────────────────────────────────────────────────────────────
 # JWT
 # ───────────────────────────────────────────────────────────────
@@ -218,11 +273,13 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": True,
 }
 
+
 # ───────────────────────────────────────────────────────────────
 # CORS
 # ───────────────────────────────────────────────────────────────
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = [] if DEBUG else env_list("CORS_ALLOWED_ORIGINS", "")
+
 
 # ───────────────────────────────────────────────────────────────
 # Allauth / dj-rest-auth
@@ -234,6 +291,7 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = "username_email"
 ACCOUNT_EMAIL_VERIFICATION = "none"
+
 
 # ───────────────────────────────────────────────────────────────
 # Google OAuth
@@ -250,6 +308,7 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
+
 # ───────────────────────────────────────────────────────────────
 # Email
 # ───────────────────────────────────────────────────────────────
@@ -260,4 +319,8 @@ EMAIL_BACKEND = os.getenv(
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
+
+# ───────────────────────────────────────────────────────────────
+# Default
+# ───────────────────────────────────────────────────────────────
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
