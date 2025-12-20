@@ -368,9 +368,10 @@ export default function MainPage() {
                               </h3>
 
                               {product.category && (
-                                <p className="text-slate-200 text-[10px] sm:text-xs md:text-sm tracking-[0.22em] uppercase line-clamp-1">
-                                  {product.category}
-                                </p>
+                               <p className="text-luxury-gold/90 text-[10px] sm:text-[11px] md:text-xs tracking-[0.22em] uppercase line-clamp-1
+                                          drop-shadow-[0_1px_6px_rgba(212,175,55,0.35)]">
+                                {product.category}
+                              </p>
                               )}
                             </div>
                           </div>
