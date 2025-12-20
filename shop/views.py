@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import BasePermission, IsAdminUser, AllowAny
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
@@ -127,7 +127,7 @@ class PasswordResetConfirmView(generics.GenericAPIView):
 # ─── Current Logged-In User ────────────────
 class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [JSONParser, FormParser, MultiPartParser]
 
     def get(self, request):
         serializer = UserSerializer(request.user, context={"request": request})
