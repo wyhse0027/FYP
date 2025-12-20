@@ -1,135 +1,216 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
 const AFRAME_SRC = "https://aframe.io/releases/1.5.0/aframe.min.js";
 const MINDAR_SRC =
   "https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-image-aframe.prod.js";
-const BACKEND_BASE = "http://127.0.0.1:8000";
 
-function toAbsolute(url) {
-  if (!url) return null;
-  if (url.startsWith("http")) return url;
-  return `${BACKEND_BASE}/${url.replace(/^\/+/, "")}`;
+// CRA env var (set locally in .env, set on Vercel/Koyeb dashboard in production)
+const RAW_BACKEND_BASE = process.env.REACT_APP_API_BASE_URL || "";
+
+// Normalize base URL: remove trailing slashes
+function normalizeBase(url) {
+  return (url || "").trim().replace(/\/+$/, "");
 }
 
-// ✅ Ask for camera permission
-const ensureCameraStream = async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    console.log("📸 Camera permission granted");
-    return stream;
-  } catch (err) {
-    console.error("🚫 Camera permission denied:", err);
-    alert("Please allow camera access to view AR content.");
-    return null;
-  }
-};
+function apiToOrigin(apiBase) {
+  // converts:
+  // https://xxx.koyeb.app/api   -> https://xxx.koyeb.app
+  // http://127.0.0.1:8000/api  -> http://127.0.0.1:8000
+  return (apiBase || "").replace(/\/api\/?$/, "");
+}
+
+function toAbsolute(url, apiBase) {
+  if (!url) return null;
+  if (/^https?:\/\//i.test(url)) return url;
+
+  const origin = apiToOrigin(apiBase);
+  return `${origin}/${String(url).replace(/^\/+/, "")}`;
+}
 
 export default function ARViewer() {
   const { slug } = useParams();
+
+  const BACKEND_BASE = useMemo(() => normalizeBase(RAW_BACKEND_BASE), []);
   const [data, setData] = useState(null);
   const [ready, setReady] = useState(false);
   const [showInstruction, setShowInstruction] = useState(true);
+  const [fatal, setFatal] = useState("");
 
-  // ─────────────── Handle Back Button ───────────────
-  const handleBack = () => {
-    const video = document.getElementById("camera-preview");
-    if (video && video.srcObject) {
-      const tracks = video.srcObject.getTracks();
-      tracks.forEach((track) => track.stop());
-      video.srcObject = null;
+  // prevent double init/cleanup loops
+  const cleanedRef = useRef(false);
+  const startedRef = useRef(false);
+
+  // ---- HARD FAIL if env missing (so you don't "load forever") ----
+  useEffect(() => {
+    if (!BACKEND_BASE) {
+      setFatal(
+        "Missing REACT_APP_API_BASE_URL. Set it in your deployment environment variables (Vercel/Koyeb) and redeploy."
+      );
+      console.error(
+        "❌ Missing REACT_APP_API_BASE_URL. Example: https://your-backend.koyeb.app"
+      );
+    } else {
+      console.log("🌐 BACKEND_BASE =", BACKEND_BASE);
     }
+  }, [BACKEND_BASE]);
 
-    const overlay = document.getElementById("camera-preview");
-    if (overlay) {
-      overlay.pause?.();
-      overlay.remove();
+  // ---- Teardown: stop MindAR camera + all video tracks ----
+  const teardownAR = async () => {
+    if (cleanedRef.current) return;
+    cleanedRef.current = true;
+
+    try {
+      const scene = document.querySelector("a-scene");
+      const mindSys = scene?.systems?.["mindar-image"];
+
+      // stop MindAR (important)
+      if (mindSys) {
+        try {
+          await mindSys.stop();
+          console.log("🛑 [MINDAR] stopped");
+        } catch (e) {
+          console.warn("⚠️ [MINDAR] stop error:", e);
+        }
+      }
+
+      // stop all tracks (MindAR + any preview video)
+      document.querySelectorAll("video").forEach((v) => {
+        try {
+          if (v.srcObject) {
+            v.srcObject.getTracks().forEach((t) => t.stop());
+            v.srcObject = null;
+          }
+          v.pause?.();
+        } catch {}
+      });
+
+      // ✅ DO NOT remove scene / video elements here
+      // React will unmount and remove them safely.
+    } finally {
+      setTimeout(() => {
+        cleanedRef.current = false;
+        startedRef.current = false;
+      }, 300);
     }
+  };
 
-    const scene = document.querySelector("a-scene");
-    if (scene) {
-      scene.pause();
-      scene.parentNode?.removeChild(scene);
-    }
-
+  const handleBack = async () => {
+    await teardownAR();
     window.history.back();
   };
 
-  // ─────────────── Load AFRAME + MINDAR ───────────────
+  // cleanup on route change/unmount
+  useEffect(() => {
+    return () => {
+      teardownAR();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ---- Load scripts once ----
   useEffect(() => {
     const loadScripts = async () => {
-      console.log("📦 [LOAD] Initializing AFRAME + MINDAR...");
       const loadScript = (id, src) =>
         new Promise((resolve, reject) => {
           if (document.getElementById(id)) return resolve();
           const s = document.createElement("script");
           s.src = src;
           s.id = id;
+          s.async = true;
           s.onload = resolve;
           s.onerror = reject;
           document.head.appendChild(s);
         });
 
-      if (!window.AFRAME) await loadScript("aframe", AFRAME_SRC);
-      await new Promise((r) => {
-        const check = setInterval(() => {
-          if (window.AFRAME?.THREE) {
-            clearInterval(check);
-            window.THREE = window.AFRAME.THREE;
-            r();
-          }
-        }, 200);
-      });
+      try {
+        console.log("📦 [LOAD] Loading AFRAME + MINDAR...");
 
-      if (!window.MINDAR) await loadScript("mindar", MINDAR_SRC);
-      console.log("✅ [LOAD] AFRAME + MINDAR ready");
-      setReady(true);
+        if (!window.AFRAME) await loadScript("aframe", AFRAME_SRC);
+
+        // wait for AFRAME.THREE
+        await new Promise((r) => {
+          const t = setInterval(() => {
+            if (window.AFRAME?.THREE) {
+              clearInterval(t);
+              window.THREE = window.AFRAME.THREE;
+              r();
+            }
+          }, 150);
+        });
+
+        if (!window.MINDAR) await loadScript("mindar", MINDAR_SRC);
+
+        console.log("✅ [LOAD] AFRAME + MINDAR ready");
+        setReady(true);
+      } catch (err) {
+        console.error("❌ [LOAD] Script load failed:", err);
+        setFatal("Failed to load AR scripts. Check network / CDN availability.");
+      }
     };
 
-    loadScripts().catch((err) =>
-      console.error("❌ [LOAD] Script load failed:", err)
-    );
+    loadScripts();
   }, []);
 
-  // ─────────────── Fetch AR data ───────────────
+  // ---- Fetch AR data ----
   useEffect(() => {
-    if (!slug) return;
-    console.log("🌍 [AR] Fetching AR data for:", slug);
+    if (!slug || !BACKEND_BASE) return;
 
-    fetch(`${BACKEND_BASE}/api/ar/?product__name=${slug.replace(/-/g, " ")}`)
-      .then((r) => r.json())
-      .then((j) => {
-        const r = (Array.isArray(j) && j[0]) || (j.results && j.results[0]);
-        if (r) {
-          r.marker_mind = toAbsolute(r.marker_mind);
-          r.model_glb = toAbsolute(r.model_glb);
-          setData(r);
-          console.log("✅ [AR] Loaded marker + model:", r);
-        } else console.warn("⚠️ [AR] No AR data found");
+    const productName = slug.replace(/-/g, " ");
+    const q = encodeURIComponent(productName);
+
+    console.log("🌍 [AR] Fetching AR data for:", productName);
+
+    fetch(`${BACKEND_BASE}/ar/?product__name=${q}`)
+      .then(async (r) => {
+        if (!r.ok) {
+          const txt = await r.text().catch(() => "");
+          throw new Error(`AR API ${r.status}: ${txt || r.statusText}`);
+        }
+        return r.json();
       })
-      .catch((e) => console.error("❌ [AR] Fetch failed:", e));
-  }, [slug]);
+      .then((j) => {
+        const rec = (Array.isArray(j) && j[0]) || (j?.results && j.results[0]);
+        if (!rec) {
+          console.warn("⚠️ [AR] No AR data found for:", productName);
+          setFatal("No AR data found for this product (backend returned empty).");
+          return;
+        }
 
-  // ─────────────── Validate .mind file ───────────────
+        const marker_mind = toAbsolute(rec.marker_mind, BACKEND_BASE);
+        const model_glb = toAbsolute(rec.model_glb, BACKEND_BASE);
+
+        const fixed = { ...rec, marker_mind, model_glb };
+        console.log("✅ [AR] Loaded marker + model:", fixed);
+        setData(fixed);
+      })
+      .catch((e) => {
+        console.error("❌ [AR] Fetch failed:", e);
+        setFatal(
+          "Failed to load AR data from backend. Check BACKEND URL, CORS, and /api/ar/ endpoint."
+        );
+      });
+  }, [slug, BACKEND_BASE]);
+
+  // ---- Validate .mind file (optional safety) ----
   useEffect(() => {
-    if (!ready || !data) return;
+    if (!ready || !data?.marker_mind) return;
 
     const validateMindFile = async (url) => {
       try {
         const res = await fetch(url);
         if (!res.ok) throw new Error(`Failed to fetch ${url} (${res.status})`);
+
         const buffer = await res.arrayBuffer();
         const bytes = new Uint8Array(buffer);
 
+        // ZIP signature PK..
         const isZip =
-          bytes[0] === 0x50 &&
-          bytes[1] === 0x4b &&
-          bytes[2] === 0x03 &&
-          bytes[3] === 0x04;
+          bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04;
 
         if (isZip) {
           console.error("⚠️ [AR] Invalid .mind file — ZIP detected.");
-          alert("Invalid .mind file — recompile with MindAR compiler.");
+          setFatal("Invalid .mind file (ZIP). Recompile using MindAR compiler.");
           return false;
         }
 
@@ -137,6 +218,7 @@ export default function ARViewer() {
         return true;
       } catch (err) {
         console.error("❌ [AR] Mind file validation failed:", err);
+        setFatal("Mind file cannot be loaded. Check storage URL and permissions.");
         return false;
       }
     };
@@ -144,38 +226,20 @@ export default function ARViewer() {
     validateMindFile(data.marker_mind);
   }, [ready, data]);
 
-  // ─────────────── Initialize MindAR + Animate GLB ───────────────
+  // ---- Start MindAR once scene is loaded ----
   useEffect(() => {
-    if (!ready || !data) return;
+    if (!ready || !data || fatal) return;
+    if (startedRef.current) return;
+    startedRef.current = true;
 
     const startMindAR = async () => {
-      console.log("🎬 [INIT] Starting MindAR setup...");
-      const stream = await ensureCameraStream();
-      if (!stream) return;
+      console.log("🎬 [INIT] Starting MindAR...");
 
-      let preview = document.getElementById("camera-preview");
-      if (!preview) {
-        preview = document.createElement("video");
-        preview.id = "camera-preview";
-        preview.autoplay = true;
-        preview.playsInline = true;
-        preview.muted = true;
-        preview.style.cssText = `
-          position: fixed;
-          top: 0; left: 0;
-          width: 100vw; height: 100vh;
-          object-fit: cover;
-          z-index: 0;
-          background: #000;
-        `;
-        document.body.appendChild(preview);
-      }
-      preview.srcObject = stream;
-
+      // Wait for <a-scene> to exist
       const scene = document.querySelector("a-scene");
       if (!scene) {
-        console.log("⏳ Waiting for <a-scene>...");
-        setTimeout(startMindAR, 500);
+        startedRef.current = false;
+        setTimeout(startMindAR, 300);
         return;
       }
 
@@ -193,36 +257,37 @@ export default function ARViewer() {
               console.log("🟢 [MINDAR] Tracking started successfully.");
             } catch (err) {
               console.error("💥 [MINDAR] Start failed:", err);
+              setFatal("MindAR failed to start. Check HTTPS + camera permission.");
             }
-          }, 800);
+          }, 600);
         }
 
         const anchor = document.querySelector("#ar-anchor");
-        const model = document.querySelector("#ar-model");
+        const modelEl = document.querySelector("#ar-model");
         if (anchor) anchor.object3D.visible = false;
 
-        // ✅ Add explicit GLTF animation handling
         const attachAnimations = (mesh) => {
-          if (!mesh) return;
-          if (mesh.animations && mesh.animations.length > 0) {
+          if (!mesh || !modelEl) return;
+          const anims = mesh.animations || [];
+          if (anims.length > 0) {
             console.log(
-              `🎥 [MODEL] ${mesh.animations.length} animation(s):`,
-              mesh.animations.map((a) => `${a.name} (${a.duration.toFixed(2)}s)`)
+              `🎥 [MODEL] ${anims.length} animation(s):`,
+              anims.map((a) => `${a.name || "clip"} (${a.duration?.toFixed?.(2) ?? "?"}s)`)
             );
-            model.setAttribute(
+            modelEl.setAttribute(
               "animation-mixer",
               "clip: *; loop: repeat; crossFadeDuration: 0.5; timeScale: 1"
             );
-            console.log("✅ [ANIM] Mixer attached to model.");
+            console.log("✅ [ANIM] Mixer attached.");
           } else {
-            console.warn("⚠️ [MODEL] No animations on mesh:", mesh);
+            console.warn("⚠️ [MODEL] No animations found.");
           }
         };
 
-        if (model) {
-          model.addEventListener("model-loaded", (e) => {
+        if (modelEl) {
+          modelEl.addEventListener("model-loaded", (e) => {
             const mesh = e.detail.model;
-            console.log("🧩 [MODEL] Loaded:", mesh);
+            console.log("🧩 [MODEL] Loaded");
             attachAnimations(mesh);
           });
         }
@@ -233,22 +298,16 @@ export default function ARViewer() {
             console.log("🎯 [MARKER] FOUND ✅");
             if (anchor) anchor.object3D.visible = true;
 
-            const mesh = model?.getObject3D("mesh");
-            if (mesh) {
-              attachAnimations(mesh);
-              console.log("▶️ [ANIM] Playing all clips...");
-            }
+            const mesh = modelEl?.getObject3D("mesh");
+            if (mesh) attachAnimations(mesh);
 
             setShowInstruction(false);
           });
 
           target.addEventListener("targetLost", () => {
-            console.log("🚫 [MARKER] LOST ❌ — stopping animation");
+            console.log("🚫 [MARKER] LOST ❌");
             if (anchor) anchor.object3D.visible = false;
-            if (model) {
-              model.removeAttribute("animation-mixer");
-              console.log("⏹ [ANIM] Mixer removed.");
-            }
+            if (modelEl) modelEl.removeAttribute("animation-mixer");
             setShowInstruction(true);
           });
         }
@@ -256,10 +315,53 @@ export default function ARViewer() {
     };
 
     startMindAR();
-  }, [ready, data]);
+  }, [ready, data, fatal]);
 
-  // ─────────────── Render Scene ───────────────
-  if (!ready || !data)
+  // ---- UI states ----
+  if (fatal) {
+    return (
+      <div
+        style={{
+          background: "#000",
+          height: "100vh",
+          color: "#fff",
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "monospace",
+          padding: "24px",
+          textAlign: "center",
+        }}
+      >
+        <div style={{ maxWidth: 520 }}>
+          <div style={{ fontSize: 18, marginBottom: 10 }}>AR failed to load</div>
+          <div style={{ opacity: 0.85, lineHeight: 1.5 }}>{fatal}</div>
+          <div style={{ marginTop: 12, opacity: 0.7, fontSize: 12 }}>
+            Check: Vercel env var → REACT_APP_API_BASE_URL, backend reachable, CORS allowed.
+          </div>
+        </div>
+
+        <button
+          onClick={handleBack}
+          style={{
+            marginTop: 10,
+            background: "rgba(255,255,255,0.1)",
+            color: "#fff",
+            border: "1px solid rgba(255,255,255,0.2)",
+            borderRadius: 12,
+            padding: "12px 18px",
+            cursor: "pointer",
+          }}
+        >
+          Back
+        </button>
+      </div>
+    );
+  }
+
+  if (!ready || !data) {
     return (
       <div
         style={{
@@ -275,21 +377,23 @@ export default function ARViewer() {
         Loading AR Environment...
       </div>
     );
+  }
 
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#000" }}>
       <a-scene
-        mindar-image={`imageTargetSrc: ${data.marker_mind}; autoStart: ; uiScanning: true;`}
+        // ✅ fixed autoStart
+        mindar-image={`imageTargetSrc: ${data.marker_mind}; autoStart: false; uiScanning: true; uiError: true;`}
         color-space="sRGB"
         renderer="colorManagement: true, physicallyCorrectLights"
         vr-mode-ui="enabled: false"
         device-orientation-permission-ui="enabled: true"
         embedded
       >
-        <a-camera position="0 0 0" look-controls="enabled: false" mindar-camera></a-camera>
+        <a-camera position="0 0 0" look-controls="enabled: false" mindar-camera />
 
-        <a-light type="ambient" intensity="2"></a-light>
-        <a-light type="directional" position="0 1 1" intensity="2"></a-light>
+        <a-light type="ambient" intensity="2" />
+        <a-light type="directional" position="0 1 1" intensity="2" />
 
         <a-entity id="ar-anchor" mindar-image-target="targetIndex: 0">
           <a-gltf-model
@@ -297,28 +401,27 @@ export default function ARViewer() {
             src={data.model_glb}
             scale="0.75 0.75 0.75"
             rotation="-90 180 0"
-          ></a-gltf-model>
+          />
         </a-entity>
       </a-scene>
 
-      {/* ✅ Elegant Back Button */}
+      {/* Back button */}
       <button
         onClick={handleBack}
         style={{
           position: "fixed",
-          top: "24px",
-          left: "24px",
+          top: 24,
+          left: 24,
           zIndex: 9999,
           background: "rgba(15, 25, 50, 0.7)",
           border: "1px solid rgba(255,255,255,0.15)",
-          borderRadius: "14px",
+          borderRadius: 14,
           padding: "14px 24px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           cursor: "pointer",
           boxShadow: "0 4px 15px rgba(0,0,0,0.4)",
-          transition: "all 0.3s ease",
           backdropFilter: "blur(6px)",
         }}
       >
@@ -330,7 +433,7 @@ export default function ARViewer() {
           strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
-          style={{ width: "36px", height: "36px" }}
+          style={{ width: 36, height: 36 }}
         >
           <polyline points="19 12 5 12" />
           <polyline points="12 19 5 12 12 5" />
@@ -338,7 +441,7 @@ export default function ARViewer() {
       </button>
 
       <style>{`
-        video, #camera-preview {
+        video {
           display: block !important;
           position: fixed !important;
           top: 0 !important;
@@ -353,14 +456,30 @@ export default function ARViewer() {
           z-index: 2 !important;
           position: relative !important;
         }
-        @keyframes floatBack {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-2px); }
-        }
-        button svg {
-          animation: floatBack 3s ease-in-out infinite;
-        }
       `}</style>
+
+      {/* Optional: instruction overlay (you had showInstruction state but not rendering it) */}
+      {showInstruction && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 24,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 9999,
+            background: "rgba(0,0,0,0.55)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            color: "#fff",
+            padding: "10px 14px",
+            borderRadius: 12,
+            fontFamily: "system-ui, Arial",
+            fontSize: 14,
+            backdropFilter: "blur(6px)",
+          }}
+        >
+          Point your camera at the marker to view the AR model.
+        </div>
+      )}
     </div>
   );
 }
