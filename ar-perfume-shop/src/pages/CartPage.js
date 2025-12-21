@@ -4,19 +4,10 @@ import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import { IoTrashOutline } from "react-icons/io5";
-import {
-  CheckCircle2,
-  Crown,
-  Minus,
-  Plus,
-  ShoppingBag,
-  Sparkles,
-  Trash2,
-} from "lucide-react";
+import { CheckCircle2, Crown, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 
 const CartPage = () => {
-  const { cartItems, updateQuantity, removeFromCart, itemCount, subtotal } =
-    useCart();
+  const { cartItems, updateQuantity, removeFromCart, itemCount, subtotal } = useCart();
 
   const navigate = useNavigate();
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -26,32 +17,24 @@ const CartPage = () => {
 
   // Keep selection in sync when cart changes
   useEffect(() => {
-    setSelectedIds((prev) =>
-      prev.filter((id) => cartItems.some((item) => item.id === id))
-    );
+    setSelectedIds((prev) => prev.filter((id) => cartItems.some((item) => item.id === id)));
   }, [cartItems]);
 
   const toggleSelect = (cartItemId) => {
     setSelectedIds((prev) =>
-      prev.includes(cartItemId)
-        ? prev.filter((id) => id !== cartItemId)
-        : [...prev, cartItemId]
+      prev.includes(cartItemId) ? prev.filter((id) => id !== cartItemId) : [...prev, cartItemId]
     );
   };
 
   const selectAll = () => setSelectedIds(cartItems.map((item) => item.id));
   const clearSelection = () => setSelectedIds([]);
 
-  const allSelected =
-    cartItems.length > 0 && selectedIds.length === cartItems.length;
+  const allSelected = cartItems.length > 0 && selectedIds.length === cartItems.length;
 
   const selectedItems = cartItems.filter((item) => selectedIds.includes(item.id));
 
   // quantity-based count for selected items
-  const selectedItemCount = selectedItems.reduce(
-    (sum, item) => sum + item.quantity,
-    0
-  );
+  const selectedItemCount = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const selectedSubtotal = selectedItems.reduce(
     (sum, item) => sum + parseFloat(item.product?.price || 0) * item.quantity,
@@ -67,7 +50,7 @@ const CartPage = () => {
   return (
     <>
       <div className="min-h-screen w-full bg-blue-900/95 relative overflow-hidden pb-[calc(80px+260px)]">
-        {/* Decorative elements (same palette, just nicer) */}
+        {/* Decorative elements */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute top-20 left-10 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl" />
           <div className="absolute bottom-40 right-10 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
@@ -76,22 +59,16 @@ const CartPage = () => {
 
         <div className="relative z-10 px-6 md:px-12 lg:px-16">
           <div className="mx-auto w-full max-w-screen-2xl py-8 text-[18px] md:text-[19px] lg:text-[20px]">
-            {/* Main shell */}
             <div className="bg-gray-800/70 backdrop-blur-sm rounded-2xl p-6 border border-white/10 shadow-2xl">
-              {/* Keep your header component */}
               <PageHeader title="YOUR COLLECTION" />
 
               {itemCount === 0 ? (
-                <div className="mt-10 glass-ish p-14 text-center">
+                <div className="mt-10 p-14 text-center">
                   <div className="mx-auto w-16 h-16 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center mb-6">
                     <ShoppingBag className="w-8 h-8 text-white/60" />
                   </div>
-                  <h2 className="text-2xl font-bold text-white mb-2">
-                    Your bag is empty
-                  </h2>
-                  <p className="text-white/70 mb-8">
-                    Add something you like, then come back here.
-                  </p>
+                  <h2 className="text-2xl font-bold text-white mb-2">Your bag is empty</h2>
+                  <p className="text-white/70 mb-8">Add something you like, then come back here.</p>
                   <button
                     onClick={() => navigate("/")}
                     className="px-8 py-3 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-extrabold transition"
@@ -101,12 +78,12 @@ const CartPage = () => {
                 </div>
               ) : (
                 <>
-                  {/* Select all bar (lovable feel, same logic/colors) */}
+                  {/* Select all */}
                   <div className="mt-6 mb-6 bg-white/10 border border-white/10 rounded-2xl px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <button
                       type="button"
                       onClick={() => (allSelected ? clearSelection() : selectAll())}
-                      className="inline-flex items-center gap-3 text-white hover:text-white transition"
+                      className="inline-flex items-center gap-3 text-white transition"
                     >
                       <span
                         className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition ${
@@ -115,13 +92,9 @@ const CartPage = () => {
                             : "border-white/30 hover:border-white/60"
                         }`}
                       >
-                        {allSelected ? (
-                          <CheckCircle2 className="w-4 h-4 text-blue-950" />
-                        ) : null}
+                        {allSelected ? <CheckCircle2 className="w-4 h-4 text-blue-950" /> : null}
                       </span>
-                      <span className="text-sm">
-                        {allSelected ? "Deselect all" : "Select all items"}
-                      </span>
+                      <span className="text-sm">{allSelected ? "Deselect all" : "Select all items"}</span>
                     </button>
 
                     <div className="flex items-center gap-2 text-white/80">
@@ -163,20 +136,14 @@ const CartPage = () => {
                                 }`}
                                 aria-label="Select item"
                               >
-                                {isSelected ? (
-                                  <CheckCircle2 className="w-5 h-5 text-blue-950" />
-                                ) : null}
+                                {isSelected ? <CheckCircle2 className="w-5 h-5 text-blue-950" /> : null}
                               </button>
                             </div>
 
                             {/* Image */}
                             <div className="relative w-28 h-28 md:w-32 md:h-32 rounded-xl overflow-hidden bg-black/10 border border-white/10 flex-shrink-0 group">
                               <img
-                                src={
-                                  product.card_image ||
-                                  product.promo_image ||
-                                  "/placeholder.png"
-                                }
+                                src={product.card_image || product.promo_image || "/placeholder.png"}
                                 alt={product.name || "Product"}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                               />
@@ -185,17 +152,17 @@ const CartPage = () => {
 
                             {/* Details */}
                             <div className="flex-1 min-w-0 text-white">
+                              {/* Title row + desktop subtotal column */}
                               <div className="flex items-start justify-between gap-4">
                                 <div className="min-w-0">
                                   <h2 className="font-bold text-xl line-clamp-2">
                                     {product.name || "Unnamed Product"}
                                   </h2>
-                                  <p className="text-white/70 text-sm mt-1">
-                                    RM {unitPrice.toFixed(2)} each
-                                  </p>
+                                  <p className="text-white/70 text-sm mt-1">RM {unitPrice.toFixed(2)} each</p>
                                 </div>
 
-                                <div className="text-right">
+                                {/* Desktop/tablet subtotal stays on the right */}
+                                <div className="text-right hidden md:block">
                                   <p className="text-amber-300/90 text-xs font-semibold">Subtotal</p>
                                   <p className="font-extrabold text-lg text-amber-200 whitespace-nowrap">
                                     RM {lineTotal.toFixed(2)}
@@ -203,18 +170,14 @@ const CartPage = () => {
                                 </div>
                               </div>
 
-                              {/* Qty controls */}
-                              <div className="mt-4 flex items-center gap-3 flex-nowrap">
-                                <div className="inline-flex items-center gap-1 bg-white/10 border border-white/10 rounded-xl p-1 flex-1 min-w-0">
+                              {/* Qty + Trash
+                                  PC fix: NO flex-1 stretch bar. We use justify-between; qty is w-fit, trash on the right.
+                              */}
+                              <div className="mt-4 flex items-center justify-between gap-3">
+                                <div className="inline-flex items-center gap-1 bg-white/10 border border-white/10 rounded-xl p-1 w-fit">
                                   <button
                                     type="button"
-                                    onClick={() =>
-                                      updateQuantity(
-                                        product.id,
-                                        item.quantity - 1,
-                                        cartItemId
-                                      )
-                                    }
+                                    onClick={() => updateQuantity(product.id, item.quantity - 1, cartItemId)}
                                     disabled={item.quantity <= 1}
                                     className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/15 flex items-center justify-center transition disabled:opacity-40 disabled:cursor-not-allowed"
                                     aria-label="Decrease quantity"
@@ -222,19 +185,11 @@ const CartPage = () => {
                                     <Minus className="w-4 h-4 text-white" />
                                   </button>
 
-                                  <span className="w-10 sm:w-12 text-center font-extrabold">
-                                    {item.quantity}
-                                  </span>
+                                  <span className="w-10 sm:w-12 text-center font-extrabold">{item.quantity}</span>
 
                                   <button
                                     type="button"
-                                    onClick={() =>
-                                      updateQuantity(
-                                        product.id,
-                                        item.quantity + 1,
-                                        cartItemId
-                                      )
-                                    }
+                                    onClick={() => updateQuantity(product.id, item.quantity + 1, cartItemId)}
                                     className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/15 flex items-center justify-center transition"
                                     aria-label="Increase quantity"
                                   >
@@ -242,7 +197,6 @@ const CartPage = () => {
                                   </button>
                                 </div>
 
-                                {/* remove */}
                                 <button
                                   onClick={() =>
                                     setItemToDelete({
@@ -257,6 +211,17 @@ const CartPage = () => {
                                   <IoTrashOutline className="text-2xl text-white/80 group-hover:text-red-200 transition" />
                                 </button>
                               </div>
+
+                              {/* MOBILE ONLY: subtotal + unit price UNDER the quantity row */}
+                              <div className="mt-3 md:hidden">
+                                <div className="flex items-baseline justify-between gap-3">
+                                  <span className="text-amber-300/90 text-xs font-semibold">Subtotal</span>
+                                  <span className="font-extrabold text-base text-amber-200 whitespace-nowrap">
+                                    RM {lineTotal.toFixed(2)}
+                                  </span>
+                                </div>
+                                <p className="text-white/60 text-xs mt-1">Unit price: RM {unitPrice.toFixed(2)} each</p>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -269,30 +234,48 @@ const CartPage = () => {
           </div>
         </div>
 
-        {/* Sticky footer (lovable-ish) */}
+        {/* Sticky footer */}
         {itemCount > 0 && (
           <footer className="fixed left-0 right-0 bottom-[calc(80px+env(safe-area-inset-bottom))] z-50">
             <div className="bg-gradient-to-t from-blue-950/90 via-blue-950/80 to-transparent pt-5 pb-4 sm:pt-8 sm:pb-6 px-6">
               <div className="mx-auto w-full max-w-screen-2xl">
                 <div className="bg-white rounded-2xl p-5 shadow-2xl">
-                  <div className="flex flex-col gap-2 mb-3">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <span className="font-semibold">
+                  <div className="mb-3">
+                    {/* MOBILE: both lines LEFT, row-by-row */}
+                    <div className="sm:hidden space-y-1">
+                      <div className="font-semibold">
                         {itemCount} item{itemCount !== 1 ? "s" : ""} in cart
-                      </span>
+                      </div>
+                      <div className="text-gray-600 text-sm">
+                        Cart subtotal:{" "}
+                        <span className="font-semibold text-gray-900">RM {subtotal.toFixed(2)}</span>
+                      </div>
 
-                      <span className="text-gray-500 text-sm whitespace-nowrap">
-                        Cart subtotal: <span className="font-semibold text-gray-800">RM {subtotal.toFixed(2)}</span>
-                      </span>
+                      <div className="pt-2 flex items-baseline justify-between">
+                        <span className="font-semibold">Selected: {selectedItemCount} item{selectedItemCount !== 1 ? "s" : ""}</span>
+                        <span className="font-extrabold">RM {selectedSubtotal.toFixed(2)}</span>
+                      </div>
                     </div>
 
-                    <div className="flex items-baseline justify-between gap-3">
-                      <span className="font-semibold whitespace-nowrap">
-                        Selected: {selectedItemCount} item{selectedItemCount !== 1 ? "s" : ""}
-                      </span>
-                      <span className="font-extrabold whitespace-nowrap">
-                        RM {selectedSubtotal.toFixed(2)}
-                      </span>
+                    {/* DESKTOP/TABLET: keep your 2-row layout */}
+                    <div className="hidden sm:flex sm:flex-col gap-2">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="font-semibold">
+                          {itemCount} item{itemCount !== 1 ? "s" : ""} in cart
+                        </span>
+
+                        <span className="text-gray-500 text-sm whitespace-nowrap">
+                          Cart subtotal:{" "}
+                          <span className="font-semibold text-gray-800">RM {subtotal.toFixed(2)}</span>
+                        </span>
+                      </div>
+
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="font-semibold whitespace-nowrap">
+                          Selected: {selectedItemCount} item{selectedItemCount !== 1 ? "s" : ""}
+                        </span>
+                        <span className="font-extrabold whitespace-nowrap">RM {selectedSubtotal.toFixed(2)}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -305,9 +288,7 @@ const CartPage = () => {
                         : "bg-blue-800 hover:bg-blue-700 text-white"
                     }`}
                   >
-                    {selectedIds.length === 0
-                      ? "Select items to checkout"
-                      : "CHECKOUT SELECTED"}
+                    {selectedIds.length === 0 ? "Select items to checkout" : "CHECKOUT SELECTED"}
                   </button>
                 </div>
               </div>
@@ -340,11 +321,7 @@ const ConfirmationDialog = ({ item, onConfirm, onCancel }) => (
 
       <h2 className="text-xl font-extrabold mb-2">Remove Item?</h2>
       <p className="mb-6 text-gray-600">
-        Remove{" "}
-        <span className="font-bold text-gray-900">
-          {item.name || "this item"}
-        </span>{" "}
-        from your cart?
+        Remove <span className="font-bold text-gray-900">{item.name || "this item"}</span> from your cart?
       </p>
 
       <div className="grid grid-cols-2 gap-4">
@@ -366,6 +343,3 @@ const ConfirmationDialog = ({ item, onConfirm, onCancel }) => (
 );
 
 export default CartPage;
-
-/* quick helper class (optional): if you already have a glass util, remove this.
-   Tailwind doesn't allow custom class here unless in CSS, so ignore. */
