@@ -196,16 +196,16 @@ const CartPage = () => {
                                 </div>
 
                                 <div className="text-right">
-                                  <p className="text-white/60 text-xs">Subtotal</p>
-                                  <p className="font-extrabold text-lg">
+                                  <p className="text-amber-300/90 text-xs font-semibold">Subtotal</p>
+                                  <p className="font-extrabold text-lg text-amber-200 whitespace-nowrap">
                                     RM {lineTotal.toFixed(2)}
                                   </p>
                                 </div>
                               </div>
 
                               {/* Qty controls */}
-                              <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
-                                <div className="inline-flex items-center gap-1 bg-white/10 border border-white/10 rounded-xl p-1 flex-shrink-0">
+                              <div className="mt-4 flex items-center gap-3 flex-nowrap">
+                                <div className="inline-flex items-center gap-1 bg-white/10 border border-white/10 rounded-xl p-1 flex-1 min-w-0">
                                   <button
                                     type="button"
                                     onClick={() =>
@@ -216,13 +216,13 @@ const CartPage = () => {
                                       )
                                     }
                                     disabled={item.quantity <= 1}
-                                    className="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/15 flex items-center justify-center transition disabled:opacity-40 disabled:cursor-not-allowed"
+                                    className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/15 flex items-center justify-center transition disabled:opacity-40 disabled:cursor-not-allowed"
                                     aria-label="Decrease quantity"
                                   >
                                     <Minus className="w-4 h-4 text-white" />
                                   </button>
 
-                                  <span className="w-12 text-center font-extrabold">
+                                  <span className="w-10 sm:w-12 text-center font-extrabold">
                                     {item.quantity}
                                   </span>
 
@@ -235,7 +235,7 @@ const CartPage = () => {
                                         cartItemId
                                       )
                                     }
-                                    className="w-10 h-10 rounded-lg bg-white/10 hover:bg-white/15 flex items-center justify-center transition"
+                                    className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/15 flex items-center justify-center transition"
                                     aria-label="Increase quantity"
                                   >
                                     <Plus className="w-4 h-4 text-white" />
@@ -251,7 +251,7 @@ const CartPage = () => {
                                       name: product.name,
                                     })
                                   }
-                                  className="flex-shrink-0 p-3 rounded-xl bg-white/10 hover:bg-red-500/20 border border-white/10 hover:border-red-400/30 transition group"
+                                  className="flex-none p-3 rounded-xl bg-white/10 hover:bg-red-500/20 border border-white/10 hover:border-red-400/30 transition group"
                                   aria-label="Remove item"
                                 >
                                   <IoTrashOutline className="text-2xl text-white/80 group-hover:text-red-200 transition" />
@@ -275,20 +275,24 @@ const CartPage = () => {
             <div className="bg-gradient-to-t from-blue-950/90 via-blue-950/80 to-transparent pt-5 pb-4 sm:pt-8 sm:pb-6 px-6">
               <div className="mx-auto w-full max-w-screen-2xl">
                 <div className="bg-white rounded-2xl p-5 shadow-2xl">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-                    <div className="text-lg">
+                  <div className="flex flex-col gap-2 mb-3">
+                    <div className="flex items-baseline justify-between gap-3">
                       <span className="font-semibold">
                         {itemCount} item{itemCount !== 1 ? "s" : ""} in cart
-                      </span>{" "}
-                      <span className="text-gray-500 text-sm">
-                        · Cart subtotal: RM {subtotal.toFixed(2)}
+                      </span>
+
+                      <span className="text-gray-500 text-sm whitespace-nowrap">
+                        Cart subtotal: <span className="font-semibold text-gray-800">RM {subtotal.toFixed(2)}</span>
                       </span>
                     </div>
 
-                    <div className="text-base font-semibold">
-                      Selected: {selectedItemCount} item
-                      {selectedItemCount !== 1 ? "s" : ""} ·{" "}
-                      RM {selectedSubtotal.toFixed(2)}
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="font-semibold whitespace-nowrap">
+                        Selected: {selectedItemCount} item{selectedItemCount !== 1 ? "s" : ""}
+                      </span>
+                      <span className="font-extrabold whitespace-nowrap">
+                        RM {selectedSubtotal.toFixed(2)}
+                      </span>
                     </div>
                   </div>
 
