@@ -66,7 +66,7 @@ const CartPage = () => {
 
   return (
     <>
-      <div className="min-h-screen w-full bg-blue-900/95 relative overflow-hidden pb-56">
+      <div className="min-h-screen w-full bg-blue-900/95 relative overflow-hidden pb-[calc(80px+260px)]">
         {/* Decorative elements (same palette, just nicer) */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute top-20 left-10 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl" />
@@ -204,8 +204,8 @@ const CartPage = () => {
                               </div>
 
                               {/* Qty controls */}
-                              <div className="mt-4 flex items-center justify-between gap-4">
-                                <div className="inline-flex items-center gap-1 bg-white/10 border border-white/10 rounded-xl p-1">
+                              <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
+                                <div className="inline-flex items-center gap-1 bg-white/10 border border-white/10 rounded-xl p-1 flex-shrink-0">
                                   <button
                                     type="button"
                                     onClick={() =>
@@ -251,12 +251,9 @@ const CartPage = () => {
                                       name: product.name,
                                     })
                                   }
-                                  className="p-3 rounded-xl bg-white/10 hover:bg-red-500/20 border border-white/10 hover:border-red-400/30 transition group"
+                                  className="flex-shrink-0 p-3 rounded-xl bg-white/10 hover:bg-red-500/20 border border-white/10 hover:border-red-400/30 transition group"
                                   aria-label="Remove item"
                                 >
-                                  {/* keep your icon style if you want:
-                                      <IoTrashOutline className="text-2xl" />
-                                   */}
                                   <IoTrashOutline className="text-2xl text-white/80 group-hover:text-red-200 transition" />
                                 </button>
                               </div>
@@ -274,11 +271,11 @@ const CartPage = () => {
 
         {/* Sticky footer (lovable-ish) */}
         {itemCount > 0 && (
-          <footer className="fixed bottom-0 left-0 right-0 z-50">
-            <div className="bg-gradient-to-t from-blue-950/90 via-blue-950/80 to-transparent pt-8 pb-6 px-6">
+          <footer className="fixed left-0 right-0 bottom-[calc(80px+env(safe-area-inset-bottom))] z-50">
+            <div className="bg-gradient-to-t from-blue-950/90 via-blue-950/80 to-transparent pt-5 pb-4 sm:pt-8 sm:pb-6 px-6">
               <div className="mx-auto w-full max-w-screen-2xl">
                 <div className="bg-white rounded-2xl p-5 shadow-2xl">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
                     <div className="text-lg">
                       <span className="font-semibold">
                         {itemCount} item{itemCount !== 1 ? "s" : ""} in cart

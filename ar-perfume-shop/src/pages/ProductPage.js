@@ -68,15 +68,18 @@ function Toast({ message, type = "success", onClose }) {
       initial={{ opacity: 0, y: 30, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 30, scale: 0.96 }}
-      className={`fixed bottom-6 right-6 z-[60] px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm ${
-        type === "error"
-          ? "bg-red-500/90 border-red-400/30"
-          : "bg-emerald-500/90 border-emerald-400/30"
-      } text-white`}
+      className={`
+        fixed z-[60]
+        left-1/2 -translate-x-1/2 bottom-24 sm:bottom-6
+        w-[calc(100%-2rem)] sm:w-auto max-w-md
+        px-5 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm
+        ${type === "error" ? "bg-red-500/90 border-red-400/30" : "bg-emerald-500/90 border-emerald-400/30"}
+        text-white
+      `}
     >
       <div className="flex items-center gap-3">
-        <IoSparkles className="text-xl" />
-        <span className="font-medium">{message}</span>
+        <IoSparkles className="text-xl shrink-0" />
+        <span className="font-medium flex-1 text-center">{message}</span>
         <button onClick={onClose} className="text-white/70 hover:text-white ml-2">
           <IoClose className="text-xl" />
         </button>
@@ -84,6 +87,7 @@ function Toast({ message, type = "success", onClose }) {
     </motion.div>
   );
 }
+
 
 function AddToCartModal({ product, qty, setQty, onClose, onConfirm }) {
   const dec = () => qty > 1 && setQty(qty - 1);
@@ -100,7 +104,7 @@ function AddToCartModal({ product, qty, setQty, onClose, onConfirm }) {
         initial={{ scale: 0.92, opacity: 0, y: 16 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.92, opacity: 0, y: 16 }}
-        className="bg-gradient-to-br from-luxury-navy via-luxury-navy/95 to-luxury-navy/90 border border-luxury-gold/20 text-white rounded-3xl shadow-2xl w-full max-w-md p-8"
+        className="bg-gradient-to-br from-luxury-navy via-luxury-navy/95 to-luxury-navy/90 border border-luxury-gold/20 text-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8"
       >
         <div className="text-center mb-8">
           <IoSparkles className="text-luxury-gold text-4xl mx-auto mb-4" />
@@ -113,12 +117,12 @@ function AddToCartModal({ product, qty, setQty, onClose, onConfirm }) {
             whileHover={{ scale: 1.06 }}
             whileTap={{ scale: 0.95 }}
             onClick={dec}
-            className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/10 hover:bg-white/20 border border-luxury-gold/20 text-2xl font-bold transition-all duration-300"
+            className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-2xl bg-white/10 hover:bg-white/20 border border-luxury-gold/20 text-2xl font-bold transition-all duration-300"
           >
             −
           </motion.button>
 
-          <div className="w-24 text-center py-3 border border-luxury-gold/30 rounded-2xl text-2xl font-bold bg-white/5">
+          <div className="w-20 sm:w-24 text-center py-3 border border-luxury-gold/30 rounded-2xl text-2xl font-bold bg-white/5">
             {qty}
           </div>
 
@@ -126,7 +130,7 @@ function AddToCartModal({ product, qty, setQty, onClose, onConfirm }) {
             whileHover={{ scale: 1.06 }}
             whileTap={{ scale: 0.95 }}
             onClick={inc}
-            className="w-14 h-14 flex items-center justify-center rounded-2xl bg-white/10 hover:bg-white/20 border border-luxury-gold/20 text-2xl font-bold transition-all duration-300"
+            className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-2xl bg-white/10 hover:bg-white/20 border border-luxury-gold/20 text-2xl font-bold transition-all duration-300"
           >
             +
           </motion.button>
@@ -139,12 +143,21 @@ function AddToCartModal({ product, qty, setQty, onClose, onConfirm }) {
           </span>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex gap-3 sm:gap-4">
           <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             onClick={onClose}
-            className="flex-1 px-6 py-4 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl font-semibold transition-all duration-300"
+            className="
+              flex-1
+              px-4 py-3 sm:px-6 sm:py-4
+              bg-white/10 hover:bg-white/20
+              border border-white/20
+              rounded-xl sm:rounded-2xl
+              font-semibold
+              transition-all duration-300
+              text-base sm:text-lg
+            "
           >
             Cancel
           </motion.button>
@@ -153,11 +166,22 @@ function AddToCartModal({ product, qty, setQty, onClose, onConfirm }) {
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             onClick={onConfirm}
-            className="flex-1 px-6 py-4 bg-gradient-to-r from-luxury-gold to-luxury-gold/80 hover:from-luxury-gold/90 hover:to-luxury-gold/70 text-luxury-navy rounded-2xl font-bold transition-all duration-300 shadow-lg shadow-luxury-gold/20"
+            className="
+              flex-1
+              px-4 py-3 sm:px-6 sm:py-4
+              bg-gradient-to-r from-luxury-gold to-luxury-gold/80
+              hover:from-luxury-gold/90 hover:to-luxury-gold/70
+              text-luxury-navy
+              rounded-xl sm:rounded-2xl
+              font-bold
+              transition-all duration-300
+              shadow-lg shadow-luxury-gold/20
+              text-base sm:text-lg
+            "
           >
-            <span className="flex items-center justify-center gap-2">
-              <IoCartOutline className="text-xl" />
-              Add to Cart
+            <span className="inline-flex items-center justify-center gap-2">
+              <IoCartOutline className="text-2xl sm:text-xl" />
+              <span className="leading-none whitespace-nowrap">Add to Cart</span>
             </span>
           </motion.button>
         </div>
@@ -698,7 +722,7 @@ export default function ProductPage() {
                     onClick={() => setCartOpen(true)}
                     className="flex-1 py-4 px-6 bg-gradient-to-r from-luxury-gold to-luxury-gold/80 text-luxury-navy font-bold rounded-2xl shadow-lg shadow-luxury-gold/20 flex items-center justify-center gap-3 transition-all duration-300"
                   >
-                    <IoCartOutline className="text-2xl" />
+                    <IoCartOutline className="text-2xl sm:text-xl" />
                     Add to Cart
                   </motion.button>
 
@@ -725,15 +749,25 @@ export default function ProductPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-gradient-to-r from-purple-600/30 via-pink-500/30 to-purple-600/30 border border-purple-400/20 rounded-3xl p-6 flex items-center gap-5"
+                    className="
+                      bg-gradient-to-r from-purple-600/30 via-pink-500/30 to-purple-600/30
+                      border border-purple-400/20 rounded-3xl p-6
+                      flex flex-col sm:flex-row
+                      sm:items-center
+                      gap-4 sm:gap-5
+                    "
                   >
-                    <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-3xl">
+                    <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-3xl shrink-0">
                       📱
                     </div>
-                    <div className="flex-1">
+
+                    <div className="flex-1 min-w-0">
                       <h3 className="text-lg font-bold text-white">Download AR App</h3>
-                      <p className="text-luxury-silver text-sm">Experience fragrance in augmented reality</p>
+                      <p className="text-luxury-silver text-sm break-words">
+                        Experience fragrance in augmented reality
+                      </p>
                     </div>
+
                     {firstDownloadHref && (
                       <motion.a
                         whileHover={{ scale: 1.04 }}
@@ -741,7 +775,15 @@ export default function ProductPage() {
                         href={firstDownloadHref}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/20"
+                        className="
+                          w-full sm:w-auto
+                          shrink-0 whitespace-nowrap
+                          px-6 py-3
+                          bg-gradient-to-r from-emerald-500 to-emerald-600
+                          text-white font-semibold rounded-xl
+                          shadow-lg shadow-emerald-500/20
+                          text-center
+                        "
                       >
                         Download
                       </motion.a>
