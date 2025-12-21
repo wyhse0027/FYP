@@ -175,13 +175,15 @@ const ShopPage = () => {
                   <span
                     className="
                       absolute -top-1 -right-1
-                      min-w-[18px] h-[18px] px-1
-                      md:min-w-[24px] md:h-[24px] md:text-[12px]
+                      inline-flex items-center justify-center
+                      min-w-[22px] h-[22px] px-1.5
+                      md:min-w-[28px] md:h-[28px] md:px-2
                       rounded-full bg-luxury-gold text-[#0c1a3a]
-                      text-[11px] font-extrabold grid place-items-center shadow
+                      text-[12px] md:text-[13px] font-extrabold leading-none
+                      shadow
                     "
                   >
-                    {itemCount}
+                    {itemCount > 99 ? "99+" : itemCount}
                   </span>
                 )}
               </Link>
