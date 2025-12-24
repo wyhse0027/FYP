@@ -41,6 +41,19 @@ const starBar = (avg) => {
   return "★".repeat(n) + "☆".repeat(5 - n);
 };
 
+// shorten long text for MOBILE only without cutting mid-word
+const shortenForMobile = (value, max = 55) => {
+  if (!value) return "—";
+  const str = String(value);
+  if (str.length <= max) return str;
+  // try cut at last space before max
+  const cutAt = str.lastIndexOf(" ", max);
+  if (cutAt > 30) {
+    return str.slice(0, cutAt).trim() + "…";
+  }
+  return str.slice(0, max).trim() + "…";
+};
+
 /* ---------- main page ---------- */
 export default function ComparePage() {
   const navigate = useNavigate();
@@ -158,9 +171,10 @@ export default function ComparePage() {
       </div>
 
       <div className="relative z-10 mx-auto w-full max-w-screen-2xl px-4 md:px-8 lg:px-12 py-10">
+        {/* Back button */}
         <div className="mb-6">
           <button
-            onClick={() => navigate("/shop")} // change to your shop route
+            onClick={() => navigate("/shop")} // back to shop
             className="
               group
               flex items-center justify-center
@@ -183,54 +197,55 @@ export default function ComparePage() {
           </button>
         </div>
 
-        {/* HERO HEADER (like screenshot layout) */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 text-[rgba(212,175,55,0.95)] text-xs md:text-sm font-semibold tracking-[0.35em] uppercase">
-            <span className="text-[rgba(212,175,55,0.95)]">👑</span>
+        {/* HERO HEADER */}
+        <div className="text-center mb-8 md:mb-10">
+          <div className="inline-flex items-center gap-2 text-[rgba(212,175,55,0.95)] text-[10px] md:text-sm font-semibold tracking-[0.35em] uppercase">
+            <span>👑</span>
             <span>Side by Side</span>
-            <span className="text-[rgba(212,175,55,0.95)]">👑</span>
+            <span>👑</span>
           </div>
 
-          <h1 className="mt-4 text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
+          <h1 className="mt-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
             <span className="text-white">Compare </span>
             <span className="text-[rgba(212,175,55,0.95)]">Fragrances</span>
           </h1>
 
-          <p className="mt-3 text-white/70 text-base md:text-lg max-w-2xl mx-auto">
-            Discover the perfect scent by comparing our exquisite collection
+          <p className="mt-3 text-white/70 text-sm sm:text-base md:text-lg max-w-2xl mx-auto">
+            Discover the perfect scent by comparing our exquisite collection.
           </p>
 
           {/* centered action buttons */}
-          <div className="mt-7 flex items-center justify-center gap-4">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
             <button
               onClick={swap}
-              className="inline-flex items-center gap-2 rounded-full px-6 py-3
+              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 sm:px-6 sm:py-3
                          bg-white/10 border border-white/15
-                         hover:bg-white/15 transition"
+                         hover:bg-white/15 transition text-sm sm:text-base"
               title="Swap"
             >
-              <IoSwapHorizontalOutline className="text-xl text-[rgba(212,175,55,0.95)]" />
+              <IoSwapHorizontalOutline className="text-lg sm:text-xl text-[rgba(212,175,55,0.95)]" />
               <span className="font-semibold">Swap</span>
             </button>
 
             <button
               onClick={clearBoth}
-              className="inline-flex items-center gap-2 rounded-full px-6 py-3
+              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 sm:px-6 sm:py-3
                          bg-white/10 border border-white/15
-                         hover:bg-white/15 transition"
+                         hover:bg-white/15 transition text-sm sm:text-base"
               title="Clear"
             >
-              <IoTrashOutline className="text-xl text-white/80" />
+              <IoTrashOutline className="text-lg sm:text-xl text-white/80" />
               <span className="font-semibold">Clear</span>
             </button>
           </div>
         </div>
 
-        {/* GRID (same layout as screenshot: left card / specs / right card) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* LEFT CARD */}
+        {/* DESKTOP GRID (unchanged behaviour, lg+ only) */}
+        <div className="hidden lg:grid grid-cols-12 gap-8">
+          {/* LEFT CARD – desktop */}
           <div className="lg:col-span-3">
             <ProductPanel
+              label="Fragrance A"
               product={left}
               placeholder="Select First Fragrance"
               onChange={() => setPicker({ open: true, side: "left" })}
@@ -238,11 +253,11 @@ export default function ComparePage() {
             />
           </div>
 
-          {/* CENTER COMPARISON */}
-          <div className="lg:col-span-6 rounded-3xl p-6 md:p-8 bg-white/10 border border-white/10 backdrop-blur-sm">
+          {/* CENTER COMPARISON – desktop */}
+          <div className="lg:col-span-6 rounded-3xl p-8 bg-white/10 border border-white/10 backdrop-blur-sm">
             <div className="flex items-center justify-center gap-3 mb-6">
               <IoSparklesOutline className="text-[rgba(212,175,55,0.95)] text-xl" />
-              <h3 className="text-center font-extrabold text-2xl md:text-3xl">
+              <h3 className="text-center font-extrabold text-3xl">
                 Specifications
               </h3>
               <IoSparklesOutline className="text-[rgba(212,175,55,0.95)] text-xl" />
@@ -264,14 +279,81 @@ export default function ComparePage() {
             )}
           </div>
 
-          {/* RIGHT CARD */}
+          {/* RIGHT CARD – desktop */}
           <div className="lg:col-span-3">
             <ProductPanel
+              label="Fragrance B"
               product={right}
               placeholder="Select Second Fragrance"
               onChange={() => setPicker({ open: true, side: "right" })}
               onRemove={() => setSide("right", null)}
             />
+          </div>
+        </div>
+
+        {/* MOBILE / TABLET LAYOUT (lg:hidden) */}
+        <div className="lg:hidden space-y-6">
+          {/* Both cards near the top: A then B */}
+          <ProductPanel
+            label="Fragrance A"
+            product={left}
+            placeholder="Select First Fragrance"
+            onChange={() => setPicker({ open: true, side: "left" })}
+            onRemove={() => setSide("left", null)}
+          />
+
+          <ProductPanel
+            label="Fragrance B"
+            product={right}
+            placeholder="Select Second Fragrance"
+            onChange={() => setPicker({ open: true, side: "right" })}
+            onRemove={() => setSide("right", null)}
+          />
+
+          {/* Specs card – mobile-friendly layout */}
+          <div className="rounded-3xl p-5 sm:p-6 bg-white/10 border border-white/10 backdrop-blur-sm">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <IoSparklesOutline className="text-[rgba(212,175,55,0.95)] text-lg" />
+              <h3 className="text-center font-extrabold text-xl">
+                Specifications
+              </h3>
+              <IoSparklesOutline className="text-[rgba(212,175,55,0.95)] text-lg" />
+            </div>
+
+            <SpecRowMobile
+              label="Target"
+              left={shortenForMobile(L.target, 24)}
+              right={shortenForMobile(R.target, 24)}
+            />
+            <SpecRowMobile
+              label="Category"
+              left={shortenForMobile(L.category, 24)}
+              right={shortenForMobile(R.category, 24)}
+            />
+            <SpecRowMobile
+              label="Tags"
+              left={shortenForMobile(L.tags, 60)}
+              right={shortenForMobile(R.tags, 60)}
+            />
+            <SpecRowMobile
+              label="Rating"
+              left={L.rating}
+              right={R.rating}
+              mono
+            />
+            <SpecRowMobile
+              label="Price"
+              left={L.price}
+              right={R.price}
+              isPrice
+            />
+
+            {!left && !right && (
+              <div className="text-center pt-6 text-white/65 text-sm">
+                Select any two fragrances above to see a side-by-side
+                comparison.
+              </div>
+            )}
           </div>
         </div>
 
@@ -292,24 +374,33 @@ export default function ComparePage() {
 }
 
 /* ---------- UI bits ---------- */
-function ProductPanel({ product, placeholder, onChange, onRemove }) {
+function ProductPanel({ product, placeholder, onChange, onRemove, label }) {
   const title = product?.name || placeholder;
   const img = productImage(product);
 
   return (
-    <div className="rounded-3xl p-6 bg-white/10 border border-white/10 backdrop-blur-sm">
-      <div className="flex items-start justify-between mb-4">
+    <div className="rounded-3xl p-5 sm:p-6 bg-white/10 border border-white/10 backdrop-blur-sm">
+      <div className="flex items-start justify-between mb-4 gap-3">
         <div className="min-w-0">
-          <div className="font-extrabold text-xl truncate">{title}</div>
+          {label && (
+            <div className="text-[10px] uppercase tracking-[0.25em] text-white/60 mb-1">
+              {label}
+            </div>
+          )}
+          <div className="font-extrabold text-lg sm:text-xl break-words md:truncate">
+            {title}
+          </div>
           {product?.category && (
-            <div className="text-sm text-white/70 mt-1">{product.category}</div>
+            <div className="text-xs sm:text-sm text-white/70 mt-1">
+              {product.category}
+            </div>
           )}
         </div>
 
-        <div className="shrink-0 ml-3 flex gap-2">
+        <div className="shrink-0 flex gap-2">
           <button
             onClick={onChange}
-            className="text-sm px-4 py-2 rounded-full
+            className="text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-full
                        bg-white/10 border border-white/15
                        hover:bg-white/15 transition
                        text-[rgba(212,175,55,0.95)] font-semibold"
@@ -320,11 +411,11 @@ function ProductPanel({ product, placeholder, onChange, onRemove }) {
           {product && (
             <button
               onClick={onRemove}
-              className="p-2 rounded-full bg-white/10 border border-white/15
+              className="p-1.5 sm:p-2 rounded-full bg-white/10 border border-white/15
                          hover:bg-white/15 transition"
               title="Remove"
             >
-              <IoClose className="text-xl text-white/80" />
+              <IoClose className="text-lg sm:text-xl text-white/80" />
             </button>
           )}
         </div>
@@ -343,39 +434,45 @@ function ProductPanel({ product, placeholder, onChange, onRemove }) {
           </>
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-white/55 px-4 text-center gap-3">
-            <div className="h-14 w-14 rounded-2xl border border-white/15 bg-white/5 flex items-center justify-center">
-              <div className="h-7 w-7 rounded-md border border-white/20" />
+            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl border border-white/15 bg-white/5 flex items-center justify-center">
+              <div className="h-6 w-6 sm:h-7 sm:w-7 rounded-md border border-white/20" />
             </div>
-            <div className="text-sm">No fragrance selected</div>
+            <div className="text-xs sm:text-sm">No fragrance selected</div>
           </div>
         )}
       </div>
 
       <div className="text-center pt-3 border-t border-white/10">
-        <div className="text-sm text-white/60">Price</div>
-        <div className="text-2xl font-extrabold mt-1 text-[rgba(212,175,55,0.95)]">
+        <div className="text-xs sm:text-sm text-white/60">Price</div>
+        <div className="text-xl sm:text-2xl font-extrabold mt-1 text-[rgba(212,175,55,0.95)]">
           {product ? money(product.price) : "—"}
         </div>
 
         {/* subtle gold underline like screenshot */}
-        <div className="mt-3 mx-auto h-[2px] w-10 bg-[rgba(212,175,55,0.7)]/80 rounded-full" />
+        <div className="mt-3 mx-auto h-[2px] w-10 bg-[rgba(212,175,55,0.7)] rounded-full" />
       </div>
     </div>
   );
 }
 
+/* ---------- Desktop spec row (3 columns, like before) ---------- */
 function SpecRowTriple({ label, left, right, isPrice }) {
-  if ((left === "—" || left == null) && (right === "—" || right == null))
+  const safeLeft = left ?? "—";
+  const safeRight = right ?? "—";
+
+  if ((safeLeft === "—" || safeLeft == null) && (safeRight === "—" || safeRight == null))
     return null;
 
   return (
-    <div className="grid grid-cols-3 gap-4 items-center py-4 border-b border-white/10 last:border-0">
+    <div className="hidden lg:grid grid-cols-3 gap-4 items-center py-4 border-b border-white/10 last:border-0">
       <div
-        className={`text-center break-words ${
-          isPrice ? "text-[rgba(212,175,55,0.95)] text-lg font-extrabold" : "text-white/90"
+        className={`text-center whitespace-normal leading-relaxed px-2 ${
+          isPrice
+            ? "text-[rgba(212,175,55,0.95)] text-lg font-extrabold"
+            : "text-white/90"
         }`}
       >
-        {left}
+        {safeLeft}
       </div>
 
       <div className="text-center">
@@ -385,11 +482,47 @@ function SpecRowTriple({ label, left, right, isPrice }) {
       </div>
 
       <div
-        className={`text-center break-words ${
-          isPrice ? "text-[rgba(212,175,55,0.95)] text-lg font-extrabold" : "text-white/90"
+        className={`text-center whitespace-normal leading-relaxed px-2 ${
+          isPrice
+            ? "text-[rgba(212,175,55,0.95)] text-lg font-extrabold"
+            : "text-white/90"
         }`}
       >
-        {right}
+        {safeRight}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Mobile spec row ---------- */
+function SpecRowMobile({ label, left, right, isPrice, mono }) {
+  const hasLeft = left && left !== "—";
+  const hasRight = right && right !== "—";
+  if (!hasLeft && !hasRight) return null;
+
+  return (
+    <div className="py-3 border-b border-white/10 last:border-0">
+      <div className="flex justify-center mb-2">
+        <span className="inline-block px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">
+          {label}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
+        <div
+          className={`text-right whitespace-normal ${
+            isPrice ? "text-[rgba(212,175,55,0.95)] font-extrabold" : "text-white/90"
+          } ${mono ? "font-mono" : ""}`}
+        >
+          {hasLeft ? left : "—"}
+        </div>
+        <div
+          className={`text-left whitespace-normal ${
+            isPrice ? "text-[rgba(212,175,55,0.95)] font-extrabold" : "text-white/90"
+          } ${mono ? "font-mono" : ""}`}
+        >
+          {hasRight ? right : "—"}
+        </div>
       </div>
     </div>
   );
@@ -432,7 +565,7 @@ function ProductPicker({ products, onPick, onClose }) {
                   />
                 </div>
 
-                <div className="font-semibold text-lg text-white line-clamp-1">
+                <div className="font-semibold text-base text-white line-clamp-2">
                   {p.name}
                 </div>
                 <div className="text-sm text-[rgba(212,175,55,0.95)] mt-1 font-semibold">
