@@ -2,15 +2,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
-import http from "../lib/http"; // ✅ use wrapper
+import http from "../lib/http";
 
 const Star = ({ filled, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`text-2xl md:text-3xl ${
-      filled ? "text-yellow-400" : "text-gray-500"
-    }`}
+    className={`text-2xl ${filled ? "text-yellow-400" : "text-gray-500"}`}
     aria-label={filled ? "star-filled" : "star"}
   >
     ★
@@ -36,7 +34,7 @@ export default function RateOrderPage() {
 
   if (!order) {
     return (
-      <div className="min-h-screen w-full bg-[#0c1a3a] px-6 md:px-10 lg:px-16 text-white">
+      <div className="min-h-screen w-full bg-[#0c1a3a] px-4 sm:px-6 md:px-10 lg:px-16 text-white">
         <div className="mx-auto w-full max-w-screen-2xl py-8">
           <PageHeader title="Rate Order" />
           <div className="bg-white/5 rounded-xl p-6">Loading order…</div>
@@ -47,7 +45,7 @@ export default function RateOrderPage() {
 
   // ─── Handle media selection ─────────────────────────────
   const handleFileChange = (pid, e) => {
-    const newFiles = Array.from(e.target.files);
+    const newFiles = Array.from(e.target.files || []);
     setFiles((prev) => ({ ...prev, [pid]: newFiles }));
   };
 
@@ -59,7 +57,6 @@ export default function RateOrderPage() {
         const stars = Number(ratings[pid] || 0);
 
         if (stars > 0) {
-          // ✅ Send review + files in one request
           const formData = new FormData();
           formData.append("product_id", pid);
           formData.append("rating", stars);
@@ -74,7 +71,6 @@ export default function RateOrderPage() {
         }
       }
 
-      // ✅ Mark order as completed
       await http.post(`orders/${order.id}/complete/`);
 
       nav("/orders?tab=HISTORY", { replace: true });
@@ -86,11 +82,11 @@ export default function RateOrderPage() {
 
   // ─── UI ─────────────────────────────
   return (
-    <div className="min-h-screen w-full bg-[#0c1a3a] px-6 md:px-10 lg:px-16 text-white">
+    <div className="min-h-screen w-full bg-[#0c1a3a] px-4 sm:px-6 md:px-10 lg:px-16 text-white">
       <div className="mx-auto w-full max-w-screen-2xl py-8">
         <PageHeader title="Rate your items" />
 
-        <div className="grid gap-6">
+        <div className="mt-4 grid gap-5">
           {order.items.map((it) => {
             const pid = it.product.id;
             const name = it.product.name;
@@ -100,27 +96,35 @@ export default function RateOrderPage() {
             const rating = Number(ratings[pid] || 0);
 
             return (
-              <div key={pid} className="bg-white/5 rounded-2xl p-4 md:p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-28 h-28 md:w-36 md:h-36 rounded-lg overflow-hidden bg-black/20 flex items-center justify-center">
-                    {img ? (
-                      <img
-                        src={img}
-                        alt={name}
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      <div className="text-white/60">No image</div>
-                    )}
+              <div
+                key={pid}
+                className="bg-white/5 rounded-2xl p-4 sm:p-5 lg:p-6"
+              >
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                  {/* Image block – full width on mobile, fixed on larger screens */}
+                  <div className="w-full sm:w-32 md:w-40">
+                    <div className="w-full aspect-square rounded-xl overflow-hidden bg-black/20 flex items-center justify-center">
+                      {img ? (
+                        <img
+                          src={img}
+                          alt={name}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="text-white/60 text-sm">No image</div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="text-lg md:text-2xl font-semibold">
+                  {/* Right side content */}
+                  <div className="flex-1 flex flex-col gap-3">
+                    {/* Title + View product */}
+                    <div className="flex flex-col xs:flex-row xs:items-start justify-between gap-1 xs:gap-3">
+                      <div className="text-base sm:text-lg md:text-xl font-semibold leading-snug">
                         {name}
                       </div>
                       <Link
-                        className="text-sky-400 underline"
+                        className="text-sky-400 text-sm sm:text-xs md:text-sm underline mt-1 xs:mt-0"
                         to={`/product/${pid}`}
                         target="_blank"
                         rel="noreferrer"
@@ -128,22 +132,25 @@ export default function RateOrderPage() {
                         View product
                       </Link>
                     </div>
-                    <div className="text-white/70 text-sm mb-2">
+
+                    <div className="text-white/70 text-xs sm:text-sm">
                       Qty: {qty}
                     </div>
 
                     {/* Stars */}
-                    <div className="flex items-center gap-2 mb-3">
-                      {[1, 2, 3, 4, 5].map((n) => (
-                        <Star
-                          key={n}
-                          filled={n <= rating}
-                          onClick={() =>
-                            setRatings((s) => ({ ...s, [pid]: n }))
-                          }
-                        />
-                      ))}
-                      <span className="ml-2 text-white/80">
+                    <div className="flex items-center flex-wrap gap-2">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <Star
+                            key={n}
+                            filled={n <= rating}
+                            onClick={() =>
+                              setRatings((s) => ({ ...s, [pid]: n }))
+                            }
+                          />
+                        ))}
+                      </div>
+                      <span className="text-white/80 text-sm">
                         {rating || 0}/5
                       </span>
                     </div>
@@ -151,27 +158,35 @@ export default function RateOrderPage() {
                     {/* Comment */}
                     <textarea
                       rows={3}
-                      className="w-full bg-white/10 rounded-lg p-3 outline-none focus:ring-4 focus:ring-sky-500/30 mb-3"
+                      className="w-full bg-white/10 rounded-lg p-3 text-sm outline-none focus:ring-4 focus:ring-sky-500/30"
                       placeholder="Tell others what you liked (optional)…"
                       value={comments[pid] || ""}
                       onChange={(e) =>
-                        setComments((c) => ({ ...c, [pid]: e.target.value }))
+                        setComments((c) => ({
+                          ...c,
+                          [pid]: e.target.value,
+                        }))
                       }
                     />
 
-                    {/* File upload */}
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*,video/*"
-                      onChange={(e) => handleFileChange(pid, e)}
-                      className="text-sm text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-sky-500 file:text-white hover:file:bg-sky-600"
-                    />
-                    {files[pid]?.length > 0 && (
-                      <div className="mt-2 text-xs text-white/70">
-                        {files[pid].length} file(s) selected
+                    {/* File upload – mobile-friendly button */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                      <label className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-sky-500 hover:bg-sky-600 text-sm font-semibold cursor-pointer w-full sm:w-auto text-center">
+                        Choose files
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*,video/*"
+                          onChange={(e) => handleFileChange(pid, e)}
+                          className="hidden"
+                        />
+                      </label>
+                      <div className="text-xs text-white/70">
+                        {files[pid]?.length
+                          ? `${files[pid].length} file(s) selected`
+                          : "No files selected"}
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               </div>
