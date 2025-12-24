@@ -139,27 +139,56 @@ export default function ComparePage() {
     };
   };
 
-  const L = {
-    target: listify(left?.target),
-    category: listify(left?.category),
-    tags: listify(parseTags(left?.tags)),
-    rating: (() => {
-      const { avg, count } = ratingInfo(a, left);
-      return count ? `${starBar(avg)}  ${avg.toFixed(1)} · ${count}` : "—";
-    })(),
-    price: money(left?.price),
-  };
+  // ---------- derived values for left/right ----------
+  const L = (() => {
+    const target = listify(left?.target);
+    const category = listify(left?.category);
+    const tags = listify(parseTags(left?.tags));
+    const { avg, count } = ratingInfo(a, left);
+    const hasRating = Number.isFinite(avg) && avg > 0;
+    const ratingStars = hasRating ? starBar(avg) : "—";
+    const ratingValue = hasRating ? avg.toFixed(1) : "—";
 
-  const R = {
-    target: listify(right?.target),
-    category: listify(right?.category),
-    tags: listify(parseTags(right?.tags)),
-    rating: (() => {
-      const { avg, count } = ratingInfo(b, right);
-      return count ? `${starBar(avg)}  ${avg.toFixed(1)} · ${count}` : "—";
-    })(),
-    price: money(right?.price),
-  };
+    return {
+      target,
+      category,
+      tags,
+      // desktop display keeps old behaviour
+      rating: hasRating
+        ? `${ratingStars}  ${ratingValue} · ${count}`
+        : "—",
+      // mobile needs split rows + no count
+      ratingStars,
+      ratingValue,
+      price: money(left?.price),
+      name: left?.name || "",
+    };
+  })();
+
+  const R = (() => {
+    const target = listify(right?.target);
+    const category = listify(right?.category);
+    const tags = listify(parseTags(right?.tags));
+    const { avg, count } = ratingInfo(b, right);
+    const hasRating = Number.isFinite(avg) && avg > 0;
+    const ratingStars = hasRating ? starBar(avg) : "—";
+    const ratingValue = hasRating ? avg.toFixed(1) : "—";
+
+    return {
+      target,
+      category,
+      tags,
+      rating: hasRating
+        ? `${ratingStars}  ${ratingValue} · ${count}`
+        : "—",
+      ratingStars,
+      ratingValue,
+      price: money(right?.price),
+      name: right?.name || "",
+    };
+  })();
+
+  const bothSelected = !!left && !!right;
 
   return (
     <div className="min-h-screen w-full text-white bg-[#0c1a3a] relative overflow-hidden">
@@ -181,7 +210,7 @@ export default function ComparePage() {
               w-12 h-12 rounded-full
               border border-[rgba(212,175,55,0.5)]
               bg-[#0c1a3a]
-              hover:bg-white/10
+              hover:bg:white/10
               transition-all duration-300
             "
             aria-label="Back to shop"
@@ -293,68 +322,112 @@ export default function ComparePage() {
 
         {/* MOBILE / TABLET LAYOUT (lg:hidden) */}
         <div className="lg:hidden space-y-6">
-          {/* Both cards near the top: A then B */}
-          <ProductPanel
-            label="Fragrance A"
-            product={left}
-            placeholder="Select First Fragrance"
-            onChange={() => setPicker({ open: true, side: "left" })}
-            onRemove={() => setSide("left", null)}
-          />
+          {/* STEP 1: selection only, no specs yet */}
+          {!bothSelected && (
+            <>
+              <ProductPanel
+                label="Fragrance A"
+                product={left}
+                placeholder="Select First Fragrance"
+                onChange={() => setPicker({ open: true, side: "left" })}
+                onRemove={() => setSide("left", null)}
+              />
 
-          <ProductPanel
-            label="Fragrance B"
-            product={right}
-            placeholder="Select Second Fragrance"
-            onChange={() => setPicker({ open: true, side: "right" })}
-            onRemove={() => setSide("right", null)}
-          />
+              <ProductPanel
+                label="Fragrance B"
+                product={right}
+                placeholder="Select Second Fragrance"
+                onChange={() => setPicker({ open: true, side: "right" })}
+                onRemove={() => setSide("right", null)}
+              />
 
-          {/* Specs card – mobile-friendly layout */}
-          <div className="rounded-3xl p-5 sm:p-6 bg-white/10 border border-white/10 backdrop-blur-sm">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <IoSparklesOutline className="text-[rgba(212,175,55,0.95)] text-lg" />
-              <h3 className="text-center font-extrabold text-xl">
-                Specifications
-              </h3>
-              <IoSparklesOutline className="text-[rgba(212,175,55,0.95)] text-lg" />
-            </div>
+              {!left && !right && (
+                <div className="text-center pt-2 pb-4 text-white/65 text-xs">
+                  Pick two fragrances above to start comparing.
+                </div>
+              )}
+            </>
+          )}
 
-            <SpecRowMobile
-              label="Target"
-              left={shortenForMobile(L.target, 24)}
-              right={shortenForMobile(R.target, 24)}
-            />
-            <SpecRowMobile
-              label="Category"
-              left={shortenForMobile(L.category, 24)}
-              right={shortenForMobile(R.category, 24)}
-            />
-            <SpecRowMobile
-              label="Tags"
-              left={shortenForMobile(L.tags, 60)}
-              right={shortenForMobile(R.tags, 60)}
-            />
-            <SpecRowMobile
-              label="Rating"
-              left={L.rating}
-              right={R.rating}
-              mono
-            />
-            <SpecRowMobile
-              label="Price"
-              left={L.price}
-              right={R.price}
-              isPrice
-            />
-
-            {!left && !right && (
-              <div className="text-center pt-6 text-white/65 text-sm">
-                Select any two fragrances above to see a side-by-side
-                comparison.
+          {/* STEP 2: both selected – show ONLY names + specs + change */}
+          {bothSelected && (
+            <div className="rounded-3xl p-5 sm:p-6 bg-white/10 border border-white/10 backdrop-blur-sm">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <IoSparklesOutline className="text-[rgba(212,175,55,0.95)] text-lg" />
+                <h3 className="text-center font-extrabold text-xl">
+                  Specifications
+                </h3>
+                <IoSparklesOutline className="text-[rgba(212,175,55,0.95)] text-lg" />
               </div>
-            )}
-          </div>
+
+              {/* names + change buttons (no images) */}
+              <div className="grid grid-cols-2 gap-3 mb-4 text-xs sm:text-sm">
+                <div className="text-right">
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-white/60 mb-1">
+                    Fragrance A
+                  </div>
+                  <div className="font-semibold text-white break-words mb-2">
+                    {L.name}
+                  </div>
+                  <button
+                    onClick={() => setPicker({ open: true, side: "left" })}
+                    className="inline-flex items-center justify-center px-3 py-1.5 rounded-full
+                               bg-white/10 border border-white/15 text-[rgba(212,175,55,0.95)]
+                               text-[11px] font-semibold"
+                  >
+                    Change
+                  </button>
+                </div>
+
+                <div className="text-left">
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-white/60 mb-1">
+                    Fragrance B
+                  </div>
+                  <div className="font-semibold text-white break-words mb-2">
+                    {R.name}
+                  </div>
+                  <button
+                    onClick={() => setPicker({ open: true, side: "right" })}
+                    className="inline-flex items-center justify-center px-3 py-1.5 rounded-full
+                               bg-white/10 border border-white/15 text-[rgba(212,175,55,0.95)]
+                               text-[11px] font-semibold"
+                  >
+                    Change
+                  </button>
+                </div>
+              </div>
+
+              {/* specs (no images) */}
+              <SpecRowMobile
+                label="Target"
+                left={shortenForMobile(L.target, 24)}
+                right={shortenForMobile(R.target, 24)}
+              />
+              <SpecRowMobile
+                label="Category"
+                left={shortenForMobile(L.category, 24)}
+                right={shortenForMobile(R.category, 24)}
+              />
+              <SpecRowMobile
+                label="Tags"
+                left={shortenForMobile(L.tags, 60)}
+                right={shortenForMobile(R.tags, 60)}
+              />
+              {/* rating: stars row + digits row, no count */}
+              <SpecRowMobile
+                label="Rating"
+                left={{ stars: L.ratingStars, value: L.ratingValue }}
+                right={{ stars: R.ratingStars, value: R.ratingValue }}
+                ratingLayout
+              />
+              <SpecRowMobile
+                label="Price"
+                left={L.price}
+                right={R.price}
+                isPrice
+              />
+            </div>
+          )}
         </div>
 
         {/* Picker Modal */}
@@ -460,7 +533,10 @@ function SpecRowTriple({ label, left, right, isPrice }) {
   const safeLeft = left ?? "—";
   const safeRight = right ?? "—";
 
-  if ((safeLeft === "—" || safeLeft == null) && (safeRight === "—" || safeRight == null))
+  if (
+    (safeLeft === "—" || safeLeft == null) &&
+    (safeRight === "—" || safeRight == null)
+  )
     return null;
 
   return (
@@ -495,7 +571,42 @@ function SpecRowTriple({ label, left, right, isPrice }) {
 }
 
 /* ---------- Mobile spec row ---------- */
-function SpecRowMobile({ label, left, right, isPrice, mono }) {
+function SpecRowMobile({
+  label,
+  left,
+  right,
+  isPrice,
+  mono,
+  ratingLayout = false,
+}) {
+  // ratingLayout: left/right are objects { stars, value }
+  if (ratingLayout) {
+    const hasLeft = left && left.value && left.value !== "—";
+    const hasRight = right && right.value && right.value !== "—";
+    if (!hasLeft && !hasRight) return null;
+
+    return (
+      <div className="py-3 border-b border-white/10 last:border-0">
+        <div className="flex justify-center mb-2">
+          <span className="inline-block px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">
+            {label}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
+          <div className="text-right text-white/90">
+            <div className="font-mono">{hasLeft ? left.stars : "—"}</div>
+            <div className="mt-1">{hasLeft ? left.value : ""}</div>
+          </div>
+          <div className="text-left text-white/90">
+            <div className="font-mono">{hasRight ? right.stars : "—"}</div>
+            <div className="mt-1">{hasRight ? right.value : ""}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const hasLeft = left && left !== "—";
   const hasRight = right && right !== "—";
   if (!hasLeft && !hasRight) return null;
@@ -511,14 +622,18 @@ function SpecRowMobile({ label, left, right, isPrice, mono }) {
       <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
         <div
           className={`text-right whitespace-normal ${
-            isPrice ? "text-[rgba(212,175,55,0.95)] font-extrabold" : "text-white/90"
+            isPrice
+              ? "text-[rgba(212,175,55,0.95)] font-extrabold"
+              : "text-white/90"
           } ${mono ? "font-mono" : ""}`}
         >
           {hasLeft ? left : "—"}
         </div>
         <div
           className={`text-left whitespace-normal ${
-            isPrice ? "text-[rgba(212,175,55,0.95)] font-extrabold" : "text-white/90"
+            isPrice
+              ? "text-[rgba(212,175,55,0.95)] font-extrabold"
+              : "text-white/90"
           } ${mono ? "font-mono" : ""}`}
         >
           {hasRight ? right : "—"}
@@ -557,7 +672,10 @@ function ProductPicker({ products, onPick, onClose }) {
                 <div className="rounded-xl overflow-hidden bg-black/20 aspect-[4/5] mb-3 border border-white/10">
                   <img
                     src={
-                      p.card_image || p.promo_image || p?.media_gallery?.[0]?.file || ""
+                      p.card_image ||
+                      p.promo_image ||
+                      p?.media_gallery?.[0]?.file ||
+                      ""
                     }
                     alt={p.name}
                     className="w-full h-full object-cover"
