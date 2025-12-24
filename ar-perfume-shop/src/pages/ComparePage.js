@@ -360,37 +360,36 @@ export default function ComparePage() {
                 <IoSparklesOutline className="text-[rgba(212,175,55,0.95)] text-lg" />
               </div>
 
-              {/* names + change buttons (no images) */}
               <div className="grid grid-cols-2 gap-3 mb-4 text-xs sm:text-sm">
-                <div className="text-right">
+                <div className="flex flex-col h-full items-end text-right">
                   <div className="text-[10px] uppercase tracking-[0.2em] text-white/60 mb-1">
                     Fragrance A
                   </div>
-                  <div className="font-semibold text-white break-words mb-2">
+                  <div className="font-semibold text-white break-words">
                     {L.name}
                   </div>
                   <button
                     onClick={() => setPicker({ open: true, side: "left" })}
-                    className="inline-flex items-center justify-center px-3 py-1.5 rounded-full
-                               bg-white/10 border border-white/15 text-[rgba(212,175,55,0.95)]
-                               text-[11px] font-semibold"
+                    className="mt-auto inline-flex items-center justify-center px-3 py-1.5 rounded-full
+                              bg-white/10 border border-white/15 text-[rgba(212,175,55,0.95)]
+                              text-[11px] font-semibold"
                   >
                     Change
                   </button>
                 </div>
 
-                <div className="text-left">
+                <div className="flex flex-col h-full items-start text-left">
                   <div className="text-[10px] uppercase tracking-[0.2em] text-white/60 mb-1">
                     Fragrance B
                   </div>
-                  <div className="font-semibold text-white break-words mb-2">
+                  <div className="font-semibold text-white break-words">
                     {R.name}
                   </div>
                   <button
                     onClick={() => setPicker({ open: true, side: "right" })}
-                    className="inline-flex items-center justify-center px-3 py-1.5 rounded-full
-                               bg-white/10 border border-white/15 text-[rgba(212,175,55,0.95)]
-                               text-[11px] font-semibold"
+                    className="mt-auto inline-flex items-center justify-center px-3 py-1.5 rounded-full
+                              bg-white/10 border border-white/15 text-[rgba(212,175,55,0.95)]
+                              text-[11px] font-semibold"
                   >
                     Change
                   </button>
@@ -410,8 +409,8 @@ export default function ComparePage() {
               />
               <SpecRowMobile
                 label="Tags"
-                left={shortenForMobile(L.tags, 60)}
-                right={shortenForMobile(R.tags, 60)}
+                left={L.tags}
+                right={R.tags}
               />
               {/* rating: stars row + digits row, no count */}
               <SpecRowMobile
@@ -588,7 +587,7 @@ function SpecRowMobile({
     return (
       <div className="py-3 border-b border-white/10 last:border-0">
         <div className="flex justify-center mb-2">
-          <span className="inline-block px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">
+          <span className="inline-block w-32 text-center px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">
             {label}
           </span>
         </div>
@@ -614,7 +613,7 @@ function SpecRowMobile({
   return (
     <div className="py-3 border-b border-white/10 last:border-0">
       <div className="flex justify-center mb-2">
-        <span className="inline-block px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">
+        <span className="inline-block w-32 text-center px-3 py-1 rounded-full bg-white/10 border border-white/15 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">
           {label}
         </span>
       </div>
