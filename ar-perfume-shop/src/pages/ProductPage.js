@@ -102,7 +102,51 @@ function Toast({ message, type = "success", onClose }) {
   );
 }
 
+function ReviewLightbox({ item, onClose }) {
+  if (!item) return null;
 
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[70] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
+    >
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20
+                   flex items-center justify-center text-white z-10"
+        aria-label="Close"
+      >
+        <IoClose className="text-2xl" />
+      </button>
+
+      {/* Media */}
+      <motion.div
+        initial={{ scale: 0.92, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.92, opacity: 0 }}
+        className="max-w-5xl w-full max-h-[85vh] flex items-center justify-center"
+      >
+        {item.type === "IMAGE" ? (
+          <img
+            src={item.src}
+            alt="Review media"
+            className="max-w-full max-h-[85vh] object-contain rounded-xl"
+          />
+        ) : (
+          <video
+            src={item.src}
+            controls
+            autoPlay
+            className="max-w-full max-h-[85vh] rounded-xl bg-black"
+          />
+        )}
+      </motion.div>
+    </motion.div>
+  );
+}
 
 function AddToCartModal({ product, qty, setQty, onClose, onConfirm }) {
   const dec = () => qty > 1 && setQty(qty - 1);
@@ -205,7 +249,7 @@ function AddToCartModal({ product, qty, setQty, onClose, onConfirm }) {
   );
 }
 
-function ReviewCard({ review, currentUserId, onEdit, onDelete }) {
+function ReviewCard({ review, currentUserId, onEdit, onDelete, onOpenMedia }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -267,9 +311,16 @@ function ReviewCard({ review, currentUserId, onEdit, onDelete }) {
       {review.media_gallery?.length > 0 && (
         <div className="mt-3 grid grid-cols-2 gap-3">
           {review.media_gallery.map((m) => (
-            <div
+            <button
               key={m.id}
-              className="aspect-video rounded-xl overflow-hidden border border-white/10"
+              onClick={() =>
+                onOpenMedia({
+                  type: m.type,
+                  src: m.file,
+                })
+              }
+              className="aspect-video rounded-xl overflow-hidden border border-white/10
+                        hover:ring-2 hover:ring-luxury-gold/40 transition"
             >
               {m.type === "IMAGE" ? (
                 <img
@@ -284,7 +335,7 @@ function ReviewCard({ review, currentUserId, onEdit, onDelete }) {
                   className="w-full h-full object-cover bg-black"
                 />
               )}
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -319,6 +370,7 @@ export default function ProductPage() {
   const [editRating, setEditRating] = useState(0);
   const [editComment, setEditComment] = useState("");
   const [editFiles, setEditFiles] = useState([]);
+  const [lightbox, setLightbox] = useState(null);
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -903,6 +955,7 @@ export default function ProductPage() {
                           },
                         })
                       }
+                      onOpenMedia={setLightbox}
                     />
                   ))
                 ) : (
@@ -1062,6 +1115,16 @@ export default function ProductPage() {
             message={confirmAction.message}
             onCancel={() => setConfirmAction(null)}
             onConfirm={confirmAction.onConfirm}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Review Media Lightbox */}
+      <AnimatePresence>
+        {lightbox && (
+          <ReviewLightbox
+            item={lightbox}
+            onClose={() => setLightbox(null)}
           />
         )}
       </AnimatePresence>
