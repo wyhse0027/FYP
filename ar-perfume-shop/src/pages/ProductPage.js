@@ -212,39 +212,46 @@ function ReviewCard({ review, currentUserId, onEdit, onDelete }) {
       animate={{ opacity: 1, y: 0 }}
       className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-all duration-300"
     >
-      <div className="flex items-center gap-4 mb-3">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-luxury-gold/30 to-luxury-accent/30 flex items-center justify-center overflow-hidden">
-          <img
-            src={review.user?.avatar || "https://i.pravatar.cc/50"}
-            alt={review.user?.username || "User"}
-            className="w-full h-full object-cover"
-          />
-        </div>
+      {/* Header row */}
+      <div className="flex flex-wrap items-center gap-3 mb-3">
+        {/* Avatar + name + stars */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-luxury-gold/30 to-luxury-accent/30 flex items-center justify-center overflow-hidden">
+            <img
+              src={review.user?.avatar || "https://i.pravatar.cc/50"}
+              alt={review.user?.username || "User"}
+              className="w-full h-full object-cover"
+            />
+          </div>
 
-        <div className="flex-1">
-          <div className="font-semibold text-white">{review.user?.username}</div>
-          <div className="flex gap-0.5 text-luxury-gold">
-            {[...Array(5)].map((_, i) =>
-              i < review.rating ? (
-                <IoStar key={i} />
-              ) : (
-                <IoStarOutline key={i} className="text-white/30" />
-              )
-            )}
+          <div className="min-w-0">
+            <div className="font-semibold text-white truncate">
+              {review.user?.username}
+            </div>
+            <div className="flex gap-0.5 text-luxury-gold">
+              {[...Array(5)].map((_, i) =>
+                i < review.rating ? (
+                  <IoStar key={i} />
+                ) : (
+                  <IoStarOutline key={i} className="text-white/30" />
+                )
+              )}
+            </div>
           </div>
         </div>
 
+        {/* Actions – can fall to next line on mobile */}
         {review.user?.id === currentUserId && (
-          <div className="flex gap-3">
+          <div className="flex gap-3 text-sm mt-1 sm:mt-0">
             <button
               onClick={() => onEdit(review)}
-              className="text-sm text-luxury-accent hover:text-luxury-gold transition-colors"
+              className="text-luxury-accent hover:text-luxury-gold transition-colors"
             >
               Edit
             </button>
             <button
               onClick={() => onDelete(review)}
-              className="text-sm text-red-400 hover:text-red-300 transition-colors"
+              className="text-red-400 hover:text-red-300 transition-colors"
             >
               Delete
             </button>
@@ -252,16 +259,30 @@ function ReviewCard({ review, currentUserId, onEdit, onDelete }) {
         )}
       </div>
 
-      <p className="text-luxury-silver leading-relaxed mb-3">{review.comment}</p>
+      {/* Body */}
+      <p className="text-luxury-silver leading-relaxed mb-3">
+        {review.comment}
+      </p>
 
       {review.media_gallery?.length > 0 && (
         <div className="mt-3 grid grid-cols-2 gap-3">
           {review.media_gallery.map((m) => (
-            <div key={m.id} className="aspect-video rounded-xl overflow-hidden border border-white/10">
+            <div
+              key={m.id}
+              className="aspect-video rounded-xl overflow-hidden border border-white/10"
+            >
               {m.type === "IMAGE" ? (
-                <img src={m.file} alt="Review media" className="w-full h-full object-cover" />
+                <img
+                  src={m.file}
+                  alt="Review media"
+                  className="w-full h-full object-cover"
+                />
               ) : (
-                <video src={m.file} controls className="w-full h-full object-cover bg-black" />
+                <video
+                  src={m.file}
+                  controls
+                  className="w-full h-full object-cover bg-black"
+                />
               )}
             </div>
           ))}

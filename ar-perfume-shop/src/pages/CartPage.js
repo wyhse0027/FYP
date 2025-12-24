@@ -220,7 +220,6 @@ const CartPage = () => {
                                     RM {lineTotal.toFixed(2)}
                                   </span>
                                 </div>
-                                <p className="text-white/60 text-xs mt-1">Unit price: RM {unitPrice.toFixed(2)} each</p>
                               </div>
                             </div>
                           </div>
