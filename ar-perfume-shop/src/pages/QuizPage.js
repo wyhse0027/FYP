@@ -197,25 +197,27 @@ const QuizPage = () => {
           <motion.header
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between mb-10"
+            className="grid grid-cols-[auto_1fr_auto] items-center mb-10"
           >
-            {/* ✅ only back button returns to shop */}
+            {/* Back button – fixed size so title can center perfectly */}
             <Link
               to={SHOP_ROUTE}
-              className="flex items-center gap-3 text-slate-300 hover:text-white transition-colors group"
+              className="flex items-center justify-start text-slate-300 hover:text-white transition-colors"
             >
-              <div className="p-2 rounded-full border border-yellow-500/30 group-hover:border-yellow-400 transition-colors">
+              <div className="w-10 h-10 rounded-full border border-yellow-500/30 flex items-center justify-center hover:border-yellow-400 transition-colors">
                 <IoArrowBack className="w-5 h-5" />
               </div>
             </Link>
 
-            <div className="text-center">
-              <h1 className="text-2xl md:text-3xl font-bold text-white tracking-wide">
+            {/* Center title */}
+            <div className="flex justify-center">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-wide text-center">
                 Fragrance <span className="text-yellow-400">Quiz</span>
               </h1>
             </div>
 
-            <div className="w-24" />
+            {/* Spacer: mirrors back button size for perfect centering */}
+            <div className="w-10 h-10" aria-hidden="true" />
           </motion.header>
 
           {error && (
@@ -273,7 +275,9 @@ const QuizPage = () => {
                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-white/5 text-yellow-300 mb-2">
                           <IoSparkles className="w-6 h-6" />
                         </div>
-                        <h3 className="text-lg font-bold text-white">{q.title}</h3>
+                        <h3 className="text-lg font-bold text-white">
+                          {q.title}
+                        </h3>
                         {q.label && (
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-[11px] bg-pink-500/15 text-pink-200 border border-pink-400/40">
                             {q.label}
@@ -389,7 +393,9 @@ const QuizPage = () => {
                     ← Choose Another Quiz
                   </button>
 
-                  {loading && <span className="text-slate-400 text-xs">Submitting...</span>}
+                  {loading && (
+                    <span className="text-slate-400 text-xs">Submitting...</span>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -403,96 +409,96 @@ const QuizPage = () => {
                 exit={{ opacity: 0, scale: 0.96 }}
                 className="max-w-5xl mx-auto"
               >
+                {/* Personality / persona card */}
+                {effectivePersona && (
+                  <div className="relative mb-10">
+                    {/* Outer glow */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/25 via-purple-500/25 to-transparent rounded-3xl blur-2xl opacity-70" />
 
-              {/* Personality / persona card */}
-              {effectivePersona && (
-                <div className="relative mb-10">
-                  {/* Outer glow */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/25 via-purple-500/25 to-transparent rounded-3xl blur-2xl opacity-70" />
-
-                  <div className="relative p-6 md:p-8 lg:p-10 rounded-3xl border border-yellow-400/40 bg-transparent backdrop-blur-sm overflow-hidden">
-                    {/* 🔥 Cover image as card background */}
-                    {personaCoverImage && (
-                      <div className="absolute inset-0 -z-10">
-                        <img
-                          src={personaCoverImage}
-                          alt={`${effectivePersona.persona_name} cover`}
-                          className="w-full h-full object-cover blur-md scale-110"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#020617]/85 via-[#020617]/55 to-transparent" />
-                      </div>
-                    )}
-
-                    <div className="relative z-10 grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-4 items-center">
-                      {/* LEFT: text */}
-                      <div className="flex-1 text-center md:text-left">
-                        <span className="inline-block px-4 py-1 rounded-full bg-yellow-500/20 text-yellow-200 text-xs font-medium mb-4">
-                          Your Fragrance Personality
-                        </span>
-
-                        {/* Main title only – no ghost word */}
-                        <div className="inline-block md:block mb-4">
-                          <h2 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold text-white tracking-tight leading-[0.95]">
-                            {effectivePersona.persona_name}
-                          </h2>
-                        </div>
-                        
-                        {category && (
-                          <p className="text-sm md:text-base uppercase tracking-[0.35em] text-yellow-300 mb-4">
-                            Category: {category}
-                          </p>
-                        )}
-
-                        {(effectivePersona.description || effectivePersona.tagline) && (
-                          <p className="text-slate-100 text-base md:text-lg max-w-2xl mb-6">
-                            {effectivePersona.description || effectivePersona.tagline}
-                          </p>
-                        )}
-
-                        {effectivePersona.scent_notes &&
-                          effectivePersona.scent_notes.length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              {effectivePersona.scent_notes.map((note) => (
-                                <span
-                                  key={note}
-                                  className="px-3 py-1 rounded-full border border-white/10 bg-black/30 text-[11px] uppercase tracking-wide text-slate-50"
-                                >
-                                  {note}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-
-                        {effectivePersona.occasions &&
-                          effectivePersona.occasions.length > 0 && (
-                            <div className="mt-4">
-                              <p className="text-[11px] uppercase tracking-[0.25em] text-slate-300 mb-1">
-                                Best For
-                              </p>
-                              <p className="text-xs text-slate-100">
-                                {effectivePersona.occasions.join(" • ")}
-                              </p>
-                            </div>
-                          )}
-                      </div>
-
-                      {/* RIGHT: main persona portrait */}
-                      {personaMainImage && (
-                        <div className="flex justify-center md:justify-end">
-                          <div className="relative aspect-[3/4] w-full max-w-xs md:max-w-sm rounded-3xl overflow-hidden border border-yellow-400/40 bg-slate-950/60 shadow-[0_0_35px_rgba(250,204,21,0.25)]">
-                            <img
-                              src={personaMainImage}
-                              alt={effectivePersona.persona_name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
+                    <div className="relative p-6 md:p-8 lg:p-10 rounded-3xl border border-yellow-400/40 bg-transparent backdrop-blur-sm overflow-hidden">
+                      {/* 🔥 Cover image as card background */}
+                      {personaCoverImage && (
+                        <div className="absolute inset-0 -z-10">
+                          <img
+                            src={personaCoverImage}
+                            alt={`${effectivePersona.persona_name} cover`}
+                            className="w-full h-full object-cover blur-md scale-110"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#020617]/85 via-[#020617]/55 to-transparent" />
                         </div>
                       )}
+
+                      <div className="relative z-10 grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-6 md:gap-4 items-center">
+                        {/* LEFT: text */}
+                        <div className="flex-1 text-center md:text-left">
+                          <span className="inline-block px-4 py-1 rounded-full bg-yellow-500/20 text-yellow-200 text-[11px] md:text-xs font-medium mb-4">
+                            Your Fragrance Personality
+                          </span>
+
+                          {/* Main title only – no ghost word */}
+                          <div className="inline-block md:block mb-4">
+                            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[0.95] break-words">
+                              {effectivePersona.persona_name}
+                            </h2>
+                          </div>
+
+                          {category && (
+                            <p className="text-[11px] sm:text-xs md:text-sm uppercase tracking-[0.2em] md:tracking-[0.35em] text-yellow-300 mb-4">
+                              Category: {category}
+                            </p>
+                          )}
+
+                          {(effectivePersona.description ||
+                            effectivePersona.tagline) && (
+                            <p className="text-slate-100 text-sm sm:text-base md:text-lg max-w-2xl mx-auto md:mx-0 mb-6">
+                              {effectivePersona.description ||
+                                effectivePersona.tagline}
+                            </p>
+                          )}
+
+                          {effectivePersona.scent_notes &&
+                            effectivePersona.scent_notes.length > 0 && (
+                              <div className="mt-2 flex flex-wrap justify-center md:justify-start gap-2">
+                                {effectivePersona.scent_notes.map((note) => (
+                                  <span
+                                    key={note}
+                                    className="px-3 py-1 rounded-full border border-white/10 bg-black/30 text-[10px] sm:text-[11px] uppercase tracking-wide text-slate-50"
+                                  >
+                                    {note}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                          {effectivePersona.occasions &&
+                            effectivePersona.occasions.length > 0 && (
+                              <div className="mt-4">
+                                <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.15em] sm:tracking-[0.25em] text-slate-300 mb-1">
+                                  Best For
+                                </p>
+                                <p className="text-xs sm:text-sm text-slate-100">
+                                  {effectivePersona.occasions.join(" • ")}
+                                </p>
+                              </div>
+                            )}
+                        </div>
+
+                        {/* RIGHT: main persona portrait */}
+                        {personaMainImage && (
+                          <div className="flex justify-center md:justify-end mt-4 md:mt-0">
+                            <div className="relative aspect-[3/4] w-full max-w-xs md:max-w-sm rounded-3xl overflow-hidden border border-yellow-400/40 bg-slate-950/60 shadow-[0_0_35px_rgba(250,204,21,0.25)]">
+                              <img
+                                src={personaMainImage}
+                                alt={effectivePersona.persona_name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-
+                )}
 
                 {/* Recommended products */}
                 <div className="mb-8">
