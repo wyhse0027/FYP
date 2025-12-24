@@ -64,29 +64,44 @@ function ConfirmModal({ title, message, onCancel, onConfirm }) {
 
 function Toast({ message, type = "success", onClose }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 30, scale: 0.96 }}
-      className={`
-        fixed z-[60]
-        left-1/2 -translate-x-1/2 bottom-24 sm:bottom-6
-        w-[calc(100%-2rem)] sm:w-auto max-w-md
-        px-5 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm
-        ${type === "error" ? "bg-red-500/90 border-red-400/30" : "bg-emerald-500/90 border-emerald-400/30"}
-        text-white
-      `}
+    <div
+      className="
+        fixed inset-x-0 bottom-24 sm:bottom-6 z-[60]
+        flex justify-center px-4
+        pointer-events-none
+      "
     >
-      <div className="flex items-center gap-3">
-        <IoSparkles className="text-xl shrink-0" />
-        <span className="font-medium flex-1 text-center">{message}</span>
-        <button onClick={onClose} className="text-white/70 hover:text-white ml-2">
-          <IoClose className="text-xl" />
-        </button>
-      </div>
-    </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 30, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 30, scale: 0.96 }}
+        className={`
+          pointer-events-auto
+          w-full sm:w-auto max-w-md
+          px-5 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm
+          ${
+            type === "error"
+              ? "bg-red-500/90 border-red-400/30"
+              : "bg-emerald-500/90 border-emerald-400/30"
+          }
+          text-white
+        `}
+      >
+        <div className="flex items-center gap-3">
+          <IoSparkles className="text-xl shrink-0" />
+          <span className="font-medium flex-1 text-center">{message}</span>
+          <button
+            onClick={onClose}
+            className="text-white/70 hover:text-white ml-2"
+          >
+            <IoClose className="text-xl" />
+          </button>
+        </div>
+      </motion.div>
+    </div>
   );
 }
+
 
 
 function AddToCartModal({ product, qty, setQty, onClose, onConfirm }) {
