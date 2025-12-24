@@ -143,13 +143,21 @@ const Footer = () => {
       </div>
 
       {/* BOTTOM BAR */}
-      <div className="border-t border-sky-500/10">
-        <div className="w-full px-6 lg:px-16 py-4 flex flex-col md:flex-row items-center justify-between text-[11px] text-sky-300/80">
-          <span>© {year} GERAIN CHAN. All rights reserved.</span>
-          <span className="uppercase tracking-[0.2em]">
-            Immersive Perfume · AR Experience
-          </span>
-        </div>
+      <div
+        className="
+          w-full px-6 lg:px-16 py-4
+          flex flex-col md:flex-row
+          items-center
+          justify-center md:justify-between
+          text-[11px] text-sky-300/80
+          text-center md:text-left
+          gap-1
+        "
+      >
+        <span>© {year} GERAIN CHAN. All rights reserved.</span>
+        <span className="uppercase tracking-[0.2em]">
+          Immersive Perfume · AR Experience
+        </span>
       </div>
     </footer>
   );
