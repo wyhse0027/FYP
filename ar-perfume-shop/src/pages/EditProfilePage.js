@@ -91,7 +91,10 @@ export default function EditProfilePage() {
     .join(", ");
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 relative overflow-hidden px-4 sm:px-6 md:px-10 lg:px-16">
+    <div
+      className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900
+                 relative overflow-hidden px-4 sm:px-6 md:px-10 lg:px-16"
+    >
       {/* Decorative blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-luxury-gold/10 rounded-full blur-3xl" />
@@ -99,14 +102,19 @@ export default function EditProfilePage() {
         <div className="absolute top-1/2 left-0 w-64 h-64 bg-white/5 rounded-full blur-2xl" />
       </div>
 
-      {/* ✅ Center content with consistent left/right gaps on phone */}
-      <div className="relative z-10 mx-auto w-full max-w-[1100px] py-6 sm:py-8 text-white">
+      <div className="relative z-10 mx-auto w-full max-w-[1600px] py-6 sm:py-8 text-white">
         <PageHeader title="Edit Profile" />
 
-        <div className="grid gap-5 sm:gap-7 xl:grid-cols-3 items-stretch">
+        <div className="grid gap-6 sm:gap-8 xl:grid-cols-3 items-stretch">
           {/* LEFT avatar */}
-          <section className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-5 sm:p-6 md:p-8 flex flex-col items-center justify-center min-h-0 xl:min-h-[680px] shadow-2xl">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-5 sm:mb-8">
+          <section
+            className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10
+                       p-5 sm:p-6 md:p-8
+                       flex flex-col items-center justify-center
+                       min-h-0 xl:min-h-[680px]
+                       shadow-2xl"
+          >
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-6 sm:mb-8">
               <span className="bg-gradient-to-r from-luxury-gold via-luxury-gold-light to-luxury-gold bg-clip-text text-transparent">
                 Profile Picture
               </span>
@@ -117,54 +125,65 @@ export default function EditProfilePage() {
               <div className="absolute -inset-2 sm:-inset-3 rounded-full border border-luxury-gold/25 pointer-events-none" />
               <div className="absolute -inset-5 sm:-inset-7 rounded-full border border-luxury-gold/10 pointer-events-none" />
 
-              <div className="relative w-40 h-40 sm:w-60 sm:h-60 md:w-72 md:h-72 xl:w-[360px] xl:h-[360px] rounded-full overflow-hidden border-[6px] sm:border-8 border-white/80 shadow-2xl">
+              <div
+                className="relative
+                           w-40 h-40 xs:w-44 xs:h-44 sm:w-60 sm:h-60 md:w-72 md:h-72 xl:w-[360px] xl:h-[360px]
+                           rounded-full overflow-hidden
+                           border-[6px] sm:border-8 border-white/80 shadow-2xl"
+              >
                 <img
                   src={profile.avatar || `https://i.pravatar.cc/600?u=${profile.username}`}
                   alt="Avatar"
                   className="w-full h-full object-cover"
                 />
 
-                {/* bottom fade + username */}
+                {/* bottom fade + name */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent" />
-
-                {/* ✅ FIX #1: username NOT truncated, allow wrapping / new line */}
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-3 sm:bottom-4 bg-black/45 backdrop-blur text-white font-bold px-4 sm:px-6 py-1.5 sm:py-2 rounded-2xl border border-white/10 w-[86%] text-center">
-                  <span className="block text-sm sm:text-base leading-snug break-words whitespace-normal">
-                    {profile.username || "USER"}
-                  </span>
+                <div
+                  className="absolute left-1/2 -translate-x-1/2 bottom-3 sm:bottom-4
+                             bg-black/45 backdrop-blur text-white font-bold
+                             px-4 sm:px-6 py-1.5 sm:py-2
+                             rounded-full border border-white/10
+                             max-w-[85%] truncate"
+                >
+                  {profile.username || "USER"}
                 </div>
               </div>
 
-              {/* ✅ FIX #2: icon only button (no text) */}
+              {/* ✅ Phone UI: icon-only. PC UI stays the same */}
               <button
                 onClick={() => open("avatar")}
-                className="mt-5 sm:mt-8 inline-flex items-center justify-center
-                           w-14 h-14 sm:w-auto sm:h-auto sm:px-6 sm:py-3
-                           rounded-2xl font-semibold
+                className="mt-6 sm:mt-8 inline-flex items-center justify-center gap-3
+                           p-3 sm:px-6 sm:py-3 rounded-2xl text-base sm:text-lg font-semibold
                            bg-white/10 hover:bg-white/15 border border-white/10 hover:border-luxury-gold/25
                            transition-all duration-300"
-                aria-label="Change photo"
-                title="Change photo"
+                aria-label="Change Photo"
+                title="Change Photo"
               >
                 <IoCameraOutline className="text-2xl sm:text-3xl text-luxury-gold-light" />
-                {/* desktop keeps label if you want; phone hides it */}
-                <span className="hidden sm:inline text-base sm:text-lg ml-3">
-                  Change Photo
-                </span>
+                <span className="hidden sm:inline">Change Photo</span>
               </button>
             </div>
           </section>
 
           {/* RIGHT fields */}
-          <section className="xl:col-span-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-5 sm:p-6 md:p-8 min-h-0 xl:min-h-[680px] shadow-2xl">
+          <section
+            className="xl:col-span-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10
+                       p-5 sm:p-6 md:p-8
+                       min-h-0 xl:min-h-[680px]
+                       shadow-2xl"
+          >
+            {/* ✅ Phone UI: shorter title so it doesn’t push layout to the right */}
             <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-5 sm:mb-6">
-              <span className="bg-gradient-to-r from-luxury-gold via-luxury-gold-light to-luxury-gold bg-clip-text text-transparent">
+              <span className="sm:hidden bg-gradient-to-r from-luxury-gold via-luxury-gold-light to-luxury-gold bg-clip-text text-transparent">
+                Info
+              </span>
+              <span className="hidden sm:inline bg-gradient-to-r from-luxury-gold via-luxury-gold-light to-luxury-gold bg-clip-text text-transparent">
                 Personal Information
               </span>
             </h2>
 
-            {/* ✅ FIX #3: keep content centered + same left/right gaps */}
-            <div className="space-y-3 sm:space-y-4 mx-auto w-full max-w-[720px]">
+            <div className="space-y-3 sm:space-y-4">
               <FieldRow
                 icon={<IoMailOutline />}
                 title="Email"
@@ -176,6 +195,8 @@ export default function EditProfilePage() {
                 title="Username"
                 label={profile.username}
                 onClick={() => open("username")}
+                /* ✅ Phone UI: one-line only, show full value via horizontal scroll */
+                nowrap
               />
               <FieldRow
                 icon={<IoCallOutline />}
@@ -201,7 +222,10 @@ export default function EditProfilePage() {
           <div className="flex flex-col items-center gap-5">
             <div className="relative">
               <div className="absolute -inset-2 sm:-inset-3 rounded-full border border-luxury-gold/15 pointer-events-none" />
-              <div className="w-44 h-44 sm:w-[260px] sm:h-[260px] md:w-[320px] md:h-[320px] rounded-full overflow-hidden bg-black/20 ring-2 ring-white/20">
+              <div
+                className="w-44 h-44 sm:w-[260px] sm:h-[260px] md:w-[320px] md:h-[320px]
+                           rounded-full overflow-hidden bg-black/20 ring-2 ring-white/20"
+              >
                 <img
                   src={profile.avatar || `https://i.pravatar.cc/600?u=${profile.username}`}
                   alt=""
@@ -267,7 +291,7 @@ export default function EditProfilePage() {
 
 /* ---------------- UI Bits ---------------- */
 
-function FieldRow({ icon, title, label, onClick, multiline }) {
+function FieldRow({ icon, title, label, onClick, multiline, nowrap }) {
   const value = label || "Not set";
 
   return (
@@ -279,24 +303,36 @@ function FieldRow({ icon, title, label, onClick, multiline }) {
                  transition-all duration-300"
     >
       <div className="flex items-start gap-3 sm:gap-4">
-        <div className="mt-0.5 flex-shrink-0 p-2.5 sm:p-3 rounded-xl bg-white/5 border border-white/10 text-luxury-gold-light">
+        <div
+          className="mt-0.5 flex-shrink-0 p-2.5 sm:p-3 rounded-xl
+                     bg-white/5 border border-white/10
+                     text-luxury-gold-light"
+        >
           <span className="text-xl sm:text-2xl">{icon}</span>
         </div>
 
         <div className="min-w-0 flex-1">
           <div className="text-xs sm:text-sm text-white/60 mb-1">{title}</div>
 
-          {/* ✅ allow wrapping/new lines (email can wrap too) */}
+          {/* ✅ Username fix: one-line only + flexible length (scroll on phone) */}
           <div
-            className={`font-semibold text-white/90 whitespace-normal break-words
-                        ${multiline ? "text-sm sm:text-base leading-relaxed" : "text-base sm:text-lg"}
-                        ${!label ? "opacity-70 italic font-medium" : ""}`}
+            className={[
+              "font-semibold text-white/90 overflow-hidden",
+              multiline ? "text-sm sm:text-base leading-relaxed break-words" : "text-base sm:text-lg",
+              !label ? "opacity-70 italic font-medium" : "",
+              nowrap ? "whitespace-nowrap overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none]" : "break-words",
+            ].join(" ")}
           >
-            {value}
+            {/* hide scrollbar (webkit) */}
+            <style>{`
+              .hide-scrollbar::-webkit-scrollbar { display: none; }
+            `}</style>
+            <span className={nowrap ? "hide-scrollbar inline-block" : ""}>{value}</span>
           </div>
         </div>
 
-        <div className="self-center text-xs sm:text-sm text-white/55 group-hover:text-luxury-gold-light transition">
+        {/* ✅ Phone UI: remove "Edit" text so the whole section doesn't look pushed to the right */}
+        <div className="hidden sm:block self-center text-xs sm:text-sm text-white/55 group-hover:text-luxury-gold-light transition">
           Edit
         </div>
       </div>
@@ -307,7 +343,12 @@ function FieldRow({ icon, title, label, onClick, multiline }) {
 function Modal({ title, onClose, children, footer }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-      <div className="w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-[#0c1a3a] via-[#0b1733] to-[#0c1a3a] border border-luxury-gold/20 max-h-[85vh] sm:max-h-[90vh] flex flex-col">
+      <div
+        className="w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl
+                   bg-gradient-to-br from-[#0c1a3a] via-[#0b1733] to-[#0c1a3a]
+                   border border-luxury-gold/20
+                   max-h-[85vh] sm:max-h-[90vh] flex flex-col"
+      >
         <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-white/10 flex items-center justify-between">
           <div className="font-semibold text-lg sm:text-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-light to-luxury-gold bg-clip-text text-transparent">
             {title}
@@ -337,7 +378,14 @@ function Modal({ title, onClose, children, footer }) {
   );
 }
 
-function EditOneLine({ title, initial, onSave, onClose, placeholder, type = "text" }) {
+function EditOneLine({
+  title,
+  initial,
+  onSave,
+  onClose,
+  placeholder,
+  type = "text",
+}) {
   const [val, setVal] = useState(initial || "");
 
   return (
