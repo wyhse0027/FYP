@@ -82,22 +82,57 @@ export default function SettingsPage() {
             {/* Theme */}
             <div className="mb-6">
               <label className="block text-white/70 mb-2">Theme</label>
-              <div className="grid grid-cols-3 gap-3">
+
+              {/* mobile: 2 cols (Light/Dark), System spans full row
+                  sm+: 3 cols (Light/Dark/System all same row) */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {themeOptions.map(({ k, label, Icon }) => {
                   const active = settings.theme === k;
+                  const isSystem = k === "system";
+                  const iconOnly = k === "light" || k === "dark"; // phone: icon-only
+
                   return (
                     <button
                       key={k}
                       onClick={() => update({ theme: k })}
-                      className={`flex items-center justify-center gap-2 h-14 rounded-xl border transition-all duration-300
-                        ${
-                          active
-                            ? "border-luxury-gold/60 bg-luxury-gold/10 shadow-[0_0_30px_rgba(212,175,55,0.18)]"
-                            : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-luxury-gold/25"
-                        }`}
+                      className={[
+                        "flex items-center justify-center gap-2 rounded-xl border transition-all duration-300",
+                        // sizing
+                        iconOnly
+                          ? "h-12 sm:h-14" // icon buttons shorter on mobile
+                          : "h-12 sm:h-14", // system same height
+                        // layout: System full width on mobile
+                        isSystem ? "col-span-2 sm:col-span-1" : "",
+                        // active styling
+                        active
+                          ? "border-luxury-gold/60 bg-luxury-gold/10 shadow-[0_0_30px_rgba(212,175,55,0.18)]"
+                          : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-luxury-gold/25",
+                        // icon-only buttons can be more square-ish on mobile
+                        iconOnly ? "px-0" : "px-4",
+                      ].join(" ")}
+                      aria-label={label}
+                      title={label}
                     >
-                      <Icon className={`text-xl ${active ? "text-luxury-gold-light" : "text-white/80"}`} />
-                      <span className={`font-medium ${active ? "text-white" : "text-white/80"}`}>{label}</span>
+                      <Icon
+                        className={[
+                          "text-xl",
+                          active ? "text-luxury-gold-light" : "text-white/80",
+                          iconOnly ? "text-2xl" : "", // slightly bigger icon on mobile
+                        ].join(" ")}
+                      />
+
+                      {/* Text rules:
+                          - Light/Dark: hide on mobile, show on sm+
+                          - System: always show text (so it looks like a proper full-width button) */}
+                      <span
+                        className={[
+                          "font-medium",
+                          active ? "text-white" : "text-white/80",
+                          iconOnly ? "hidden sm:inline" : "inline",
+                        ].join(" ")}
+                      >
+                        {label}
+                      </span>
                     </button>
                   );
                 })}
@@ -107,24 +142,33 @@ export default function SettingsPage() {
             {/* Language */}
             <div className="mb-6">
               <label className="block text-white/70 mb-2">Language</label>
+
               <div className="relative">
-                <IoLanguageOutline className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60" />
+                {/* left icon */}
+                <IoLanguageOutline
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none"
+                />
+
                 <select
                   value={settings.language}
                   onChange={(e) => update({ language: e.target.value })}
-                  className="w-full bg-white/10 border border-white/15 rounded-xl pl-10 pr-4 py-3 text-white outline-none
-                             focus:border-luxury-gold/50 focus:ring-4 focus:ring-luxury-gold/20"
+                  className="
+                    w-full appearance-none
+                    bg-white/10 border border-white/15 rounded-xl
+                    pl-10 pr-9 py-3
+                    text-white outline-none
+                    focus:border-luxury-gold/50 focus:ring-4 focus:ring-luxury-gold/20
+                  "
                 >
-                  <option className="bg-slate-900" value="en">
-                    English
-                  </option>
-                  <option className="bg-slate-900" value="ms">
-                    Bahasa Melayu
-                  </option>
-                  <option className="bg-slate-900" value="zh">
-                    中文
-                  </option>
+                  <option className="bg-slate-900" value="en">English</option>
+                  <option className="bg-slate-900" value="ms">Bahasa Melayu</option>
+                  <option className="bg-slate-900" value="zh">中文</option>
                 </select>
+
+                {/* custom dropdown chevron (centers better than native) */}
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white/60">
+                  ▼
+                </span>
               </div>
             </div>
 
