@@ -17,7 +17,7 @@ from .views import (
     ScentPersonaViewSet,
     AdminCategoryList,
 )
-from .views_upload import R2PresignBigFile, ARFinalizeBigFile
+from .views_upload import R2PresignBigFile, ARFinalizeBigFile, ARDeleteBigFile
 
 # ─── Routers ───────────────────────────────────────────────
 router = DefaultRouter()
@@ -83,4 +83,5 @@ urlpatterns = [
     # Big file direct upload (R2 presign + finalize)
     path("uploads/r2-presign/", R2PresignBigFile.as_view(), name="r2-presign-bigfile"),
     path("ar/<int:pk>/finalize-bigfile/", ARFinalizeBigFile.as_view(), name="ar-finalize-bigfile"),
+    path("ar/<int:pk>/delete-bigfile/", ARDeleteBigFile.as_view(), name="ar-delete-bigfile"),
 ]
