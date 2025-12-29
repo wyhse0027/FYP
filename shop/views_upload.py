@@ -29,6 +29,17 @@ ALLOWED = {
 }
 
 
+def r2_client():
+    """Cloudflare R2 S3-compatible client."""
+    return boto3.client(
+        "s3",
+        endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name="auto",
+    )
+
+
 class R2PresignBigFile(APIView):
     """
     Generate a presigned PUT URL for uploading big files directly to Cloudflare R2.
@@ -66,13 +77,7 @@ class R2PresignBigFile(APIView):
         key = f"{folder}/{uuid.uuid4()}_{safe_name}"
 
         # Build R2 S3-compatible client from Django settings
-        s3 = boto3.client(
-            "s3",
-            endpoint_url=settings.AWS_S3_ENDPOINT_URL,
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name="auto",
-        )
+        s3 = r2_client()
 
         upload_url = s3.generate_presigned_url(
             "put_object",
@@ -131,11 +136,15 @@ class ARFinalizeBigFile(APIView):
 
         # Ensure key matches folder
         if kind == "glb" and not key.startswith("ar/models/"):
-            return Response({"detail": "Key must start with ar/models/"},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Key must start with ar/models/"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if kind == "apk" and not key.startswith("ar/apk/"):
-            return Response({"detail": "Key must start with ar/apk/"},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Key must start with ar/apk/"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             ar = ARExperience.objects.get(pk=pk)
@@ -154,3 +163,64 @@ class ARFinalizeBigFile(APIView):
             ar.save(update_fields=["app_download_file", "updated_at"])
 
         return Response({"detail": "ok"}, status=status.HTTP_200_OK)
+
+
+class ARDeleteBigFile(APIView):
+    """
+    Delete the actual object from R2 + clear the FileField.
+
+    DELETE /api/ar/<pk>/delete-bigfile/?kind=glb|apk
+    """
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        kind = (request.query_params.get("kind") or "").strip().lower()
+        if kind not in ("glb", "apk"):
+            return Response(
+                {"detail": "kind must be glb or apk"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            ar = ARExperience.objects.get(pk=pk)
+        except ARExperience.DoesNotExist:
+            return Response(
+                {"detail": "ARExperience not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        field = ar.model_glb if kind == "glb" else ar.app_download_file
+        key = (getattr(field, "name", "") or "").strip()
+
+        # nothing to delete (still ok)
+        if not key:
+            return Response({"detail": "already empty"}, status=status.HTTP_200_OK)
+
+        # safety: prevent deleting outside our folders
+        if kind == "glb" and not key.startswith("ar/models/"):
+            return Response({"detail": "Invalid stored key for glb"}, status=status.HTTP_400_BAD_REQUEST)
+        if kind == "apk" and not key.startswith("ar/apk/"):
+            return Response({"detail": "Invalid stored key for apk"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # delete from R2 (idempotent)
+        try:
+            s3 = r2_client()
+            s3.delete_object(
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Key=key,
+            )
+        except Exception as e:
+            return Response(
+                {"detail": f"R2 delete failed: {e}"},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        # clear db field (do NOT re-delete through storage)
+        if kind == "glb":
+            ar.model_glb.delete(save=False)
+            ar.save(update_fields=["model_glb", "updated_at"])
+        else:
+            ar.app_download_file.delete(save=False)
+            ar.save(update_fields=["app_download_file", "updated_at"])
+
+        return Response({"detail": "deleted"}, status=status.HTTP_200_OK)

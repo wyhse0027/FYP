@@ -77,12 +77,12 @@ export default function AdminAREditPage() {
   const handleDeleteGLB = async () => {
     if (!id) return;
     try {
-      await http.delete(`/ar/${id}/delete-glb/`);
+      await http.delete(`/ar/${id}/delete-bigfile/?kind=glb`);
       setForm((prev) => ({ ...prev, model_glb: null }));
-      setMessage("✅ GLB model deleted successfully!");
+      setMessage("✅ GLB deleted from R2 + database successfully!");
     } catch (err) {
       console.error("Failed to delete GLB:", err);
-      setMessage("❌ Failed to delete GLB model.");
+      setMessage(`❌ Failed to delete GLB. ${err?.response?.data?.detail || ""}`);
     } finally {
       setConfirmDelete(false);
     }
@@ -105,12 +105,12 @@ export default function AdminAREditPage() {
   const handleDeleteApk = async () => {
     if (!id) return;
     try {
-      await http.patch(`/ar/${id}/`, { app_download_file: null });
+      await http.delete(`/ar/${id}/delete-bigfile/?kind=apk`);
       setForm((prev) => ({ ...prev, app_download_file: null }));
-      setMessage("✅ APK deleted successfully!");
+      setMessage("✅ APK deleted from R2 + database successfully!");
     } catch (err) {
       console.error("Failed to delete APK:", err);
-      setMessage("❌ Failed to delete APK file.");
+      setMessage(`❌ Failed to delete APK. ${err?.response?.data?.detail || ""}`);
     } finally {
       setConfirmDelete(false);
     }
