@@ -17,6 +17,7 @@ from .views import (
     ScentPersonaViewSet,
     AdminCategoryList,
 )
+from .views_upload import R2PresignBigFile, ARFinalizeBigFile
 
 # ─── Routers ───────────────────────────────────────────────
 router = DefaultRouter()
@@ -78,4 +79,8 @@ urlpatterns = [
     path("dj-rest-auth/", include("dj_rest_auth.urls")),
     path("dj-rest-auth/registration/", include("dj_rest_auth.registration.urls")),
     path("accounts/", include("allauth.urls")),  # required for Google OAuth callbacks
+
+    # Big file direct upload (R2 presign + finalize)
+    path("uploads/r2-presign/", R2PresignBigFile.as_view(), name="r2-presign-bigfile"),
+    path("ar/<int:pk>/finalize-bigfile/", ARFinalizeBigFile.as_view(), name="ar-finalize-bigfile"),
 ]

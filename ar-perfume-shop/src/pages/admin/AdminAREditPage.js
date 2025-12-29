@@ -4,6 +4,40 @@ import { useNavigate, useParams } from "react-router-dom";
 import PageHeader from "../../components/PageHeader";
 import http from "../../lib/http";
 
+/* -------------------- R2 direct upload helpers -------------------- */
+async function presignR2(kind, file) {
+  const res = await http.post("/uploads/r2-presign/", {
+    kind,
+    filename: file.name,
+    content_type: file.type || "application/octet-stream",
+  });
+  return res.data; // { upload_url, public_url, key }
+}
+
+async function putToR2(uploadUrl, file) {
+  const resp = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": file.type || "application/octet-stream",
+    },
+    body: file,
+  });
+
+  if (!resp.ok) {
+    throw new Error(`R2 PUT failed: ${resp.status}`);
+  }
+}
+
+async function uploadBigFileToR2(kind, file) {
+  const { upload_url, key } = await presignR2(kind, file);
+  await putToR2(upload_url, file);
+  return key;
+}
+
+async function finalizeBigFile(arId, kind, key) {
+  await http.patch(`/ar/${arId}/finalize-bigfile/`, { kind, key });
+}
+
 export default function AdminAREditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -12,10 +46,10 @@ export default function AdminAREditPage() {
   const [form, setForm] = useState({
     product: "",
     type: "MARKER",
-    app_download_file: null,
-    marker_image: null,
-    model_glb: null,
-    marker_mind: null,
+    app_download_file: null, // string url OR File
+    marker_image: null, // string url OR File
+    model_glb: null, // string url OR File
+    marker_mind: null, // string url OR File
     enabled: true,
   });
   const [loading, setLoading] = useState(false);
@@ -23,10 +57,9 @@ export default function AdminAREditPage() {
   const [fetching, setFetching] = useState(!!id);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  // ✅ use PageHeader back behavior
-  const goBack = () => navigate("/admin/ar-management"); // or navigate(-1)
+  const goBack = () => navigate("/admin/ar-management");
 
-  // ─── Delete Handlers ─────────────────────────────
+  /* -------------------- Delete handlers -------------------- */
   const handleDeleteMarker = async () => {
     if (!id) return;
     try {
@@ -83,7 +116,7 @@ export default function AdminAREditPage() {
     }
   };
 
-  // ─── Fetch Product List ──────────────────────────
+  /* -------------------- Load products -------------------- */
   useEffect(() => {
     http
       .get("/products/")
@@ -91,7 +124,7 @@ export default function AdminAREditPage() {
       .catch((err) => console.error("Failed to fetch products:", err));
   }, []);
 
-  // ─── Fetch AR Experience if Editing ───────────────
+  /* -------------------- Load existing AR -------------------- */
   useEffect(() => {
     if (!id) return;
 
@@ -119,61 +152,96 @@ export default function AdminAREditPage() {
     fetchAR();
   }, [id]);
 
-  // ─── Handle Input Changes ─────────────────────────
+  /* -------------------- Input change -------------------- */
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === "checkbox") {
       setForm({ ...form, [name]: checked });
     } else if (type === "file") {
-      setForm({ ...form, [name]: files[0] });
+      setForm({ ...form, [name]: files?.[0] || null });
     } else {
       setForm({ ...form, [name]: value });
     }
   };
 
-  // ─── Submit Handler ───────────────────────────────
+  /* -------------------- Submit -------------------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
     try {
+      // 1) Upload big files to R2 first (GLB/APK only)
+      let glbKey = null;
+      let apkKey = null;
+
+      if (form.model_glb instanceof File) {
+        setMessage("⬆️ Uploading GLB to R2...");
+        glbKey = await uploadBigFileToR2("glb", form.model_glb);
+      }
+
+      if (form.app_download_file instanceof File) {
+        setMessage("⬆️ Uploading APK to R2...");
+        apkKey = await uploadBigFileToR2("apk", form.app_download_file);
+      }
+
+      // 2) Save the ARExperience (small multipart for marker_image + mind + fields)
       const formData = new FormData();
       formData.append("product_id", form.product);
       formData.append("type", form.type);
       formData.append("enabled", form.enabled);
 
-      if (form.app_download_file instanceof File)
-        formData.append("app_download_file", form.app_download_file);
-      if (form.marker_image instanceof File)
+      // IMPORTANT: keep these via Django multipart (small enough)
+      if (form.marker_image instanceof File) {
         formData.append("marker_image", form.marker_image);
-      if (form.model_glb instanceof File)
-        formData.append("model_glb", form.model_glb);
-      if (form.marker_mind instanceof File)
+      }
+      if (form.marker_mind instanceof File) {
         formData.append("marker_mind", form.marker_mind);
+      }
+
+      // DO NOT append model_glb / app_download_file (big files)
+      let arId = id;
 
       if (id) {
+        setMessage("💾 Saving AR data...");
         await http.patch(`/ar/${id}/`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        setMessage("✅ AR experience updated successfully!");
+        arId = id;
       } else {
-        await http.post("/ar/", formData, {
+        setMessage("💾 Creating AR record...");
+        const res = await http.post("/ar/", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        setMessage("✅ AR experience created successfully!");
+
+        arId = res.data?.id;
+        if (!arId) {
+          throw new Error("Create AR succeeded but no id returned. Ensure serializer includes id.");
+        }
       }
 
+      // 3) Finalize: save R2 keys into FileFields (no upload through Django)
+      if (glbKey) {
+        setMessage("🔗 Linking GLB to AR record...");
+        await finalizeBigFile(arId, "glb", glbKey);
+      }
+
+      if (apkKey) {
+        setMessage("🔗 Linking APK to AR record...");
+        await finalizeBigFile(arId, "apk", apkKey);
+      }
+
+      setMessage(id ? "✅ AR experience updated successfully!" : "✅ AR experience created successfully!");
       setTimeout(() => navigate("/admin/ar-management"), 1200);
     } catch (err) {
       console.error("Failed to save AR:", err);
-      setMessage("❌ Failed to save AR experience.");
+      setMessage(`❌ Failed to save AR experience. ${err?.message || ""}`);
     } finally {
       setLoading(false);
     }
   };
 
-  // ─── Loading UI ───────────────────────────────
+  /* -------------------- Loading UI -------------------- */
   if (fetching)
     return (
       <div className="min-h-screen bg-[#0c1a3a] text-white flex items-center justify-center">
@@ -181,15 +249,13 @@ export default function AdminAREditPage() {
       </div>
     );
 
-  // ─── Main Form UI ───────────────────────────────
+  /* -------------------- UI -------------------- */
   return (
     <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 lg:px-16">
       <div className="max-w-6xl mx-auto py-6">
-        {/* ✅ Use your PageHeader (center title + back) */}
         <PageHeader
           title={id ? "Edit AR Experience" : "Create AR Experience"}
           onBack={goBack}
-          // showBack default true, no need pass unless you want to hide
         />
 
         <div className="max-w-2xl bg-white/10 backdrop-blur-md p-8 rounded-2xl shadow-lg border border-white/10 mx-auto">
@@ -231,30 +297,27 @@ export default function AdminAREditPage() {
 
             {/* APK Upload */}
             <div>
-              <label className="block font-semibold mb-2">
-                App Download (.apk)
-              </label>
+              <label className="block font-semibold mb-2">App Download (.apk)</label>
 
-              {typeof form.app_download_file === "string" &&
-                form.app_download_file && (
-                  <div className="relative mb-3 flex items-center gap-3">
-                    <a
-                      href={form.app_download_file}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sky-400 underline"
-                    >
-                      Download current APK
-                    </a>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmDelete({ type: "apk" })}
-                      className="bg-red-600 hover:bg-red-700 text-white rounded-md px-2 py-1 text-sm"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                )}
+              {typeof form.app_download_file === "string" && form.app_download_file && (
+                <div className="relative mb-3 flex items-center gap-3">
+                  <a
+                    href={form.app_download_file}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sky-400 underline"
+                  >
+                    Download current APK
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete({ type: "apk" })}
+                    className="bg-red-600 hover:bg-red-700 text-white rounded-md px-2 py-1 text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
 
               <input
                 type="file"
@@ -263,6 +326,9 @@ export default function AdminAREditPage() {
                 onChange={handleChange}
                 className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-700"
               />
+              <p className="text-xs opacity-70 mt-2">
+                Note: APK uploads go directly to R2 (faster, avoids backend timeouts).
+              </p>
             </div>
 
             {/* Marker Image */}
@@ -294,7 +360,7 @@ export default function AdminAREditPage() {
               />
             </div>
 
-            {/* 3D Model (GLB) */}
+            {/* GLB Upload */}
             <div>
               <label className="block font-semibold mb-2">3D Model (.glb)</label>
               {typeof form.model_glb === "string" && form.model_glb && (
@@ -323,13 +389,14 @@ export default function AdminAREditPage() {
                 onChange={handleChange}
                 className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-700"
               />
+              <p className="text-xs opacity-70 mt-2">
+                Note: GLB uploads go directly to R2 (faster, avoids backend timeouts).
+              </p>
             </div>
 
             {/* MindAR Target (.mind) */}
             <div>
-              <label className="block font-semibold mb-2">
-                MindAR Target (.mind)
-              </label>
+              <label className="block font-semibold mb-2">MindAR Target (.mind)</label>
               {typeof form.marker_mind === "string" && form.marker_mind && (
                 <div className="relative mb-3 flex items-center gap-3">
                   <a
@@ -378,18 +445,14 @@ export default function AdminAREditPage() {
               type="submit"
               disabled={loading}
               className={`w-full py-3 rounded-lg font-semibold transition text-white ${
-                loading
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-700"
+                loading ? "bg-gray-500 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
               }`}
             >
               {loading ? "Saving..." : id ? "Update AR" : "Create AR"}
             </button>
 
             {/* Status Message */}
-            {message && (
-              <p className="text-center text-sm mt-4 opacity-80">{message}</p>
-            )}
+            {message && <p className="text-center text-sm mt-4 opacity-80">{message}</p>}
           </form>
         </div>
 

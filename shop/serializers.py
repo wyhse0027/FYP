@@ -372,7 +372,8 @@ class ARExperienceSerializer(serializers.ModelSerializer):
 
     # ─── Replace/Delete Logic for all uploadable fields ────────────────────────
     def update(self, instance, validated_data):
-        for field in ["marker_image", "model_glb", "marker_mind", "app_download_file"]:
+        # Only handle these through multipart endpoint
+        for field in ["marker_image", "marker_mind"]:
             new_file = validated_data.pop(field, serializers.empty)
             if new_file is None:
                 getattr(instance, field).delete(save=False)
@@ -382,8 +383,9 @@ class ARExperienceSerializer(serializers.ModelSerializer):
                 if old_file:
                     old_file.delete(save=False)
                 setattr(instance, field, new_file)
-        return super().update(instance, validated_data)
 
+        # Let DRF update normal fields (product/type/enabled)
+        return super().update(instance, validated_data)
     
 # ─── Reviews ─────────────────────
 class ReviewMediaSerializer(serializers.ModelSerializer):
