@@ -43,6 +43,11 @@ const CartPage = () => {
 
   const handleCheckout = () => {
     if (selectedIds.length === 0) return;
+
+    // ✅ block checkout if any selected item exceeds stock
+    const bad = selectedItems.find((i) => i.quantity > (i.product?.stock ?? Infinity));
+    if (bad) return; // (you can show toast here if you have one)
+
     const query = `items=${selectedIds.join(",")}`;
     navigate(`/checkout?${query}`);
   };
@@ -186,13 +191,13 @@ const CartPage = () => {
                                   </button>
 
                                   <span className="w-10 sm:w-12 text-center font-extrabold">{item.quantity}</span>
-
-                                  <button
-                                    type="button"
-                                    onClick={() => updateQuantity(product.id, item.quantity + 1, cartItemId)}
-                                    className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/15 flex items-center justify-center transition"
-                                    aria-label="Increase quantity"
-                                  >
+                                      <button
+                                        type="button"
+                                        onClick={() => updateQuantity(product.id, item.quantity + 1, cartItemId)}
+                                        disabled={item.quantity >= (product.stock ?? Infinity)}
+                                        className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/15 flex items-center justify-center transition disabled:opacity-40 disabled:cursor-not-allowed"
+                                        aria-label="Increase quantity"
+                                      >
                                     <Plus className="w-4 h-4 text-white" />
                                   </button>
                                 </div>

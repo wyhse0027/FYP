@@ -48,63 +48,92 @@ export const CartProvider = ({ children }) => {
 
   // ─── Add item to cart ───────────────────────────────────────────────────
   const addToCart = async (product, quantity) => {
-    try {
+    // basic client guard
+    const qty = Number(quantity);
+    if (!Number.isFinite(qty) || qty <= 0) {
+      throw new Error("Invalid quantity.");
+    }
+
+    // ✅ Logged-in users MUST respect backend result (no guest fallback)
+    if (isAuthed) {
       const res = await http.post("cart-items/", {
         product_id: product.id,
-        quantity,
+        quantity: qty,
       });
 
       const newItem = res.data;
+
       setCartItems((prev) => {
         const existing = prev.find((i) => i.product.id === product.id);
         if (existing) {
+          // backend already validated final qty, so this is safe
           return prev.map((i) =>
-            i.product.id === product.id
-              ? { ...i, quantity: i.quantity + quantity }
-              : i
+            i.product.id === product.id ? { ...i, quantity: i.quantity + qty } : i
           );
         }
-        return [...prev, { id: newItem.id, quantity, product }];
+        return [...prev, { id: newItem.id, quantity: qty, product }];
       });
-    } catch (err) {
-      // fallback guest behavior
-      console.warn("Guest addToCart fallback:", err.message);
-      setCartItems((prev) => {
-        const existing = prev.find((i) => i.product.id === product.id);
-        if (existing) {
-          return prev.map((i) =>
-            i.product.id === product.id
-              ? { ...i, quantity: i.quantity + quantity }
-              : i
-          );
-        }
-        return [...prev, { id: Date.now(), quantity, product }];
-      });
+
+      return; // ✅ success
     }
+
+    // ✅ Guest mode ONLY: local cart logic
+    setCartItems((prev) => {
+      const existing = prev.find((i) => i.product.id === product.id);
+      const existingQty = existing ? existing.quantity : 0;
+
+      // optional: also enforce stock for guests (prevents nonsense)
+      const stock = Number(product.stock ?? Infinity);
+      if (Number.isFinite(stock) && existingQty + qty > stock) {
+        throw new Error(`Only ${stock} left in stock.`);
+      }
+
+      if (existing) {
+        return prev.map((i) =>
+          i.product.id === product.id ? { ...i, quantity: i.quantity + qty } : i
+        );
+      }
+      return [...prev, { id: Date.now(), quantity: qty, product }];
+    });
   };
 
   // ─── Update item quantity ───────────────────────────────────────────────
   const updateQuantity = async (productId, newQuantity, cartItemId) => {
-    try {
-      if (newQuantity <= 0) {
+    const qty = Number(newQuantity);
+
+    // basic guard
+    if (!Number.isFinite(qty)) throw new Error("Invalid quantity.");
+
+    // ✅ Logged-in must respect backend
+    if (isAuthed) {
+      if (qty <= 0) {
         await http.delete(`cart-items/${cartItemId}/`);
         setCartItems((prev) => prev.filter((i) => i.product.id !== productId));
-      } else {
-        await http.patch(`cart-items/${cartItemId}/`, { quantity: newQuantity });
-        setCartItems((prev) =>
-          prev.map((i) =>
-            i.product.id === productId ? { ...i, quantity: newQuantity } : i
-          )
-        );
+        return;
       }
-    } catch (err) {
-      console.warn("Guest updateQuantity fallback:", err.message);
+
+      await http.patch(`cart-items/${cartItemId}/`, { quantity: qty });
+
       setCartItems((prev) =>
         prev.map((i) =>
-          i.product.id === productId ? { ...i, quantity: newQuantity } : i
+          i.product.id === productId ? { ...i, quantity: qty } : i
         )
       );
+      return;
     }
+
+    // ✅ Guest mode only: local update (still enforce stock)
+    setCartItems((prev) =>
+      prev.map((i) => {
+        if (i.product.id !== productId) return i;
+
+        const stock = Number(i.product.stock ?? Infinity);
+        if (Number.isFinite(stock) && qty > stock) {
+          throw new Error(`Only ${stock} left in stock.`);
+        }
+        return { ...i, quantity: qty };
+      })
+    );
   };
 
   // ─── Remove item ────────────────────────────────────────────────────────
