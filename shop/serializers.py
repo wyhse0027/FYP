@@ -487,10 +487,41 @@ class CartItemSerializer(serializers.ModelSerializer):
         model = CartItem
         fields = ["id", "product", "product_id", "quantity"]
 
+    def validate_quantity(self, value):
+        if value is None:
+            return 1
+        if int(value) <= 0:
+            raise serializers.ValidationError("Quantity must be at least 1.")
+        return int(value)
+
+    def validate(self, attrs):
+        """
+        Block cart qty exceeding stock.
+        Handles both:
+        - POST (attrs has product + quantity)
+        - PATCH (attrs may have only quantity; use instance.product)
+        """
+        qty = attrs.get("quantity", None)
+
+        # PATCH might not include quantity
+        if qty is None:
+            return attrs
+
+        product = attrs.get("product") or getattr(self.instance, "product", None)
+        if not product:
+            return attrs
+
+        if product.stock is not None and qty > product.stock:
+            raise serializers.ValidationError(
+                {"quantity": f"Only {product.stock} left in stock."}
+            )
+        return attrs
+
     def create(self, validated_data):
         request = self.context.get("request")
         user = request.user
         cart, _ = Cart.objects.get_or_create(user=user)
+
         product = validated_data["product"]
         qty = validated_data.get("quantity", 1)
 
@@ -501,10 +532,15 @@ class CartItemSerializer(serializers.ModelSerializer):
         )
 
         if not created:
-            item.quantity += qty
+            new_qty = item.quantity + qty
+            if product.stock is not None and new_qty > product.stock:
+                raise serializers.ValidationError(
+                    {"quantity": f"Only {product.stock} left in stock."}
+                )
+            item.quantity = new_qty
             item.save()
-        return item
 
+        return item
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
