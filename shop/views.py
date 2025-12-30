@@ -772,27 +772,38 @@ class AdminProductViewSet(viewsets.ModelViewSet):
         ctx["request"] = self.request
         return ctx
     
-    # ✅ Remove promo image
+    # ✅ Remove promo image (idempotent)
     @action(detail=True, methods=["delete"], url_path="remove-promo")
     def remove_promo(self, request, pk=None):
         product = self.get_object()
-        if product.promo_image:
-            product.promo_image.delete(save=False)  # delete from storage
-            product.promo_image = None
-            product.save(update_fields=["promo_image"])
-            return Response({"detail": "Promo image removed"}, status=status.HTTP_204_NO_CONTENT)
-        return Response({"detail": "No promo image to delete"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # ✅ Remove card image
+        if not product.promo_image:
+            # was 400, change to 200
+            return Response({"detail": "Promo image already removed."}, status=status.HTTP_200_OK)
+
+        # delete file + clear db
+        product.promo_image.delete(save=False)
+        product.promo_image = None
+        product.save(update_fields=["promo_image"])
+
+        return Response({"detail": "Promo image removed."}, status=status.HTTP_200_OK)
+
+
+    # ✅ Remove card image (idempotent)
     @action(detail=True, methods=["delete"], url_path="remove-card")
     def remove_card(self, request, pk=None):
         product = self.get_object()
-        if product.card_image:
-            product.card_image.delete(save=False)
-            product.card_image = None
-            product.save(update_fields=["card_image"])
-            return Response({"detail": "Card image removed"}, status=status.HTTP_204_NO_CONTENT)
-        return Response({"detail": "No card image to delete"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not product.card_image:
+            # was 400, change to 200
+            return Response({"detail": "Card image already removed."}, status=status.HTTP_200_OK)
+
+        product.card_image.delete(save=False)
+        product.card_image = None
+        product.save(update_fields=["card_image"])
+
+        return Response({"detail": "Card image removed."}, status=status.HTTP_200_OK)
+
 
 
 class AdminProductMediaViewSet(viewsets.ModelViewSet):
