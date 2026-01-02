@@ -145,6 +145,13 @@ export default function CheckoutPage() {
 
     try {
       setLoading(true);
+
+      if (pm === PAYMENT_METHODS.COD) {
+        // Existing order payment flow: just keep it unpaid / COD.
+        // You can optionally update method if backend supports it.
+        setPaidOrderId(existingOrderId); // or just redirect
+        return;
+      }
       const res = await http.post(`orders/${existingOrderId}/pay/`, {
         method: pm,
         success: true,
@@ -180,10 +187,20 @@ export default function CheckoutPage() {
         city: addr.city,
         state: addr.state,
         country: addr.country,
+        payment_method: pm,
       };
 
       const orderRes = await http.post("orders/", orderPayload);
       const order = orderRes.data;
+
+      if (pm === PAYMENT_METHODS.COD) {
+        // COD = pay on delivery. No confirmation call here.
+        if (typeof clearCart === "function") clearCart();
+
+        // show "Order Placed" panel (pay later style) or directly redirect
+        setInvoiceOrderId(order.id); // <-- use this panel
+        return;
+      }
 
       if (effectivePayNow) {
         try {

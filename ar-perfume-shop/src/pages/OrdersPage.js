@@ -203,7 +203,7 @@ export default function OrdersPage() {
                   {isActive && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute inset-0 bg-gradient-to-r from-luxury-gold to-luxury-gold-light rounded-xl -z-10"
+                      className="absolute inset-0 bg-luxury-gold rounded-xl -z-10"
                       transition={{ type: "spring", duration: 0.5 }}
                     />
                   )}
@@ -294,6 +294,7 @@ function OrderCard({ order, onAsk, onDownloadPdf }) {
   const paymentLabel = (() => {
     if (!payment) return "UNPAID";
     if (method === "COD") {
+      if (status !== "TO_RATE" && status !== "COMPLETED") return "(Pay on delivery)";
       if (pStatus === "SUCCESS") return "(Collected)";
       if (pStatus === "PENDING") return "(Pay on delivery)";
       if (pStatus === "CANCELLED") return "(Cancelled)";
@@ -323,13 +324,21 @@ function OrderCard({ order, onAsk, onDownloadPdf }) {
     return "bg-white/10 text-white/70 border-white/10";
   })();
 
-  const isReceipt = payment && payment.status === "SUCCESS";
+  const isCOD = method === "COD";
+  const isPaid = payment?.status === "SUCCESS";
+  const isToReceive = status === "TO_RECEIVE";
+  const codCollected = isCOD && (status === "TO_RATE" || status === "COMPLETED");
+  const isReceipt = (!isCOD && isPaid) || codCollected;
   const downloadLabel = isReceipt ? "Receipt" : "Invoice";
+
+  // force label for COD while waiting delivery
+  const computedPaymentLabel =
+    method === "COD" && !codCollected ? "(Pay on delivery)" : paymentLabel;
 
   const ActionButton = ({ onClick, variant = "default", children }) => {
     const variantClasses = {
       primary:
-        "bg-gradient-to-r from-luxury-gold to-luxury-gold-light text-slate-900 shadow-lg shadow-luxury-gold/20",
+        "bg-luxury-gold text-slate-900 shadow-lg shadow-luxury-gold/20 hover:bg-luxury-gold/90",
       danger:
         "bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30",
       success:
@@ -394,20 +403,6 @@ function OrderCard({ order, onAsk, onDownloadPdf }) {
               }
             >
               Cancel
-            </ActionButton>
-            <ActionButton
-              variant="success"
-              onClick={() =>
-                onAsk({
-                  type: "ship",
-                  id,
-                  title: "Mark as Shipped?",
-                  message: "Mark this order as shipped?",
-                  confirmText: "Mark Shipped",
-                })
-              }
-            >
-              Mark Shipped
             </ActionButton>
           </>
         );
@@ -481,7 +476,7 @@ function OrderCard({ order, onAsk, onDownloadPdf }) {
             <div
               className={`mt-2 inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium border ${paymentBadgeClass}`}
             >
-              {payment ? `${method} · ${paymentLabel}` : paymentLabel}
+              {payment ? `${method} · ${computedPaymentLabel}` : computedPaymentLabel}
             </div>
           ) : (
             payment &&
