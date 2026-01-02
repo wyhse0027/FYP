@@ -54,7 +54,7 @@ const CartPage = () => {
 
   return (
     <>
-      <div className="min-h-screen w-full bg-blue-900/95 relative overflow-hidden pb-[calc(80px+260px)]">
+      <div className="min-h-screen w-full bg-blue-900/95 relative overflow-hidden pb-[calc(80px+260px)] md:pb-[260px]">
         {/* Decorative elements */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute top-20 left-10 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl" />
@@ -240,7 +240,7 @@ const CartPage = () => {
 
         {/* Sticky footer */}
         {itemCount > 0 && (
-          <footer className="fixed left-0 right-0 bottom-[calc(80px+env(safe-area-inset-bottom))] z-50">
+          <footer className="fixed left-0 right-0 bottom-[calc(80px+env(safe-area-inset-bottom))] md:bottom-[env(safe-area-inset-bottom)] z-50">
             <div className="bg-gradient-to-t from-blue-950/90 via-blue-950/80 to-transparent pt-5 pb-4 sm:pt-8 sm:pb-6 px-6">
               <div className="mx-auto w-full max-w-screen-2xl">
                 <div className="bg-white rounded-2xl p-5 shadow-2xl">

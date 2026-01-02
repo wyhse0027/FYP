@@ -35,9 +35,7 @@ const Layout = () => {
 
       {/* Page content */}
       <main
-        className={`flex-grow ${
-          isARPage ? "" : "pb-20"
-        }`}
+        className={`flex-grow ${isARPage ? "" : "pb-20 md:pb-0"}`}
         style={
           isARPage
             ? {
@@ -54,8 +52,12 @@ const Layout = () => {
       {/* ❌ Footer hidden in AR */}
       {!isARPage && <Footer />}
 
-      {/* ❌ Bottom nav hidden in AR */}
-      {!isARPage && <BottomNav />}
+      {/* ❌ Bottom nav hidden in AR + desktop */}
+      {!isARPage && (
+        <div className="md:hidden">
+          <BottomNav />
+        </div>
+      )}
     </div>
   );
 };

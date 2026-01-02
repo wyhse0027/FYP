@@ -253,7 +253,10 @@ class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        user = self.request.user
+        if user.is_staff or user.is_superuser:
+            return Order.objects.all()
+        return Order.objects.filter(user=user)
 
     def get_serializer_context(self):
         ctx = super().get_serializer_context()
@@ -261,37 +264,16 @@ class OrderViewSet(viewsets.ModelViewSet):
         return ctx
 
     def perform_create(self, serializer):
-        # Let the serializer handle setting user/status
-        order = serializer.save()
-
-        # Ensure every order has a Payment row so it appears in admin payments
-        if not hasattr(order, "payment"):
-            Payment.objects.create(
-                order=order,
-                amount=order.total,
-                method="COD",   # placeholder, updated in pay()
-                status="PENDING",
-            )
+        serializer.save()
 
     @action(detail=True, methods=["post"])
     def pay(self, request, pk=None):
-        """
-        Handle payment result for this order.
-
-        Expected body (from frontend / gateway):
-        {
-          "method": "CARD" | "FPX" | "E_WALLET" | "COD",
-          "success": true/false,           # REQUIRED for online methods
-          "transaction_id": "optional-gw-id"
-        }
-        """
         order = self.get_object()
 
+        # pay() only for orders waiting for online payment
         if order.status != "TO_PAY":
-            return Response(
-                {"error": "Order cannot be paid."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"error": "Order cannot be paid."},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         method = request.data.get("method")
         txid = request.data.get("transaction_id")
@@ -303,18 +285,16 @@ class OrderViewSet(viewsets.ModelViewSet):
         else:
             success = bool(success_raw)
 
-        valid_methods = ["COD", "CARD", "FPX", "E_WALLET"]
+        # ✅ COD removed here
+        valid_methods = ["CARD", "FPX", "E_WALLET"]
         if method not in valid_methods:
-            return Response(
-                {"error": "Invalid or missing payment method."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"error": "Invalid or missing payment method."},
+                            status=status.HTTP_400_BAD_REQUEST)
 
-        payment = getattr(order, "payment", None)
-        is_paid = bool(payment and payment.status == "SUCCESS")
-
-        # Ensure a Payment object exists
-        if payment is None:
+        # Payment must exist (serializer ensures it),
+        # but we still guard just in case older orders exist.
+        payment = Payment.objects.filter(order=order).first()
+        if not payment:
             payment = Payment.objects.create(
                 order=order,
                 amount=order.total,
@@ -328,51 +308,80 @@ class OrderViewSet(viewsets.ModelViewSet):
         if txid:
             payment.transaction_id = txid
 
-        # ── COD logic (no FAILED here; you collect on delivery) ─────────────
-        if method == "COD":
-            # Treat as order confirmed, to be paid on delivery
-            payment.status = "PENDING"
-            order.status = "TO_SHIP"
-            payment.save()
-            order.save()
-            return Response(
-                OrderSerializer(order, context={"request": request}).data
-            )
-
-        # ── Online methods: success/fail is explicit ────────────────────────
         if not success:
-            # Mark payment attempt as FAILED, keep order payable
             payment.status = "FAILED"
-            payment.save()
-
-            # You can choose to leave as TO_PAY (allow retry) or auto-cancel.
-            # Here: keep TO_PAY so user can try again.
+            payment.save(update_fields=["method", "amount", "transaction_id", "status"])
             order.status = "TO_PAY"
-            order.save()
-
+            order.save(update_fields=["status"])
             return Response(
-                {
-                    "detail": "Payment failed.",
-                    "order": OrderSerializer(order, context={"request": request}).data,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
+                {"detail": "Payment failed.", "order": OrderSerializer(order, context={"request": request}).data},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
-        # If success == True for online methods → mark as paid
+        # success
         payment.status = "SUCCESS"
         if not payment.transaction_id:
-            payment.transaction_id = (
-                f"PAY-{timezone.now().strftime('%Y%m%d%H%M%S')}-{order.id}"
-            )
+            payment.transaction_id = f"PAY-{timezone.now().strftime('%Y%m%d%H%M%S')}-{order.id}"
 
         order.status = "TO_SHIP"
 
-        payment.save()
-        order.save()
+        payment.save(update_fields=["method", "amount", "transaction_id", "status"])
+        order.save(update_fields=["status"])
 
-        return Response(
-            OrderSerializer(order, context={"request": request}).data
-        )
+        return Response(OrderSerializer(order, context={"request": request}).data)
+    
+    @action(detail=True, methods=["post"])
+    def cod_confirm(self, request, pk=None):
+        """
+        Customer chooses COD as payment method.
+        - create/update Payment as COD + PENDING
+        - move order TO_PAY -> TO_SHIP
+        """
+        order = self.get_object()
+
+        if order.status != "TO_PAY":
+            return Response({"error": "Order cannot be confirmed for COD."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        payment = Payment.objects.filter(order=order).first()
+        if not payment:
+            payment = Payment.objects.create(
+                order=order,
+                amount=order.total,
+                method="COD",
+                status="PENDING",  # ✅ pending until delivery confirmation
+            )
+        else:
+            payment.method = "COD"
+            payment.amount = order.total
+            payment.status = "PENDING"  # ✅ pending until delivery confirmation
+            payment.save(update_fields=["method", "amount", "status"])
+
+        order.status = "TO_SHIP"
+        order.save(update_fields=["status"])
+
+        return Response(OrderSerializer(order, context={"request": request}).data)
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAdminUser])
+    def cod_collected(self, request, pk=None):
+        order = self.get_object()
+
+        try:
+            payment = order.payment
+        except Payment.DoesNotExist:
+            return Response({"error": "No payment record."}, status=400)
+
+        if payment.method != "COD":
+            return Response({"error": "Not a COD order."}, status=400)
+
+        if payment.status != "SUCCESS":
+            payment.status = "SUCCESS"
+            if not payment.transaction_id:
+                payment.transaction_id = f"COD-{timezone.now().strftime('%Y%m%d%H%M%S')}-{order.id}"
+            payment.save(update_fields=["status", "transaction_id"])
+
+        return Response(OrderSerializer(order, context={"request": request}).data)
+
 
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):
@@ -444,27 +453,27 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Mark order as ready to rate
+        # Move order forward
         order.status = "TO_RATE"
+        order.save(update_fields=["status"])
 
-        # If COD, confirm payment now
-        try:
-          payment = order.payment
-        except Payment.DoesNotExist:
-          payment = None
-
-        if payment and payment.method == "COD" and payment.status != "SUCCESS":
+        # ✅ COD payment collected on delivery confirmation
+        payment = Payment.objects.filter(order=order).first()
+        if not payment:
+            payment = Payment.objects.create(
+                order=order,
+                amount=order.total,
+                method="COD",
+                status="SUCCESS",
+                transaction_id=f"COD-{timezone.now().strftime('%Y%m%d%H%M%S')}-{order.id}",
+            )
+        elif payment.method == "COD" and payment.status != "SUCCESS":
             payment.status = "SUCCESS"
             if not payment.transaction_id:
-                payment.transaction_id = (
-                    f"COD-{timezone.now().strftime('%Y%m%d%H%M%S')}-{order.id}"
-                )
-            payment.save()
-
-        order.save()
-        return Response(
-            OrderSerializer(order, context={"request": request}).data
-        )
+                payment.transaction_id = f"COD-{timezone.now().strftime('%Y%m%d%H%M%S')}-{order.id}"
+            payment.save(update_fields=["status", "transaction_id"])
+            
+        return Response(OrderSerializer(order, context={"request": request}).data)
 
     @action(detail=True, methods=["post"])
     def complete(self, request, pk=None):
@@ -486,7 +495,10 @@ class OrderViewSet(viewsets.ModelViewSet):
         - Always accessible only by the order owner (enforced by get_queryset()).
         """
         order = self.get_object()
-        payment = getattr(order, "payment", None)
+        try:
+            payment = order.payment
+        except Payment.DoesNotExist:
+            payment = None
 
         buffer = BytesIO()
         p = canvas.Canvas(buffer, pagesize=A4)
@@ -667,8 +679,8 @@ class PaymentViewSet(viewsets.ModelViewSet):
         if order.user != user:
             raise PermissionDenied("You cannot create a payment for this order.")
 
-        # One payment per order
-        if hasattr(order, "payment"):
+        # One payment per order (safe check for OneToOne)
+        if Payment.objects.filter(order=order).exists():
             raise serializers.ValidationError({"detail": "Payment already exists for this order."})
 
         # Amount & status are server-controlled

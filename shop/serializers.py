@@ -578,6 +578,13 @@ class OrderSerializer(serializers.ModelSerializer):
 
     payment = serializers.SerializerMethodField()
 
+    payment_method = serializers.ChoiceField(
+        choices=["COD", "CARD", "FPX", "E_WALLET"],
+        required=False,
+        default="COD",
+        write_only=True,
+    )
+
     class Meta:
         model = Order
         fields = [
@@ -596,6 +603,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "country",
             "created_at",
             "payment",
+            "payment_method",
         ]
         read_only_fields = ["id", "user", "status", "total", "created_at", "payment"]
 
@@ -620,13 +628,22 @@ class OrderSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """
         Create Order + OrderItems, compute total, decrement stock.
-        Order starts as TO_PAY.
+        - COD: order starts TO_SHIP (pay on delivery)
+        - Online: order starts TO_PAY
+        Also creates/updates a Payment row with the chosen method.
         """
         request = self.context["request"]
         user = request.user
 
         items_data = validated_data.pop("items", [])
-        order = Order.objects.create(user=user, status="TO_PAY", **validated_data)
+        payment_method = validated_data.pop("payment_method", "COD")
+
+        if payment_method == "COD":
+            initial_status = "TO_SHIP"
+        else:
+            initial_status = "TO_PAY"
+
+        order = Order.objects.create(user=user, status=initial_status, **validated_data)
 
         total = 0
         for item_data in items_data:
@@ -651,7 +668,23 @@ class OrderSerializer(serializers.ModelSerializer):
             total += float(price) * qty
 
         order.total = total
-        order.save()
+        order.save(update_fields=["total"])
+
+        # ✅ ensure payment row exists and matches chosen method
+        payment, created = Payment.objects.get_or_create(
+            order=order,
+            defaults={
+                "amount": order.total,
+                "method": payment_method,
+                "status": "PENDING" if payment_method == "COD" else "PENDING",
+            },
+        )
+        if not created:
+            payment.amount = order.total
+            payment.method = payment_method
+            payment.status = "PENDING"
+            payment.save(update_fields=["amount", "method", "status"])
+
         return order
 
 
