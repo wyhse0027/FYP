@@ -15,7 +15,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.cache import cache
-from django.db.models import Avg, Count, Q
+from django.db import transaction
+from django.db.models import Avg, Count, Q, Prefetch, F
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.http import urlsafe_base64_encode
@@ -30,7 +31,7 @@ from reportlab.lib.units import mm
 from .models import (
     Product, Review, Cart, Order, Payment, CartItem, ReviewMedia,
     Quiz, QuizAnswer, QuizQuestion, QuizResult, ProductMedia, ARExperience,
-    SiteAbout, Retailer, ScentPersona, 
+    SiteAbout, Retailer, ScentPersona, OrderItem
 )
 from .serializers import (
     ProductSerializer, ReviewSerializer, CartSerializer,
@@ -181,33 +182,40 @@ class UpdateMeView(generics.UpdateAPIView):
 
 
 # ─── Products ──────────────────────────────
-class ProductViewSet(viewsets.ModelViewSet):
+class ProductViewSet(viewsets.ReadOnlyModelViewSet):  # ✅ switch to ReadOnly if you don't need public write
+    queryset = Product.objects.all()
     permission_classes = [permissions.AllowAny]
     serializer_class = ProductSerializer
-
-    # keep this for router/basename
-    queryset = Product.objects.all()
 
     def get_queryset(self):
         return (
             Product.objects
             .all()
             .annotate(
-                # NOTE: Review -> Product has related_name="reviews"
-                rating_avg=Avg('reviews__rating'),
+                rating_avg=Avg("reviews__rating"),
                 rating_count=Count(
-                    'reviews__id',
+                    "reviews__id",
                     filter=Q(reviews__rating__isnull=False),
                     distinct=True,
                 ),
             )
-            .order_by('id')
+            # ✅ KILL N+1: gallery + ar
+            .prefetch_related(
+                "media_gallery",
+                Prefetch(
+                    "ar_experience",
+                    queryset=ARExperience.objects.only(
+                        "id","product_id","type","enabled",
+                        "model_glb","marker_mind","marker_image","app_download_file",
+                        "created_at","updated_at"
+                    ),
+                ),
+            )
+            .order_by("id")
         )
 
     def get_serializer_context(self):
-        ctx = super().get_serializer_context()
-        ctx.update({"request": self.request})
-        return ctx
+        return {"request": self.request}
 
 
 # ─── Reviews ───────────────────────────────
@@ -218,14 +226,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
     parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
 
     def get_queryset(self):
+        qs = (
+            Review.objects
+            .select_related("user", "product")        # ✅ kill N+1
+            .prefetch_related("media_gallery")        # ✅ kill N+1
+            .order_by("-created_at")
+        )
         pid = self.request.query_params.get("product")
-        return self.queryset.filter(product_id=pid) if pid else self.queryset
+        return qs.filter(product_id=pid) if pid else qs
 
     def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context.update({"request": self.request})
-        return context
-
+        return {"request": self.request}
 
 class ReviewMediaViewSet(mixins.DestroyModelMixin, viewsets.GenericViewSet):
     queryset = ReviewMedia.objects.all()
@@ -280,234 +291,150 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        qs = (
+            Order.objects
+            .select_related("user")
+            .select_related("payment")  # OneToOne
+            .prefetch_related(
+                Prefetch("items", queryset=OrderItem.objects.select_related("product"))
+            )
+            .order_by("-created_at")
+        )
         if user.is_staff or user.is_superuser:
-            return Order.objects.all()
-        return Order.objects.filter(user=user)
+            return qs
+        return qs.filter(user=user)
 
     def get_serializer_context(self):
-        ctx = super().get_serializer_context()
-        ctx["request"] = self.request
-        return ctx
+        return {"request": self.request}
 
-    def perform_create(self, serializer):
-        serializer.save()
+    def create(self, request, *args, **kwargs):
+        # ✅ atomic checkout creation
+        with transaction.atomic():
+            return super().create(request, *args, **kwargs)
 
     @action(detail=True, methods=["post"])
     def pay(self, request, pk=None):
-        order = self.get_object()
+        with transaction.atomic():
+            order = self.get_object()
 
-        # pay() only for orders waiting for online payment
-        if order.status != "TO_PAY":
-            return Response({"error": "Order cannot be paid."},
-                            status=status.HTTP_400_BAD_REQUEST)
+            if order.status != "TO_PAY":
+                return Response({"error": "Order cannot be paid."}, status=400)
 
-        method = request.data.get("method")
-        txid = request.data.get("transaction_id")
-        success_raw = request.data.get("success", True)
+            method = request.data.get("method")
+            txid = request.data.get("transaction_id")
+            success_raw = request.data.get("success", True)
 
-        # Normalize success to bool
-        if isinstance(success_raw, str):
-            success = success_raw.lower() in ["1", "true", "yes", "y"]
-        else:
-            success = bool(success_raw)
-
-        # ✅ COD removed here
-        valid_methods = ["CARD", "FPX", "E_WALLET"]
-        if method not in valid_methods:
-            return Response({"error": "Invalid or missing payment method."},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        # Payment must exist (serializer ensures it),
-        # but we still guard just in case older orders exist.
-        payment = Payment.objects.filter(order=order).first()
-        if not payment:
-            payment = Payment.objects.create(
-                order=order,
-                amount=order.total,
-                method=method,
-                status="PENDING",
+            success = (
+                success_raw.lower() in ["1", "true", "yes", "y"]
+                if isinstance(success_raw, str)
+                else bool(success_raw)
             )
 
-        # Always sync latest data
-        payment.method = method
-        payment.amount = order.total
-        if txid:
-            payment.transaction_id = txid
+            if method not in ["CARD", "FPX", "E_WALLET"]:
+                return Response({"error": "Invalid or missing payment method."}, status=400)
 
-        if not success:
-            payment.status = "FAILED"
-            payment.save(update_fields=["method", "amount", "transaction_id", "status"])
-            order.status = "TO_PAY"
-            order.save(update_fields=["status"])
-            return Response(
-                {"detail": "Payment failed.", "order": OrderSerializer(order, context={"request": request}).data},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            payment = Payment.objects.filter(order=order).first()
+            if not payment:
+                payment = Payment.objects.create(
+                    order=order, amount=order.total, method=method, status="PENDING"
+                )
 
-        # success
-        payment.status = "SUCCESS"
-        if not payment.transaction_id:
-            payment.transaction_id = f"PAY-{timezone.now().strftime('%Y%m%d%H%M%S')}-{order.id}"
-
-        order.status = "TO_SHIP"
-
-        payment.save(update_fields=["method", "amount", "transaction_id", "status"])
-        order.save(update_fields=["status"])
-
-        return Response(OrderSerializer(order, context={"request": request}).data)
-    
-    @action(detail=True, methods=["post"])
-    def cod_confirm(self, request, pk=None):
-        """
-        Customer chooses COD as payment method.
-        - create/update Payment as COD + PENDING
-        - move order TO_PAY -> TO_SHIP
-        """
-        order = self.get_object()
-
-        if order.status != "TO_PAY":
-            return Response({"error": "Order cannot be confirmed for COD."},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        payment = Payment.objects.filter(order=order).first()
-        if not payment:
-            payment = Payment.objects.create(
-                order=order,
-                amount=order.total,
-                method="COD",
-                status="PENDING",  # ✅ pending until delivery confirmation
-            )
-        else:
-            payment.method = "COD"
+            payment.method = method
             payment.amount = order.total
-            payment.status = "PENDING"  # ✅ pending until delivery confirmation
-            payment.save(update_fields=["method", "amount", "status"])
+            if txid:
+                payment.transaction_id = txid
 
-        order.status = "TO_SHIP"
-        order.save(update_fields=["status"])
+            if not success:
+                payment.status = "FAILED"
+                payment.save(update_fields=["method", "amount", "transaction_id", "status"])
+                order.status = "TO_PAY"
+                order.save(update_fields=["status"])
+                return Response(
+                    {"detail": "Payment failed.", "order": OrderSerializer(order, context={"request": request}).data},
+                    status=400
+                )
 
-        return Response(OrderSerializer(order, context={"request": request}).data)
-
-    @action(detail=True, methods=["post"], permission_classes=[IsAdminUser])
-    def cod_collected(self, request, pk=None):
-        order = self.get_object()
-
-        try:
-            payment = order.payment
-        except Payment.DoesNotExist:
-            return Response({"error": "No payment record."}, status=400)
-
-        if payment.method != "COD":
-            return Response({"error": "Not a COD order."}, status=400)
-
-        if payment.status != "SUCCESS":
             payment.status = "SUCCESS"
             if not payment.transaction_id:
-                payment.transaction_id = f"COD-{timezone.now().strftime('%Y%m%d%H%M%S')}-{order.id}"
-            payment.save(update_fields=["status", "transaction_id"])
+                payment.transaction_id = f"PAY-{timezone.now().strftime('%Y%m%d%H%M%S')}-{order.id}"
 
-        return Response(OrderSerializer(order, context={"request": request}).data)
+            order.status = "TO_SHIP"
+            payment.save(update_fields=["method", "amount", "transaction_id", "status"])
+            order.save(update_fields=["status"])
 
+            return Response(OrderSerializer(order, context={"request": request}).data)
 
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):
-        """
-        Cancel order (if TO_PAY / TO_SHIP), restock items, sync payment.
-        """
-        order = self.get_object()
+        with transaction.atomic():
+            order = self.get_object()
 
-        if order.status not in ["TO_PAY", "TO_SHIP"]:
-            return Response({"error": "Order cannot be cancelled."}, status=status.HTTP_400_BAD_REQUEST)
+            if order.status not in ["TO_PAY", "TO_SHIP"]:
+                return Response({"error": "Order cannot be cancelled."}, status=400)
 
-        # Restock
-        for item in order.items.all():
-            product = item.product
-            product.stock += item.quantity
-            product.save()
+            # ✅ restock efficiently
+            for item in order.items.all():
+                Product.objects.filter(id=item.product_id).update(
+                    stock=F("stock") + item.quantity
+                )
 
-        # Update payment if exists
-        try:
-            payment = order.payment
-            if payment.status in ["PENDING", "SUCCESS"]:
+            # ✅ sync payment
+            payment = Payment.objects.filter(order=order).first()
+            if payment and payment.status in ["PENDING", "SUCCESS"]:
                 payment.status = "CANCELLED"
-                payment.save()
-        except Payment.DoesNotExist:
-            pass
+                payment.save(update_fields=["status"])
 
-        order.status = "CANCELLED"
-        order.save()
+            order.status = "CANCELLED"
+            order.save(update_fields=["status"])
 
-        return Response(OrderSerializer(order, context={"request": request}).data)
+            return Response(OrderSerializer(order, context={"request": request}).data)
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post"], permission_classes=[IsAdminUser])
     def ship(self, request, pk=None):
-        """
-        Mark order as shipped.
-        For non-COD: require successful payment.
-        (In a real system this should be admin-only.)
-        """
         order = self.get_object()
 
         if order.status != "TO_SHIP":
-            return Response({"error": "Order cannot be shipped."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Order cannot be shipped."}, status=400)
 
-        try:
-            payment = order.payment
-        except Payment.DoesNotExist:
-            return Response({"error": "No payment record."}, status=status.HTTP_400_BAD_REQUEST)
+        payment = Payment.objects.filter(order=order).first()
+        if not payment:
+            return Response({"error": "No payment record."}, status=400)
 
         if payment.method != "COD" and payment.status != "SUCCESS":
-            return Response({"error": "Payment not successful."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Payment not successful."}, status=400)
 
         order.status = "TO_RECEIVE"
-        order.save()
+        order.save(update_fields=["status"])
         return Response(OrderSerializer(order, context={"request": request}).data)
 
     @action(detail=True, methods=["post"])
     def deliver(self, request, pk=None):
-        """
-        Customer confirms the order is received.
+        with transaction.atomic():
+            order = self.get_object()
 
-        - Moves TO_RECEIVE -> TO_RATE.
-        - If COD: mark payment as SUCCESS here (cash collected).
-        """
-        order = self.get_object()
+            if order.status != "TO_RECEIVE":
+                return Response({"error": "Order cannot be delivered."}, status=400)
 
-        if order.status != "TO_RECEIVE":
-            return Response(
-                {"error": "Order cannot be delivered."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            order.status = "TO_RATE"
+            order.save(update_fields=["status"])
 
-        # Move order forward
-        order.status = "TO_RATE"
-        order.save(update_fields=["status"])
+            # ✅ COD becomes SUCCESS when delivered (keep this rule)
+            payment = Payment.objects.filter(order=order).first()
+            if payment and payment.method == "COD" and payment.status != "SUCCESS":
+                payment.status = "SUCCESS"
+                if not payment.transaction_id:
+                    payment.transaction_id = f"COD-{timezone.now().strftime('%Y%m%d%H%M%S')}-{order.id}"
+                payment.save(update_fields=["status", "transaction_id"])
 
-        # ✅ COD payment collected on delivery confirmation
-        payment = Payment.objects.filter(order=order).first()
-        if not payment:
-            payment = Payment.objects.create(
-                order=order,
-                amount=order.total,
-                method="COD",
-                status="SUCCESS",
-                transaction_id=f"COD-{timezone.now().strftime('%Y%m%d%H%M%S')}-{order.id}",
-            )
-        elif payment.method == "COD" and payment.status != "SUCCESS":
-            payment.status = "SUCCESS"
-            if not payment.transaction_id:
-                payment.transaction_id = f"COD-{timezone.now().strftime('%Y%m%d%H%M%S')}-{order.id}"
-            payment.save(update_fields=["status", "transaction_id"])
-            
-        return Response(OrderSerializer(order, context={"request": request}).data)
+            return Response(OrderSerializer(order, context={"request": request}).data)
 
     @action(detail=True, methods=["post"])
     def complete(self, request, pk=None):
         order = self.get_object()
         if order.status != "TO_RATE":
-            return Response({"error": "Order cannot be completed."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Order cannot be completed."}, status=400)
         order.status = "COMPLETED"
-        order.save()
+        order.save(update_fields=["status"])
         return Response(OrderSerializer(order, context={"request": request}).data)
     
 

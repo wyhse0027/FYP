@@ -216,10 +216,10 @@ class ProductSerializer(serializers.ModelSerializer):
 
     # ─── Helpers ─────────────────────────────
     def get_ar_experience(self, obj):
-        experience = ARExperience.objects.filter(product=obj).first()
-        if not experience:
-            return None
-        return ARExperienceSerializer(experience, context=self.context).data
+        # if prefetched, this won't query again
+        experience = obj.ar_experience.first()
+        return ARExperienceSerializer(experience, context=self.context).data if experience else None
+
 
     def _build_url(self, file_field):
         request = self.context.get("request")
@@ -315,7 +315,28 @@ class ProductSerializer(serializers.ModelSerializer):
                 type="VIDEO" if getattr(f, "content_type", "").startswith("video") else "IMAGE",
             )
         return instance
-    
+
+class ProductCardSerializer(serializers.ModelSerializer):
+    promo_image = serializers.SerializerMethodField()
+    card_image = serializers.SerializerMethodField()
+    rating_avg = serializers.FloatField(read_only=True)
+    rating_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Product
+        fields = [
+            "id", "name", "category", "target", "price", "stock",
+            "promo_image", "card_image",
+            "rating_avg", "rating_count",
+        ]
+
+    def _url(self, f):
+        req = self.context.get("request")
+        return req.build_absolute_uri(f.url) if (f and req) else (f.url if f else None)
+
+    def get_promo_image(self, obj): return self._url(obj.promo_image)
+    def get_card_image(self, obj): return self._url(obj.card_image)
+ 
 class ProductLiteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
@@ -406,7 +427,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
 
     # what you return
-    product = ProductSerializer(read_only=True)
+    product = ProductCardSerializer(read_only=True)
 
     # what you accept in POST
     product_id = serializers.PrimaryKeyRelatedField(
@@ -478,7 +499,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 # ─── Cart & Orders ───────────────
 class CartItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
+    product = ProductCardSerializer(read_only=True)
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(), source="product", write_only=True
     )
@@ -555,7 +576,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
     product_id = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(), source="product", write_only=True
     )
-    product = ProductSerializer(read_only=True)
+    product = ProductCardSerializer(read_only=True)
 
     class Meta:
         model = OrderItem
@@ -687,9 +708,13 @@ class OrderSerializer(serializers.ModelSerializer):
 
         return order
 
+class OrderLiteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ["id", "status", "total", "created_at"]
 
 class PaymentSerializer(serializers.ModelSerializer):
-    order = OrderSerializer(read_only=True)
+    order = OrderLiteSerializer(read_only=True)
     order_id = serializers.PrimaryKeyRelatedField(
         queryset=Order.objects.all(),
         source="order",
@@ -735,7 +760,7 @@ class QuizSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "label", "audience", "questions"]
 
 class QuizResultSerializer(serializers.ModelSerializer):
-    recommended_products = ProductSerializer(many=True, read_only=True)
+    recommended_products = ProductCardSerializer(many=True, read_only=True)
     persona = serializers.SerializerMethodField()
 
     class Meta:
