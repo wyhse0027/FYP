@@ -15,63 +15,46 @@ export default function AdminDashboardPage() {
     scentPersonas: 0,
   });
 
-  const getCount = (res) => {
-    const data = res.data;
-    if (Array.isArray(data)) return data.length;
-    if (typeof data?.count === "number") return data.count;
-    if (Array.isArray(data?.results)) return data.results.length;
-    return 0;
-  };
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let alive = true;
+
     async function fetchStats() {
       try {
-        const [
-          usersRes,
-          productsRes,
-          ordersRes,
-          paymentsRes,
-          quizzesRes,
-          scentPersonasRes,
-          arRes,
-          reviewsRes,
-          retailersRes,
-        ] = await Promise.all([
-          http.get("/admin/users/"),
-          http.get("/products/"),
-          http.get("/admin/orders/"),
-          http.get("/admin/payments/"),
-          http.get("/admin/quizzes/"),
-          http.get("/admin/scent-personas/"),
-          http.get("/ar/"),
-          http.get("/admin/reviews/"),
-          http.get("/retailers/"),
-        ]);
+        setLoading(true);
+        const res = await http.get("/admin/dashboard-stats/");
+        if (!alive) return;
 
-        setStats({
-          users: getCount(usersRes),
-          products: getCount(productsRes),
-          orders: getCount(ordersRes),
-          payments: getCount(paymentsRes),
-          quizzes: getCount(quizzesRes),
-          scentPersonas: getCount(scentPersonasRes),
-          ar: getCount(arRes),
-          reviews: getCount(reviewsRes),
-          retailers: getCount(retailersRes),
-        });
+        setStats((prev) => ({
+          ...prev,
+          ...res.data,
+        }));
       } catch (err) {
         console.error("Failed to load dashboard stats:", err);
+      } finally {
+        if (alive) setLoading(false);
       }
     }
 
     fetchStats();
-  }, []);
 
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 lg:px-16">
       <div className="max-w-6xl mx-auto py-6">
         <h1 className="text-3xl font-bold mb-8 text-center">ADMIN DASHBOARD</h1>
+
+        {loading && (
+          <div className="text-center mb-6 opacity-80">
+            Loading dashboard stats...
+          </div>
+        )}
+
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Users */}
           <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">

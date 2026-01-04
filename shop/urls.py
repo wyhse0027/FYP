@@ -15,7 +15,7 @@ from .views import (
     ARExperienceViewSet, ARDeleteMarkerView, ARDeleteGLBView, ARDeleteMindView,
     AdminReviewViewSet, SiteAboutViewSet, RetailerViewSet, AdminPaymentViewSet,
     ScentPersonaViewSet,
-    AdminCategoryList,
+    AdminCategoryList, admin_dashboard_stats,
 )
 from .views_upload import R2PresignBigFile, ARFinalizeBigFile, ARDeleteBigFile
 
@@ -68,6 +68,7 @@ urlpatterns = [
 
     # Admin Endpoints
     path("admin/", include(admin_router.urls)),
+    path("admin/dashboard-stats/", admin_dashboard_stats, name="admin-dashboard-stats"),
     path("ar/<int:pk>/delete-marker/", ARDeleteMarkerView.as_view(), name="ar-delete-marker"),
     path("ar/<int:pk>/delete-glb/", ARDeleteGLBView.as_view(), name="ar-delete-glb"),
     path("ar/<int:pk>/delete-mind/", ARDeleteMindView.as_view(), name="ar-delete-mind"),

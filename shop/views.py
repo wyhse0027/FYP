@@ -14,6 +14,7 @@ from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
+from django.core.cache import cache
 from django.db.models import Avg, Count, Q
 from django.http import HttpResponse
 from django.utils import timezone
@@ -44,6 +45,31 @@ from .serializers import (
 )
 
 User = get_user_model()
+
+# ─── admin cache ─────────────────────────────
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def admin_dashboard_stats(request):
+    cache_key = "admin_dashboard_stats_v1"
+    cached = cache.get(cache_key)
+    if cached:
+        return Response(cached)
+
+    data = {
+        "users": User.objects.count(),
+        "products": Product.objects.count(),
+        "orders": Order.objects.count(),
+        "payments": Payment.objects.count(),
+        "quizzes": Quiz.objects.count(),
+        "scentPersonas": ScentPersona.objects.count(),
+        "ar": ARExperience.objects.count(),
+        "reviews": Review.objects.count(),
+        "retailers": Retailer.objects.count(),
+    }
+
+    # cache for 30s (admin dashboard doesn't need realtime)
+    cache.set(cache_key, data, 30)
+    return Response(data)
 
 
 # ─── Permissions ─────────────────────────────
