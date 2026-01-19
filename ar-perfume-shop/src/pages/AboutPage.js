@@ -40,7 +40,7 @@ function ExpandableSection({ id, title, isOpen, onToggle, children }) {
 
   return (
     <div className="relative">
-      <div className="absolute inset-0 rounded-full opacity-40 blur-md bg-white/10" />
+      <div className="absolute inset-0 rounded-full opacity-40 blur-md bg-white/10 pointer-events-none" />
       <button
         type="button"
         onClick={() => onToggle(id)}
