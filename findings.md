@@ -106,18 +106,20 @@ needs field-storage + schema migrations (not just a default swap).
 - Visual animation/playback parity remains part of the Task 6 camera + marker manual gate;
   the optimized object has not yet been written to live R2 or Neon.
 
-### Task 3 result (2026-06-21) — writes done; public-access blocker found
+### Task 3 result (2026-06-21) — COMPLETE and verified
 - Uploaded the optimized model (11,499,420 B) to R2 under a NEW key per record and repointed
   both `model_glb` fields (old objects kept untouched, verified present):
   - PK 1 ELEGANZA → `ar/models/40736ccfd2d242d885e9ba0158e5bc67_eleganza_opt.glb`
   - PK 2 ELEGANZA INTENSE → `ar/models/f537fb3602ae459fa1cede1e41114284_eleganza_opt.glb`
-  - Old (kept): `ar/models/372f75fe-..._eleganza.glb`, `ar/models/e821f00a-..._eleganza.glb`.
+  - Old (kept for rollback): `ar/models/372f75fe-..._eleganza.glb`, `ar/models/e821f00a-..._eleganza.glb`.
 - S3-API HEAD confirms both new objects exist at 11,499,420 B.
-- **BLOCKER (not a Task 3 regression):** the R2 **public** URL (`R2_PUBLIC_BASE_URL`, r2.dev)
-  returns **403 Forbidden** for ALL objects — old (413 MB) *and* new — on GET and HEAD. The
-  old objects served on the live site before, so the bucket's public-development-URL access is
-  currently **disabled**. Web AR cannot fetch any model until it is re-enabled (Cloudflare R2 →
-  bucket → Settings → Public Development URL → Allow Access) or until Phase 2 serves models
-  from a public GCS bucket.
-- Task 3 storage/DB writes are complete and **reversible** (old keys recorded above). Task 3
-  verification (public fetch of the new model) is **blocked** pending public access.
+- **Public fetch VERIFIED:** the r2.dev public URL serves the new objects — HTTP **206**,
+  `Content-Type: model/gltf-binary`, full length 11,499,420 B, CORS
+  `Access-Control-Allow-Origin: http://localhost:3000`.
+- **Correction:** an earlier check reported 403 for all objects. That was a **false alarm** —
+  Cloudflare blocks the default `Python-urllib` user-agent; a browser user-agent (what the AR
+  viewer uses) returns 206. R2 public access was never disabled.
+- Bucket CORS allowed origins: `https://gerainchan.vercel.app`, `http://localhost:3000`
+  (methods GET/HEAD/PUT/DELETE). **Phase 5 TODO:** add the Firebase Hosting domain.
+- Note: the optimized GLB is **Draco-compressed** → the A-Frame viewer must configure a
+  DRACOLoader (`dracoDecoderPath`) or it won't decode (Task 4/5).
