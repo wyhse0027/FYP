@@ -4,6 +4,10 @@ Binding process rules for all development in this repository (Eleganza / GERAIN 
 AR perfume e-commerce). This file governs **how** work is done. [`context.md`](./context.md)
 governs **what** is built (the specifications). Both are authoritative and must stay aligned.
 
+**This is the single canonical process file for every agent working in this repo (Claude
+Code, Codex, etc.). There is no separate `AGENTS.md`; any tool that looks for one must read
+this file.**
+
 These rules are deliberately strict. They exist to keep a previously sprawling codebase
 maintainable, reviewable, and revertable.
 
