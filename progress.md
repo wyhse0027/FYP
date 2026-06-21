@@ -5,6 +5,25 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Repo Restructure (nested folders)
+
+**Date:** 2026-06-21
+**Branch/Tag:** `phase-restructure`
+**Task:** Reorganized the repo to separate docs / code / config / assets into nested folders.
+
+- Moved: backend + config → `server/`; frontend → `web/`; `eleganza_ar` → `ar-assets/`;
+  `mindar_builder` → `tools/`; `arApp` + `fyp.apk` → `mobile/`; `media` + `db.sqlite3` →
+  `server/`. Governance docs + planning files stay at root.
+- 133 files moved as git **renames** (history preserved). Force-tracked the gitignored
+  `web/public/models/eleganza/Eleganza_marker.mind` to avoid silently dropping it.
+- Updated references: `context.md`, `CLAUDE.md`, `.gitignore`, Phase 1 plan paths. Docker
+  build context becomes `server/` (noted for Phase 4).
+
+**Test evidence:** `python server/manage.py check` → 0 errors (3 pre-existing allauth
+deprecation warnings, unrelated). Frontend tree intact (`web/package.json`, `web/src/...`).
+
+---
+
 ## Phase 1 — Plan Written
 
 **Date:** 2026-06-21

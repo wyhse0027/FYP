@@ -147,12 +147,12 @@ false, correct it in the same commit.
 
 ## 8. Security & Secrets
 
-8.1 **Compromised secrets.** The credentials present in `backend/.env` (Django key, Google
+8.1 **Compromised secrets.** The credentials present in `server/backend/.env` (Django key, Google
 OAuth secret, SendGrid key, Neon URL, Cloudinary secret, R2 keys) are treated as
 **compromised** and must be **rotated before any redeployment**. Tracked as a requirement.
 
-8.2 **Never commit secrets.** `.env` stays gitignored. `backend/.env.sample` documents the
-shape only (no real values).
+8.2 **Never commit secrets.** `.env` stays gitignored. `server/backend/.env.sample` documents
+the shape only (no real values).
 
 8.3 **Flag sensitive changes** for security review (§6.2).
 
