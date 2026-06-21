@@ -123,3 +123,16 @@ needs field-storage + schema migrations (not just a default swap).
   (methods GET/HEAD/PUT/DELETE). **Phase 5 TODO:** add the Firebase Hosting domain.
 - Note: the optimized GLB is **Draco-compressed** → the A-Frame viewer must configure a
   DRACOLoader (`dracoDecoderPath`) or it won't decode (Task 4/5).
+
+### Tasks 4–5 result (2026-06-21) — viewer code done, compiles
+- `web/src/pages/ARViewer.js` changes: load `aframe-extras@7.7.0`; add a race-safe `loadScript`
+  (resolve on `load`, dedupe via `data-loaded`); assert `AFRAME.components["animation-mixer"]`
+  before ready; set scene `gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/"`;
+  add `animation-mixer="clip: *; loop: repeat"` to `<a-gltf-model>`; remove the dead
+  `removeAttribute("animation-mixer")`; select the AR record deliberately
+  (`enabled && type==="MARKER"`) instead of the first result.
+- Verification: `CI=false npm run build` (web/) **succeeds** — compiles cleanly.
+- **To confirm at Task 6 (manual, in-browser):** (a) the Draco model actually decodes/renders
+  in A-Frame (DRACOLoader path works), (b) `aframe-extras` doesn't override `gltf-model` in a
+  way that drops the Draco path, (c) the animation plays. **PARKED:** the 36 clips look
+  "scattered" (independent durations/loops vs Unity orchestration) — separate diagnosis after Task 6.
