@@ -5,6 +5,27 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Credential Rotation (owner-performed, verified)
+
+**Date:** 2026-06-21
+**Task:** Owner rotated the exposed credentials (Codex-guided); independently verified.
+
+- Codex made **no file changes** (guidance only) — confirmed clean tree.
+- Independent re-check (no secret values printed): **Neon PASS, R2 PASS, Cloudinary PASS,
+  Django `SECRET_KEY` signing PASS, Google OAuth vars present.**
+- **SendGrid expired** (free trial) → email delivery broken (new issue #19).
+- Expanded `server/backend/.env.sample` to the full variable shape; marked SendGrid status in
+  `context.md` §6; updated §8 #10 (rotated) + added #19 (email).
+
+**Open:**
+- Confirm OLD credentials were revoked/deleted (not just replaced).
+- Email backend replacement decision (Gmail SMTP App Password feasibility).
+- Google OAuth: test `/accounts/google/login/` with the new secret, then delete the old secret.
+
+**Test evidence:** liveness re-check all PASS; `manage.py` Django signing PASS.
+
+---
+
 ## Codex Review Triaged + Resequence Adopted
 
 **Date:** 2026-06-21
