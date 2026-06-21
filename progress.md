@@ -5,6 +5,23 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Roadmap Approved — Program Plan
+
+**Date:** 2026-06-21
+**Task:** Brainstormed and approved the overall improvement roadmap.
+
+- Design doc: `docs/superpowers/specs/2026-06-21-project-roadmap-design.md`.
+- Decisions: target = portfolio/demo-grade; infra = all-in GCP (Cloud Run + Cloud SQL + GCS
+  + Firebase Hosting + Secret Manager); storage now **GCS** (supersedes earlier R2 plan);
+  AR = keep web + APK; aesthetic = dark opulent × glass, motion-rich.
+- 7 phases set: AR fix → GCS storage → hygiene → backend deploy → frontend deploy →
+  luxury UI redesign → tests/CI. Per-phase specs are written when each phase begins.
+- `context.md` reconciled to the GCP/GCS target.
+
+**Test evidence:** N/A (planning + docs).
+
+---
+
 ## Phase 0 — Baseline & Governance
 
 **Date:** 2026-06-21

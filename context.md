@@ -119,8 +119,8 @@ React pages.
   cache; AR page interactive within a few seconds on mid-range mobile.
 - **NFR-3 AR / Client Support**: web AR requires HTTPS + camera permission; targets current
   mobile Chrome and Safari; pinned A-Frame 1.5.0 + MindAR 1.2.3; Android native AR via APK.
-- **NFR-4 Storage**: **single provider (Cloudflare R2)** for all media; large files via
-  presigned upload; public read via R2 public/custom domain.
+- **NFR-4 Storage**: **single provider (Google Cloud Storage)** for all media; large files
+  via signed-URL upload; served read via the GCS bucket (CDN-fronted in production).
 - **NFR-5 Reliability**: stateless app container (gunicorn); managed Postgres (Neon) with
   connection reuse (`conn_max_age=600`); deploys revertable via tags.
 - **NFR-6 Maintainability**: phase-based development, hybrid tests, docs kept aligned
@@ -134,13 +134,16 @@ React pages.
 Configured via environment variables (`backend/.env`, gitignored; shape in
 `backend/.env.sample`).
 
-| Service | Purpose | Key env vars | Status |
+| Service | Purpose | Key config | Target status |
 |---|---|---|---|
-| Neon (PostgreSQL) | Primary DB (else local SQLite) | `DATABASE_URL` | Retained — verify account active |
-| Cloudflare R2 (S3) | **All media** (images + `.glb`/`.mind`/`.apk`) | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_BASE_URL` | Retained — to become sole storage |
-| Cloudinary | Images (legacy) | `CLOUDINARY_*` | **Being removed** (consolidate to R2) |
+| Cloud SQL (PostgreSQL) | Primary DB (target) | Cloud SQL connection / `DATABASE_URL` | **Target** — migrate from Neon |
+| Neon (PostgreSQL) | Current DB | `DATABASE_URL` | Being replaced by Cloud SQL |
+| Google Cloud Storage | **All media** (images + `.glb`/`.mind`/`.apk`) | bucket + service-account creds; signed URLs | **Target** — sole storage |
+| Cloudflare R2 | Current big-file storage | `R2_*` | Being replaced by GCS |
+| Cloudinary | Current image storage | `CLOUDINARY_*` | Being removed |
 | SendGrid | Password-reset email | `SENDGRID_API_KEY`, `DEFAULT_FROM_EMAIL` | Retained |
 | Google OAuth | Social login | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | Retained |
+| Secret Manager | Secret storage (prod) | — | **Target** — replaces `.env` |
 | Frontend | API base | `REACT_APP_API_BASE_URL` | Retained |
 
 Other settings: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`,
@@ -161,13 +164,15 @@ rotated before redeploy (see `CLAUDE.md` §8).**
   **OAuth**: Google.
 - Terminated and removed; application code is intact, the live service is not.
 
-### 7.2 Incoming deployment (planned) — **same shape, host TBD**
-- Keep the split shape: separate backend host + frontend host.
-- **App host: to be decided** (e.g. Koyeb / Render / Railway / Fly) — documented as TBD.
-- **Storage consolidated to R2 only** (Cloudinary removed; existing images migrated to R2).
-- Retain Neon + SendGrid + Google OAuth.
-- **Secrets rotated** before going live.
-- Deploys must be revertable (tags per phase).
+### 7.2 Incoming deployment (planned) — **all-in Google Cloud Platform**
+- **Backend:** Cloud Run (Django container, gunicorn).
+- **Database:** Cloud SQL (PostgreSQL), migrated from Neon.
+- **Media:** single Google Cloud Storage bucket (Cloudinary + R2 removed; existing media migrated).
+- **Frontend:** Firebase Hosting (HTTPS — required for web AR).
+- **Secrets:** Secret Manager; compromised credentials rotated before go-live.
+- **Email / OAuth:** SendGrid + Google OAuth retained.
+- Deploys revertable (tags per phase). Roadmap:
+  `docs/superpowers/specs/2026-06-21-project-roadmap-design.md`.
 
 ---
 
@@ -178,8 +183,8 @@ Tracked so they become requirements/tasks; not yet fixed unless noted.
 1. **Web AR animation not playing** — `pages/ARViewer.js` loads only A-Frame + MindAR; the
    `<a-gltf-model>` has no `animation-mixer` and `aframe-extras` is never loaded, so embedded
    glTF clips never play. (Drives FR-3.1.)
-2. **Dual storage** — Cloudinary (images) + R2 (big files). Consolidating to R2 only (NFR-4);
-   existing Cloudinary images to be migrated.
+2. **Dual storage** — Cloudinary (images) + R2 (big files). Consolidating to **GCS** (NFR-4);
+   existing media to be migrated. (Supersedes the earlier interim R2-only plan.)
 3. **Frontend env var inconsistency** — `config/api.js` uses `REACT_APP_API_URL` while
    `lib/http.js` / `ARViewer.js` use `REACT_APP_API_BASE_URL`. The former is likely stale.
 4. **Missing `MEDIA_URL` / `MEDIA_ROOT`** — referenced in `backend/urls.py` under DEBUG but
@@ -198,5 +203,5 @@ Tracked so they become requirements/tasks; not yet fixed unless noted.
 
 - API base path: `/api/`. Admin API under `/api/admin/`.
 - AR route: `/arview/:slug` where slug is the product name kebab-cased.
-- Media served as absolute R2 URLs (post-consolidation).
+- Media served as absolute GCS URLs (post-consolidation).
 - Conventional Commits; phases tagged `phase-<n>-<slug>`.
