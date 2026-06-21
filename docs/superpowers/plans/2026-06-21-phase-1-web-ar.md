@@ -54,6 +54,14 @@ Apply these within the relevant tasks below:
   time, final bytes, animation FPS (not "mid-range phone / single-digit seconds"). (Task 6)
 - **Keep the previous R2 key** until manual verification passes, then explicitly decide whether
   to delete the orphan. (Task 3)
+- **Configure a Draco decoder (NEW, critical).** The optimized model is **Draco-compressed**,
+  so A-Frame's GLTFLoader needs a DRACOLoader or the model won't decode/render. Set it on the
+  scene, e.g. `<a-scene gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/">`.
+  WebP textures (EXT_texture_webp) decode natively in modern browsers — no extra config.
+  Caveat: full `aframe-extras` may register its own `gltf-model` loader; confirm the model
+  (with `animation-mixer`) still honors the Draco path. Verify decoding at Task 6. (Task 4/5)
+- **R2 public fetch needs a browser user-agent** — Cloudflare blocks `Python-urllib` (403);
+  the AR viewer (browser) is fine. Don't mistake a CLI 403 for a public-access outage. (Task 3/6)
 
 ## File Structure
 
