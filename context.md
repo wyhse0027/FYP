@@ -24,28 +24,30 @@ Origin: Final Year Project. Single-owner maintenance.
 
 | Component | Path | Stack | Role |
 |---|---|---|---|
-| Backend API | `backend/`, `shop/`, `manage.py` | Django 5.2, DRF, SimpleJWT | REST API, auth, admin, persistence |
-| Web frontend | `ar-perfume-shop/` | React 19 (CRA) | Customer + admin SPA |
-| Web AR | `ar-perfume-shop/src/pages/ARViewer.js`, assets in `eleganza_ar/`, `mindar_builder/` | MindAR 1.2.3 + A-Frame 1.5.0 | In-browser marker AR |
-| Mobile AR | `arApp/` → `fyp.apk` | Unity | Native Android marker AR (download only) |
+| Backend API | `server/` (`backend/` project, `shop/` app, `manage.py`) | Django 5.2, DRF, SimpleJWT | REST API, auth, admin, persistence |
+| Web frontend | `web/` | React 19 (CRA) | Customer + admin SPA |
+| Web AR | `web/src/pages/ARViewer.js`, assets in `ar-assets/`, `tools/mindar_builder/` | MindAR 1.2.3 + A-Frame 1.5.0 | In-browser marker AR |
+| Mobile AR | `mobile/arApp/` → `mobile/fyp.apk` | Unity | Native Android marker AR (download only) |
 
-**Tracked in git:** `backend/`, `shop/`, `ar-perfume-shop/`, root Django files, these docs.
-**Not tracked (local/artifact only):** `arApp/`, `media/`, `eleganza_ar/`, `mindar_builder/`,
-`fyp.apk`, `db.sqlite3`.
+**Tracked in git:** `server/` (Django backend), `web/` (frontend), `docs/`, plus governance
+docs (`CLAUDE.md`, `context.md`) and planning files (`task_plan.md`, `findings.md`,
+`progress.md`) at root.
+**Not tracked (local/artifact only):** `mobile/arApp/`, `mobile/fyp.apk`, `server/media/`,
+`ar-assets/`, `tools/mindar_builder/`, `server/db.sqlite3`, `venv/`.
 
 The Unity project is **not actively developed** — it exists only to produce the `.apk`,
-which is stored as a downloadable binary (R2).
+which is stored as a downloadable binary (object storage).
 
 ---
 
 ## 3. Functional Specifications (FR)
 
-Derived from code review of `shop/models.py`, `shop/views.py`, `shop/urls.py`, and the
-React pages.
+Derived from code review of `server/shop/models.py`, `server/shop/views.py`,
+`server/shop/urls.py`, and the React pages.
 
 - **FR-1 — Authentication & Accounts**
   - Email/username + password signup and login (JWT access 30 min / refresh 90 d).
-  - Google OAuth login via verified `id_token` (`shop/social_views.py`).
+  - Google OAuth login via verified `id_token` (`server/shop/social_views.py`).
   - Password reset via SendGrid (request + confirm).
   - Roles: `user`, `admin` (gates admin panel + admin API).
   - Profile: avatar, phone, structured address.
@@ -131,8 +133,8 @@ React pages.
 
 ## 6. External Services & Configuration
 
-Configured via environment variables (`backend/.env`, gitignored; shape in
-`backend/.env.sample`).
+Configured via environment variables (`server/backend/.env`, gitignored; shape in
+`server/backend/.env.sample`).
 
 | Service | Purpose | Key config | Target status |
 |---|---|---|---|
@@ -150,8 +152,8 @@ Other settings: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`,
 `CSRF_TRUSTED_ORIGINS`, `CORS_ALLOWED_ORIGINS`, `FRONTEND_URL`, gunicorn tuning
 (`GUNICORN_WORKERS/THREADS/TIMEOUT`, `PORT`), one-time `RUN_MIGRATIONS` / `RUN_COLLECTSTATIC`.
 
-**All live secret values currently in `backend/.env` are considered compromised and must be
-rotated before redeploy (see `CLAUDE.md` §8).**
+**All live secret values currently in `server/backend/.env` are considered compromised and
+must be rotated before redeploy (see `CLAUDE.md` §8).**
 
 ---
 
@@ -180,22 +182,23 @@ rotated before redeploy (see `CLAUDE.md` §8).**
 
 Tracked so they become requirements/tasks; not yet fixed unless noted.
 
-1. **Web AR animation not playing** — `pages/ARViewer.js` loads only A-Frame + MindAR; the
-   `<a-gltf-model>` has no `animation-mixer` and `aframe-extras` is never loaded, so embedded
-   glTF clips never play. (Drives FR-3.1.)
+1. **Web AR animation not playing** — `web/src/pages/ARViewer.js` loads only A-Frame + MindAR;
+   the `<a-gltf-model>` has no `animation-mixer` and `aframe-extras` is never loaded, so
+   embedded glTF clips never play. (Drives FR-3.1.)
 2. **Dual storage** — Cloudinary (images) + R2 (big files). Consolidating to **GCS** (NFR-4);
    existing media to be migrated. (Supersedes the earlier interim R2-only plan.)
-3. **Frontend env var inconsistency** — `config/api.js` uses `REACT_APP_API_URL` while
-   `lib/http.js` / `ARViewer.js` use `REACT_APP_API_BASE_URL`. The former is likely stale.
-4. **Missing `MEDIA_URL` / `MEDIA_ROOT`** — referenced in `backend/urls.py` under DEBUG but
-   not defined in `settings.py` (local-dev crash risk).
+3. **Frontend env var inconsistency** — `web/src/config/api.js` uses `REACT_APP_API_URL` while
+   `web/src/lib/http.js` / `web/src/pages/ARViewer.js` use `REACT_APP_API_BASE_URL`. The former
+   is likely stale.
+4. **Missing `MEDIA_URL` / `MEDIA_ROOT`** — referenced in `server/backend/urls.py` under DEBUG
+   but not defined in `server/backend/settings.py` (local-dev crash risk).
 5. **`ProtectedRoute` loading flag** — reads `loading` from auth context, which only exposes
    `loadingUser`; the loading guard never triggers.
 6. **Duplicate route registrations** — `dj_rest_auth` / `allauth` / `accounts/` included in
-   both `backend/urls.py` and `shop/urls.py`.
-7. **No automated tests** — backend `tests.py` is the empty stub; frontend has only the
-   default CRA test. (Test suite to be built per the hybrid standard.)
-8. **Exposed secrets** in `backend/.env` — rotate before redeploy.
+   both `server/backend/urls.py` and `server/shop/urls.py`.
+7. **No automated tests** — backend `server/shop/tests.py` is the empty stub; frontend has only
+   the default CRA test. (Test suite to be built per the hybrid standard.)
+8. **Exposed secrets** in `server/backend/.env` — rotate before redeploy.
 
 ---
 

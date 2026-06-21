@@ -27,6 +27,7 @@ attach it to the model entity so embedded glTF clips play.
   test). Record manual results in `progress.md`.
 - Storage backend in this phase is the current one (Cloudflare R2). Phase 2 migrates media
   to GCS and will carry the optimized model — do not block on GCS here.
+- Run backend commands from `server/`; run frontend commands from `web/`.
 - Work on branch `phase-1-web-ar` off `main`; Conventional Commits; one commit per task;
   finish with per-phase review, merge to `main`, annotated tag `phase-1-web-ar`.
 - No new runtime npm dependencies without explicit approval.
@@ -34,7 +35,7 @@ attach it to the model entity so embedded glTF clips play.
 
 ## File Structure
 
-- `ar-perfume-shop/src/pages/ARViewer.js` — **modify**: load aframe-extras; add
+- `web/src/pages/ARViewer.js` — **modify**: load aframe-extras; add
   `animation-mixer` to the model entity; remove the dead `removeAttribute` line.
 - Optimized model artifact (e.g. `eleganza_optimized.glb`) — produced by tooling, uploaded
   to storage, referenced by the `ARExperience.model_glb` record. Not committed to git
@@ -83,7 +84,7 @@ If the printed URL is reachable, download it; otherwise use the local source
 ```bash
 curl -L -o /tmp/web_model.glb "<model_glb_url_from_step_1>"   # if reachable
 # fallback if not reachable:
-# cp "eleganza_ar/eleganza.glb" /tmp/web_model.glb
+# cp "ar-assets/eleganza.glb" /tmp/web_model.glb
 ```
 
 - [ ] **Step 3: Inspect for animations + size**
@@ -196,7 +197,7 @@ git commit -m "chore(ar): swap web AR model to optimized glb (data change logged
 ### Task 4: Load aframe-extras in the AR viewer
 
 **Files:**
-- Modify: `ar-perfume-shop/src/pages/ARViewer.js`
+- Modify: `web/src/pages/ARViewer.js`
 
 **Interfaces:**
 - Produces: `window.AFRAME` has the `animation-mixer` component registered before the scene
@@ -224,7 +225,7 @@ if (!window.MINDAR) await loadScript("mindar", MINDAR_SRC);
 
 - [ ] **Step 3: Verify the component registered (manual, browser console)**
 
-Run the app (`npm start` in `ar-perfume-shop`), open the AR route, and in DevTools console:
+Run the app (`npm start` in `web`), open the AR route, and in DevTools console:
 
 ```js
 !!AFRAME.components["animation-mixer"]
@@ -235,7 +236,7 @@ Expected: `true`. Record in `progress.md`.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add ar-perfume-shop/src/pages/ARViewer.js
+git add web/src/pages/ARViewer.js
 git commit -m "feat(ar): load aframe-extras for animation-mixer"
 ```
 
@@ -244,7 +245,7 @@ git commit -m "feat(ar): load aframe-extras for animation-mixer"
 ### Task 5: Attach animation-mixer to the model + remove dead code
 
 **Files:**
-- Modify: `ar-perfume-shop/src/pages/ARViewer.js`
+- Modify: `web/src/pages/ARViewer.js`
 
 **Interfaces:**
 - Consumes: `animation-mixer` registered (Task 4).
@@ -280,7 +281,7 @@ keep ticking harmlessly.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add ar-perfume-shop/src/pages/ARViewer.js
+git add web/src/pages/ARViewer.js
 git commit -m "fix(ar): play glb animation via animation-mixer (FR-3.1)"
 ```
 

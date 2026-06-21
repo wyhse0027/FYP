@@ -22,8 +22,13 @@ Per-phase plans are written when each phase begins (one plan doc per phase).
 
 ## Current Focus
 
+**Repo restructured** into nested folders (`server/`, `web/`, `docs/`, `ar-assets/`,
+`tools/`, `mobile/`) on branch `phase-restructure` (tag on merge). Governance + planning
+files remain at root.
+
 **Phase 1 — Web AR fix.** Plan written
-(`docs/superpowers/plans/2026-06-21-phase-1-web-ar.md`). Ready to execute on approval.
+(`docs/superpowers/plans/2026-06-21-phase-1-web-ar.md`), paths updated to `web/`. Ready to
+execute on approval.
 
 ## Errors Encountered
 

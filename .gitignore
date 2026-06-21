@@ -161,6 +161,6 @@ desktop.ini
 *.rej
 
 # Environment file and examples
-backend/.env
+server/backend/.env
 .env
 sendgrid_test.py
