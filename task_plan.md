@@ -10,7 +10,7 @@ deployed all-in on GCP.
 
 | # | Phase | Branch / Tag | Status | Plan doc |
 |---|-------|--------------|--------|----------|
-| 1 | Web AR fix (animation + GLB optimize) | `phase-1-web-ar` | planned (ready) | `docs/superpowers/plans/2026-06-21-phase-1-web-ar.md` |
+| 1 | Web AR fix (animation + GLB optimize) | `phase-1-web-ar` | ✅ complete (tag `phase-1-web-ar`) | `docs/superpowers/plans/2026-06-21-phase-1-web-ar.md` |
 | 2 | Storage → GCS + upload hardening | `phase-2-storage-gcs` | pending | — |
 | 3 | Correctness, security hardening & minimal CI | `phase-3-hygiene` | pending | — |
 | 4 | Backend deploy (Cloud Run + Cloud SQL) | `phase-4-backend-deploy` | pending | — |
@@ -22,19 +22,17 @@ Per-phase plans are written when each phase begins (one plan doc per phase).
 
 ## Current Focus
 
-**Repo restructured** into nested folders (`server/`, `web/`, `docs/`, `ar-assets/`,
-`tools/`, `mobile/`) on branch `phase-restructure` (tag on merge). Governance + planning
-files remain at root.
+**Phase 1 — Web AR fix: ✅ COMPLETE** — model optimized 413.9 MB → 11.5 MB, both AR records
+repointed, viewer renders + animates (verified in-browser), old objects deleted. Tagged
+`phase-1-web-ar`. Deferred refinement: animation clip curation (context.md §8 #20).
 
-**Phase 1 — Web AR fix.** Plan written + amended per Codex review
-(`docs/superpowers/plans/2026-06-21-phase-1-web-ar.md`). Ready to execute on approval.
+**Next: Phase 2 — Storage → GCS + upload hardening.** First needs the GCP project decided
+(`eleganza-ar`, new dedicated project on the credit's billing account).
 
-**Open actions from the Codex review (2026-06-21):**
-- 🔴 **Rotate live credentials NOW** — Neon, R2, Cloudinary confirmed reachable with the
-  stored keys (plus Google OAuth secret, SendGrid, Django `SECRET_KEY`). Owner action.
-- **GCP:** new dedicated project `eleganza-ar` (credit's billing account; reuse OAuth client).
-  First needed at Phase 2.
-- **Resequence adopted:** storage authz + upload validation → Phase 2; security hardening +
+**Standing context:**
+- Credentials rotated + old keys revoked (exposure closed). Email → free transactional
+  provider (Brevo/Resend) in Phase 3.
+- Resequence adopted: storage authz + upload validation → Phase 2; security hardening +
   minimal CI → Phase 3 (before deploy).
 
 ## Errors Encountered

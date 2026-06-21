@@ -68,6 +68,30 @@ deprecation warnings, unrelated). Frontend tree intact (`web/package.json`, `web
 
 ---
 
+## Phase 1 — COMPLETE (web AR fix)
+
+**Date:** 2026-06-21
+**Branch/Tag:** `phase-1-web-ar`
+**Requirement:** FR-3.1 (web AR renders + plays the model's animation).
+
+- **Asset:** optimized the served model 413.9 MB → 11.5 MB (97%, Draco + WebP/1024,
+  flatten/join disabled to avoid a quaternion regression); 36 clips / 67 channels / durations
+  preserved. Uploaded a per-record optimized object; repointed PK1 + PK2 `model_glb`; **deleted**
+  the two old 413 MB objects (~826 MB freed).
+- **Code (`web/src/pages/ARViewer.js`):** load `aframe-extras@7.7.0`; Draco decoder
+  (`dracoDecoderPath`); `animation-mixer="clip: *; loop: repeat"`; race-safe `loadScript`
+  (+ remove failed tag on error — review finding); deliberate enabled-marker record selection.
+- **Review:** per-phase review run; 1 low-severity finding (poisoned script tag on load failure)
+  **fixed**.
+- **Test evidence:** `npm run build` compiles; **manual AR (owner)** — model decodes (Draco OK),
+  renders, and **animates** in-browser at the marker.
+- **Deferred (owner):** animation "scatter" — Unity orchestrates via scripts/animators/particles
+  not in the `.glb`; chosen fix is web clip curation (`loop: once`/subset). context.md §8 #20.
+
+**Verification:** build PASS; manual AR PASS (renders + animates).
+
+---
+
 ## Phase 1 — Plan Written
 
 **Date:** 2026-06-21

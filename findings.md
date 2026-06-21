@@ -32,7 +32,7 @@ needs field-storage + schema migrations (not just a default swap).
 ## Phase 1 — Web AR
 
 ### Animation root cause (confirmed via code review)
-- `ar-perfume-shop/src/pages/ARViewer.js` loads only A-Frame 1.5.0 + mind-ar 1.2.3
+- `web/src/pages/ARViewer.js` loads only A-Frame 1.5.0 + mind-ar 1.2.3
   (`mindar-image-aframe.prod.js`). No `aframe-extras`.
 - The `<a-gltf-model id="ar-model">` has no `animation-mixer` attribute.
 - Line ~185 calls `modelEl.removeAttribute("animation-mixer")` on targetLost, but it is
@@ -42,10 +42,34 @@ needs field-storage + schema migrations (not just a default swap).
   via its own Animator, a separate path.
 
 ### Model-size problem
-- `eleganza_ar/eleganza.glb` ≈ 413 MB (local, untracked). Unusable over mobile web AR.
-- `eleganza_ar/markerless_ar.glb` ≈ 1.4 MB (a small model exists).
-- Web AR loads `model_glb` from the AR API record (R2 today, GCS after Phase 2), which may
-  or may not be the 413 MB file — must inspect the actual served object.
+- Web AR loads `model_glb` from the AR API record (R2 today, GCS after Phase 2).
+
+### Served-model baseline (Task 1, 2026-06-21)
+- Live Neon contains two enabled marker records, and both are genuinely selectable by the
+  product-slug lookup in `ARViewer.js`:
+  - PK 1, `ELEGANZA` →
+    `ar/models/372f75fe-7bc0-4725-8241-002fbe01b09d_eleganza.glb`
+  - PK 2, `ELEGANZA INTENSE` →
+    `ar/models/e821f00a-5dab-40ab-a2b4-f9e4512ded07_eleganza.glb`
+- Both public R2 objects report `Content-Length: 413910032` bytes and ETag
+  `450bcacd1ac6e51b20782fdd25e2f171`. The downloaded PK 1 object at
+  `C:\tmp\web_model.glb` has the same 413,910,032-byte length and MD5, proving that the
+  inspected file is the live served object. The matching PK 2 ETag/length proves it is a
+  byte-identical copy.
+- `@gltf-transform/cli@4.4.0 inspect` reports **36 animation clips** and **67 channels**.
+  Animation gate: **PASS** (non-zero clips).
+- Baseline duration/channel signature, in clip order:
+  `butterfly animation` (14.2s/3); `3icecube animation` (12.4s/3);
+  `ice cube animation` (12.4s/3); `2ice cube animation` (12.4s/3);
+  `Lavender animation` ×3 (19s/1 each); `candalmom` ×2 (21s/1 each);
+  `seed2 animation` (21s/3); `seed4 animation` (21s/3); `seed5 animation` (21s/2);
+  `seed animation` (21s/3); `seed1 animation` (21s/3); `seed6 animation` through
+  `seed9 animation` (21s/2 each); `seed3 animation` (21s/3); `seed10 animation`
+  through `seed13 animation` (21s/2 each); `Mandarin animation` (4s/1);
+  `sandalwood animation` ×2 (23.3s/1 each); `apple animation` (2s/1);
+  `JuniperBerry animation` ×2 (17s/1 each); `ozone animation` (13s/1);
+  `jasmine animation` ×3 (15s/1 each); `butterfly2 animation` (19.1s/3);
+  `butterfly3 animation` (21.1s/3); `word E animation` (27.5s/1).
 
 ### Library specifics (verified via web, 2026-06)
 - **aframe-extras** (maintained c-frame fork) — current line **7.x** (7.7.0 seen on CDN),
@@ -54,14 +78,89 @@ needs field-storage + schema migrations (not just a default swap).
   (Load AFTER A-Frame, before/with mind-ar. Verify it registers `animation-mixer`.)
   Source: https://github.com/c-frame/aframe-extras , https://www.npmjs.com/package/aframe-extras
 - **gltf-transform CLI** (`@gltf-transform/cli`):
-  - Inspect: `npx @gltf-transform/cli inspect input.glb` → lists meshes, textures, size,
+  - Inspect: `npx @gltf-transform/cli@4.4.0 inspect input.glb` → lists meshes, textures, size,
     and **animation count** (use to confirm clips exist + baseline size).
-  - Optimize: `npx @gltf-transform/cli optimize input.glb output.glb --compress draco \
-    --texture-compress webp --texture-resize 1024` → typical 80–95% size reduction.
+  - Optimize: `npx @gltf-transform/cli@4.4.0 optimize input.glb output.glb --compress draco \
+    --texture-compress webp --texture-size 1024 --flatten false --join false` → 97.22%
+    reduction here, without introducing the default flatten stage's invalid quaternion.
   Source: https://gltf-transform.dev/cli , https://www.npmjs.com/package/@gltf-transform/cli
 
-### Still to confirm at execution (Task 1)
-- [ ] Which GLB the web AR record points to, and whether it contains animation clips.
-      The Unity APK animates → the source model almost certainly has clips, but the web
-      `.glb` export must be confirmed. If zero clips: escalate (re-export with animation
-      before the web fix is meaningful).
+### Task 1 result
+- [x] Confirmed the exact live-served GLBs, their byte identity, and their embedded clips.
+      The 36-clip gate passed, so Phase 1 may proceed to optimization and viewer playback.
+
+### Optimized-model result (Task 2, 2026-06-21)
+- Pinned tool/flags: `@gltf-transform/cli@4.4.0`, Draco geometry compression, WebP
+  texture compression, and `--texture-size 1024`. The v4 help output explicitly confirms
+  `--texture-size` is the supported flag.
+- The first default `optimize` output introduced `ROTATION_NON_UNIT` at node 63 even though
+  the source validator reported `No errors found`. Re-running with `--flatten false
+  --join false` preserved the scene transforms and removed that regression.
+- Final artifact: `C:\tmp\web_model_optimized.glb`, 11,499,420 bytes, down from
+  413,910,032 bytes (**97.22% reduction**).
+- Final validation: `@gltf-transform/cli@4.4.0 validate` exited 0 and reported
+  `No errors found`.
+- Animation parity: **PASS** — all 36 clip names, all 67 channels, and every clip duration
+  match the Task 1 baseline. Keyframe counts are lower because the optimizer's documented
+  resample stage losslessly deduplicated redundant keyframes.
+- Visual animation/playback parity remains part of the Task 6 camera + marker manual gate;
+  the optimized object has not yet been written to live R2 or Neon.
+
+### Task 3 result (2026-06-21) — COMPLETE and verified
+- Uploaded the optimized model (11,499,420 B) to R2 under a NEW key per record and repointed
+  both `model_glb` fields (old objects kept untouched, verified present):
+  - PK 1 ELEGANZA → `ar/models/40736ccfd2d242d885e9ba0158e5bc67_eleganza_opt.glb`
+  - PK 2 ELEGANZA INTENSE → `ar/models/f537fb3602ae459fa1cede1e41114284_eleganza_opt.glb`
+  - Old (kept for rollback): `ar/models/372f75fe-..._eleganza.glb`, `ar/models/e821f00a-..._eleganza.glb`.
+- S3-API HEAD confirms both new objects exist at 11,499,420 B.
+- **Public fetch VERIFIED:** the r2.dev public URL serves the new objects — HTTP **206**,
+  `Content-Type: model/gltf-binary`, full length 11,499,420 B, CORS
+  `Access-Control-Allow-Origin: http://localhost:3000`.
+- **Correction:** an earlier check reported 403 for all objects. That was a **false alarm** —
+  Cloudflare blocks the default `Python-urllib` user-agent; a browser user-agent (what the AR
+  viewer uses) returns 206. R2 public access was never disabled.
+- Bucket CORS allowed origins: `https://gerainchan.vercel.app`, `http://localhost:3000`
+  (methods GET/HEAD/PUT/DELETE). **Phase 5 TODO:** add the Firebase Hosting domain.
+- Note: the optimized GLB is **Draco-compressed** → the A-Frame viewer must configure a
+  DRACOLoader (`dracoDecoderPath`) or it won't decode (Task 4/5).
+
+### Tasks 4–5 result (2026-06-21) — viewer code done, compiles
+- `web/src/pages/ARViewer.js` changes: load `aframe-extras@7.7.0`; add a race-safe `loadScript`
+  (resolve on `load`, dedupe via `data-loaded`); assert `AFRAME.components["animation-mixer"]`
+  before ready; set scene `gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/v1/decoders/"`;
+  add `animation-mixer="clip: *; loop: repeat"` to `<a-gltf-model>`; remove the dead
+  `removeAttribute("animation-mixer")`; select the AR record deliberately
+  (`enabled && type==="MARKER"`) instead of the first result.
+- Verification: `CI=false npm run build` (web/) **succeeds** — compiles cleanly.
+- **To confirm at Task 6 (manual, in-browser):** (a) the Draco model actually decodes/renders
+  in A-Frame (DRACOLoader path works), (b) `aframe-extras` doesn't override `gltf-model` in a
+  way that drops the Draco path, (c) the animation plays. **PARKED:** the 36 clips look
+  "scattered" (independent durations/loops vs Unity orchestration) — separate diagnosis after Task 6.
+
+### Task 6 result (2026-06-21, browser, owner) — core PASS
+- Console: `AFRAME + EXTRAS + MINDAR ready`, MindAR started, **no Draco error**. Owner pointed
+  the camera at the printed Eleganza marker.
+- **Model decodes + renders + animates in web AR** → Draco path works; `aframe-extras` did not
+  break gltf-model; FR-3.1 core (render + play embedded animation) **met**.
+- Harmless warnings only: "Multiple instances of Three.js", `.useLegacyLights` deprecated.
+- **Scatter confirmed INHERENT:** the web AR animation looks identical to the glTF viewer
+  (36 independent clips, durations 2–27.5s, looping independently → desync). NOT an
+  optimization or web-code regression. Unity differs because it orchestrates the clips.
+- **Open decision (before Task 7 merge/tag):** compare the APK animation over ~20–30s.
+  If APK also drifts → web is faithful, Phase 1 done. If APK stays coherent → Unity bakes a
+  single orchestrated animation; matching it needs a source re-export (separate task).
+
+### Unity animation diagnosis (2026-06-21) — APK is coherent; web cannot match from the GLB
+- Owner confirmed: **APK animation is coherent (no scatter).**
+- Inspected `mobile/arApp`: **40 per-object Animator components, NO Timeline/PlayableDirector.**
+  Orchestration is scripted, e.g. `AppleFogTrigger.cs` → `appleAnimator.Play("AppleGrow")` +
+  staggered particle (`Invoke("PlayFog", 0.5f)`); `SimpleTreeSway.cs` animates rotation
+  **procedurally in `Update()`** (not a clip); plus particle systems (fog/scent).
+- Root cause: the Unity experience lives in **Unity scripts/animator-states/particles**, not in
+  the file. The exported `.glb` only carries the **36 baked transform clips**. The web plays all
+  36 at once on independent loops → drift/scatter, and is missing the script + particle layer.
+  So the web AR **cannot reproduce the APK from the GLB**. FR-3.1 (render + play embedded
+  animation) is nonetheless **met**.
+- **Decision (owner): Option 2 — curate the web clips (play a subset / `loop: once`) to reduce
+  scatter. DEFERRED — not fixed now.** Viewer stays `clip: *; loop: repeat` for Phase 1.
+  Tracked as context.md §8 #20.

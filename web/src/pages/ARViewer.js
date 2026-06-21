@@ -5,6 +5,11 @@ import { useParams } from "react-router-dom";
 const AFRAME_SRC = "https://aframe.io/releases/1.5.0/aframe.min.js";
 const MINDAR_SRC =
   "https://cdn.jsdelivr.net/npm/mind-ar@1.2.3/dist/mindar-image-aframe.prod.js";
+// aframe-extras provides the `animation-mixer` component (plays embedded glTF clips)
+const AFRAME_EXTRAS_SRC =
+  "https://cdn.jsdelivr.net/npm/aframe-extras@7.7.0/dist/aframe-extras.min.js";
+// Draco decoder — the optimized model is Draco-compressed; A-Frame's GLTFLoader needs this
+const DRACO_DECODER_PATH = "https://www.gstatic.com/draco/v1/decoders/";
 
 // CRA env var
 const RAW_BACKEND_BASE = process.env.REACT_APP_API_BASE_URL || "";
@@ -65,13 +70,28 @@ export default function ARViewer() {
 
     const loadScript = (id, src) =>
       new Promise((resolve, reject) => {
-        if (document.getElementById(id)) return resolve();
+        const existing = document.getElementById(id);
+        if (existing) {
+          // Race fix: an existing tag may not have finished loading yet.
+          if (existing.dataset.loaded === "true") return resolve();
+          existing.addEventListener("load", () => resolve());
+          existing.addEventListener("error", reject);
+          return;
+        }
         const s = document.createElement("script");
         s.src = src;
         s.id = id;
         s.async = true;
-        s.onload = resolve;
-        s.onerror = reject;
+        s.dataset.loaded = "false";
+        s.onload = () => {
+          s.dataset.loaded = "true";
+          resolve();
+        };
+        s.onerror = (e) => {
+          // Remove the failed tag so a later retry re-creates it (no poisoned tag).
+          s.remove();
+          reject(e);
+        };
         document.head.appendChild(s);
       });
 
@@ -92,9 +112,19 @@ export default function ARViewer() {
           }, 100);
         });
 
+        // aframe-extras (animation-mixer) — load after A-Frame, before MindAR
+        await loadScript("aframe-extras", AFRAME_EXTRAS_SRC);
+
         if (!window.MINDAR) await loadScript("mindar", MINDAR_SRC);
 
-        console.log("✅ [LOAD] AFRAME + MINDAR ready");
+        // Assert the animation-mixer component actually registered
+        if (!window.AFRAME?.components?.["animation-mixer"]) {
+          throw new Error(
+            "animation-mixer not registered (aframe-extras failed to load)"
+          );
+        }
+
+        console.log("✅ [LOAD] AFRAME + EXTRAS + MINDAR ready");
         if (!cancelled) setReady(true);
       } catch (err) {
         console.error("❌ [LOAD] Script load failed:", err);
@@ -127,7 +157,12 @@ export default function ARViewer() {
         return r.json();
       })
       .then((j) => {
-        const rec = (Array.isArray(j) && j[0]) || (j?.results && j.results[0]);
+        const records = Array.isArray(j) ? j : (j?.results || []);
+        // Pick a deliberately enabled marker record (not blindly the first result)
+        const rec =
+          records.find((r) => r.enabled && r.type === "MARKER") ||
+          records.find((r) => r.enabled) ||
+          records[0];
         if (!rec) {
           console.warn("⚠️ [AR] No AR data found for:", productName);
           setFatal("No AR data found for this product (backend returned empty).");
@@ -182,7 +217,7 @@ export default function ARViewer() {
         target.addEventListener("targetLost", () => {
           console.log("🚫 [MARKER] LOST ❌");
           if (anchor) anchor.object3D.visible = false;
-          if (modelEl) modelEl.removeAttribute("animation-mixer");
+          // animation-mixer stays attached; the model is hidden via anchor visibility
           setShowInstruction(true);
         });
       }
@@ -348,6 +383,7 @@ export default function ARViewer() {
     <div style={{ width: "100vw", height: "100vh", background: "#000" }}>
       <a-scene
         mindar-image={`imageTargetSrc: ${data.marker_mind}; autoStart: false; uiScanning: true; uiError: true;`}
+        gltf-model={`dracoDecoderPath: ${DRACO_DECODER_PATH}`}
         color-space="sRGB"
         renderer="colorManagement: true, physicallyCorrectLights"
         vr-mode-ui="enabled: false"
@@ -365,6 +401,7 @@ export default function ARViewer() {
             src={data.model_glb}
             scale="0.75 0.75 0.75"
             rotation="-90 180 0"
+            animation-mixer="clip: *; loop: repeat"
           />
         </a-entity>
       </a-scene>

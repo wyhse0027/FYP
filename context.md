@@ -192,9 +192,10 @@ must be rotated before redeploy (see `CLAUDE.md` §8).**
 Tracked so they become requirements/tasks; not yet fixed unless noted.
 
 **Correctness / config**
-1. **Web AR animation not playing** — `web/src/pages/ARViewer.js` loads only A-Frame + MindAR;
-   the `<a-gltf-model>` has no `animation-mixer` and `aframe-extras` is never loaded, so
-   embedded glTF clips never play. (Drives FR-3.1.) → Phase 1
+1. **Web AR animation — FIXED (Phase 1, 2026-06-21)** ✅ — added `aframe-extras` +
+   `animation-mixer` + Draco decoder; optimized the model 413.9 MB → 11.5 MB; repointed both AR
+   records; verified rendering + animating in-browser. FR-3.1 met. Remaining refinement: clip
+   curation (see #20, deferred).
 2. **Dual storage** — Cloudinary + R2 → **GCS** (NFR-4). Storage is **bound per-field** in
    `server/shop/models.py`, so the migration needs field-storage + schema changes, not just a
    default-backend swap, plus a data-migration manifest. → Phase 2
@@ -243,6 +244,11 @@ Tracked so they become requirements/tasks; not yet fixed unless noted.
 18. **Token handling** — JWT in `localStorage`; 90-day refresh, not revoked on logout;
     unversioned CDN scripts (model-viewer, AR libs) without SRI. (Deferred hardening; mitigate
     by pinning/self-hosting scripts + CSP if cookies stay deferred.)
+20. **Web AR animation curation (DEFERRED)** — the web viewer plays all 36 glTF clips on
+    independent loops (`clip: *; loop: repeat`), which desyncs ("scatter"). The APK looks
+    coherent because Unity orchestrates via scripts/animator-states/particles (not in the
+    `.glb`). FR-3.1 (render + animate) is met. Chosen future fix (owner): curate a subset /
+    `loop: once`. Not now. See `findings.md` "Unity animation diagnosis".
 
 ---
 
