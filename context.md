@@ -243,6 +243,11 @@ Tracked so they become requirements/tasks; not yet fixed unless noted.
 18. **Token handling** — JWT in `localStorage`; 90-day refresh, not revoked on logout;
     unversioned CDN scripts (model-viewer, AR libs) without SRI. (Deferred hardening; mitigate
     by pinning/self-hosting scripts + CSP if cookies stay deferred.)
+20. **Web AR animation curation (DEFERRED)** — the web viewer plays all 36 glTF clips on
+    independent loops (`clip: *; loop: repeat`), which desyncs ("scatter"). The APK looks
+    coherent because Unity orchestrates via scripts/animator-states/particles (not in the
+    `.glb`). FR-3.1 (render + animate) is met. Chosen future fix (owner): curate a subset /
+    `loop: once`. Not now. See `findings.md` "Unity animation diagnosis".
 
 ---
 

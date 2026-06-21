@@ -149,3 +149,18 @@ needs field-storage + schema migrations (not just a default swap).
 - **Open decision (before Task 7 merge/tag):** compare the APK animation over ~20–30s.
   If APK also drifts → web is faithful, Phase 1 done. If APK stays coherent → Unity bakes a
   single orchestrated animation; matching it needs a source re-export (separate task).
+
+### Unity animation diagnosis (2026-06-21) — APK is coherent; web cannot match from the GLB
+- Owner confirmed: **APK animation is coherent (no scatter).**
+- Inspected `mobile/arApp`: **40 per-object Animator components, NO Timeline/PlayableDirector.**
+  Orchestration is scripted, e.g. `AppleFogTrigger.cs` → `appleAnimator.Play("AppleGrow")` +
+  staggered particle (`Invoke("PlayFog", 0.5f)`); `SimpleTreeSway.cs` animates rotation
+  **procedurally in `Update()`** (not a clip); plus particle systems (fog/scent).
+- Root cause: the Unity experience lives in **Unity scripts/animator-states/particles**, not in
+  the file. The exported `.glb` only carries the **36 baked transform clips**. The web plays all
+  36 at once on independent loops → drift/scatter, and is missing the script + particle layer.
+  So the web AR **cannot reproduce the APK from the GLB**. FR-3.1 (render + play embedded
+  animation) is nonetheless **met**.
+- **Decision (owner): Option 2 — curate the web clips (play a subset / `loop: once`) to reduce
+  scatter. DEFERRED — not fixed now.** Viewer stays `clip: *; loop: repeat` for Phase 1.
+  Tracked as context.md §8 #20.
