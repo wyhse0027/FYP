@@ -32,7 +32,7 @@ needs field-storage + schema migrations (not just a default swap).
 ## Phase 1 — Web AR
 
 ### Animation root cause (confirmed via code review)
-- `ar-perfume-shop/src/pages/ARViewer.js` loads only A-Frame 1.5.0 + mind-ar 1.2.3
+- `web/src/pages/ARViewer.js` loads only A-Frame 1.5.0 + mind-ar 1.2.3
   (`mindar-image-aframe.prod.js`). No `aframe-extras`.
 - The `<a-gltf-model id="ar-model">` has no `animation-mixer` attribute.
 - Line ~185 calls `modelEl.removeAttribute("animation-mixer")` on targetLost, but it is
@@ -42,10 +42,34 @@ needs field-storage + schema migrations (not just a default swap).
   via its own Animator, a separate path.
 
 ### Model-size problem
-- `eleganza_ar/eleganza.glb` ≈ 413 MB (local, untracked). Unusable over mobile web AR.
-- `eleganza_ar/markerless_ar.glb` ≈ 1.4 MB (a small model exists).
-- Web AR loads `model_glb` from the AR API record (R2 today, GCS after Phase 2), which may
-  or may not be the 413 MB file — must inspect the actual served object.
+- Web AR loads `model_glb` from the AR API record (R2 today, GCS after Phase 2).
+
+### Served-model baseline (Task 1, 2026-06-21)
+- Live Neon contains two enabled marker records, and both are genuinely selectable by the
+  product-slug lookup in `ARViewer.js`:
+  - PK 1, `ELEGANZA` →
+    `ar/models/372f75fe-7bc0-4725-8241-002fbe01b09d_eleganza.glb`
+  - PK 2, `ELEGANZA INTENSE` →
+    `ar/models/e821f00a-5dab-40ab-a2b4-f9e4512ded07_eleganza.glb`
+- Both public R2 objects report `Content-Length: 413910032` bytes and ETag
+  `450bcacd1ac6e51b20782fdd25e2f171`. The downloaded PK 1 object at
+  `C:\tmp\web_model.glb` has the same 413,910,032-byte length and MD5, proving that the
+  inspected file is the live served object. The matching PK 2 ETag/length proves it is a
+  byte-identical copy.
+- `@gltf-transform/cli@4.4.0 inspect` reports **36 animation clips** and **67 channels**.
+  Animation gate: **PASS** (non-zero clips).
+- Baseline duration/channel signature, in clip order:
+  `butterfly animation` (14.2s/3); `3icecube animation` (12.4s/3);
+  `ice cube animation` (12.4s/3); `2ice cube animation` (12.4s/3);
+  `Lavender animation` ×3 (19s/1 each); `candalmom` ×2 (21s/1 each);
+  `seed2 animation` (21s/3); `seed4 animation` (21s/3); `seed5 animation` (21s/2);
+  `seed animation` (21s/3); `seed1 animation` (21s/3); `seed6 animation` through
+  `seed9 animation` (21s/2 each); `seed3 animation` (21s/3); `seed10 animation`
+  through `seed13 animation` (21s/2 each); `Mandarin animation` (4s/1);
+  `sandalwood animation` ×2 (23.3s/1 each); `apple animation` (2s/1);
+  `JuniperBerry animation` ×2 (17s/1 each); `ozone animation` (13s/1);
+  `jasmine animation` ×3 (15s/1 each); `butterfly2 animation` (19.1s/3);
+  `butterfly3 animation` (21.1s/3); `word E animation` (27.5s/1).
 
 ### Library specifics (verified via web, 2026-06)
 - **aframe-extras** (maintained c-frame fork) — current line **7.x** (7.7.0 seen on CDN),
@@ -54,14 +78,12 @@ needs field-storage + schema migrations (not just a default swap).
   (Load AFTER A-Frame, before/with mind-ar. Verify it registers `animation-mixer`.)
   Source: https://github.com/c-frame/aframe-extras , https://www.npmjs.com/package/aframe-extras
 - **gltf-transform CLI** (`@gltf-transform/cli`):
-  - Inspect: `npx @gltf-transform/cli inspect input.glb` → lists meshes, textures, size,
+  - Inspect: `npx @gltf-transform/cli@4.4.0 inspect input.glb` → lists meshes, textures, size,
     and **animation count** (use to confirm clips exist + baseline size).
-  - Optimize: `npx @gltf-transform/cli optimize input.glb output.glb --compress draco \
-    --texture-compress webp --texture-resize 1024` → typical 80–95% size reduction.
+  - Optimize: `npx @gltf-transform/cli@4.4.0 optimize input.glb output.glb --compress draco \
+    --texture-compress webp --texture-size 1024` → typical 80–95% size reduction.
   Source: https://gltf-transform.dev/cli , https://www.npmjs.com/package/@gltf-transform/cli
 
-### Still to confirm at execution (Task 1)
-- [ ] Which GLB the web AR record points to, and whether it contains animation clips.
-      The Unity APK animates → the source model almost certainly has clips, but the web
-      `.glb` export must be confirmed. If zero clips: escalate (re-export with animation
-      before the web fix is meaningful).
+### Task 1 result
+- [x] Confirmed the exact live-served GLBs, their byte identity, and their embedded clips.
+      The 36-clip gate passed, so Phase 1 may proceed to optimization and viewer playback.
