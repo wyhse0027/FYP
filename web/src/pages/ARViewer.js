@@ -87,7 +87,11 @@ export default function ARViewer() {
           s.dataset.loaded = "true";
           resolve();
         };
-        s.onerror = reject;
+        s.onerror = (e) => {
+          // Remove the failed tag so a later retry re-creates it (no poisoned tag).
+          s.remove();
+          reject(e);
+        };
         document.head.appendChild(s);
       });
 
