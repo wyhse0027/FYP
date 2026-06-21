@@ -137,6 +137,9 @@ media/
 *.rar
 *.7z
 
+# Android build artifacts (APK kept as a download in R2, not in git)
+*.apk
+
 # =========================
 # ⚙️ SYSTEM / IDE
 # =========================
