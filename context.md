@@ -146,7 +146,7 @@ key + Google OAuth vars; expand it to cover DB, R2/GCS, Cloudinary, SendGrid, fr
 | Google Cloud Storage | **All media** (images + `.glb`/`.mind`/`.apk`) | bucket + service-account creds; signed URLs | **Target** — sole storage |
 | Cloudflare R2 | Current big-file storage | `R2_*` | Being replaced by GCS |
 | Cloudinary | Current image storage | `CLOUDINARY_*` | Being removed |
-| SendGrid | Password-reset email | `SENDGRID_API_KEY`, `DEFAULT_FROM_EMAIL` | **Expired** (free trial) — replacing with SMTP (e.g. Gmail App Password) |
+| SendGrid | Password-reset email (retired) | `SENDGRID_API_KEY`, `DEFAULT_FROM_EMAIL` | **Expired** — replacing with a free transactional provider (Brevo/Resend), Phase 3 |
 | Google OAuth | Social login | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | Retained |
 | Secret Manager | Secret storage (prod) | — | **Target** — replaces `.env` |
 | Frontend | API base | `REACT_APP_API_BASE_URL` | Retained |
@@ -216,14 +216,14 @@ Tracked so they become requirements/tasks; not yet fixed unless noted.
    result (`server/shop/views.py` ~669). → Phase 3
 
 **Security (verified 2026-06-21 — Codex + code check)**
-10. **Secrets rotated (2026-06-21)** — Neon, R2, Cloudinary, Google OAuth secret, and Django
-    `SECRET_KEY` rotated and re-verified working. **Open: confirm the OLD credentials were
-    revoked/deleted** (rotation only closes exposure once the old ones are dead). SendGrid key
-    expired (see #19). Values move to Secret Manager at deploy. → mostly done; verify revocation
+10. **Secrets rotated + old keys revoked (2026-06-21)** — Neon, R2, Cloudinary, Google OAuth
+    secret, and Django `SECRET_KEY` rotated, re-verified working, and the **old credentials
+    deleted** (owner confirmed) → exposure closed. Values move to Secret Manager at deploy. → DONE
 19. **Email delivery broken** — SendGrid free trial **expired**, so password-reset email
-    (`server/shop/email_service.py`, `server/shop/password_reset_sendgrid.py`) fails. Replace the
-    email backend (candidate: Gmail SMTP via App Password) and drop the `sendgrid` dependency.
-    Blocked on whether the sender Gmail can create an App Password. → Phase 3 (sooner if needed)
+    (`server/shop/email_service.py`, `server/shop/password_reset_sendgrid.py`) fails.
+    **Decision:** replace with a **free transactional provider** (e.g. Brevo / Resend — no
+    Workspace App Password needed) and drop the `sendgrid` dependency. → Phase 3 (sooner if
+    password reset is demoed). Verify Google OAuth server-side callback still works post-rotation.
 11. **Storage mutation open to any authenticated user** — `server/shop/views_upload.py`
     (presign/finalize/delete) use `IsAuthenticated`; finalizer trusts a client key without
     verifying the object. Must be **admin-only + verified**. → Phase 2

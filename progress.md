@@ -17,10 +17,10 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 - Expanded `server/backend/.env.sample` to the full variable shape; marked SendGrid status in
   `context.md` §6; updated §8 #10 (rotated) + added #19 (email).
 
-**Open:**
-- Confirm OLD credentials were revoked/deleted (not just replaced).
-- Email backend replacement decision (Gmail SMTP App Password feasibility).
-- Google OAuth: test `/accounts/google/login/` with the new secret, then delete the old secret.
+**Resolved (owner):** old credentials all deleted → exposure closed. Email → free
+transactional provider (Brevo/Resend) in Phase 3.
+**Still to verify:** Google OAuth server-side `/accounts/google/login/` callback works with the
+new secret (the frontend id-token login only exercises the client_id).
 
 **Test evidence:** liveness re-check all PASS; `manage.py` Django signing PASS.
 
