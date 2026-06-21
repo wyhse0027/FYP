@@ -10,7 +10,7 @@ deployed all-in on GCP.
 
 | # | Phase | Branch / Tag | Status | Plan doc |
 |---|-------|--------------|--------|----------|
-| 1 | Web AR fix (animation + GLB optimize) | `phase-1-web-ar` | planned (ready) | `docs/superpowers/plans/2026-06-21-phase-1-web-ar.md` |
+| 1 | Web AR fix (animation + GLB optimize) | `phase-1-web-ar` | in progress (Tasks 1–5 done; Task 6 manual + Task 7 left) | `docs/superpowers/plans/2026-06-21-phase-1-web-ar.md` |
 | 2 | Storage → GCS + upload hardening | `phase-2-storage-gcs` | pending | — |
 | 3 | Correctness, security hardening & minimal CI | `phase-3-hygiene` | pending | — |
 | 4 | Backend deploy (Cloud Run + Cloud SQL) | `phase-4-backend-deploy` | pending | — |
