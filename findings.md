@@ -136,3 +136,16 @@ needs field-storage + schema migrations (not just a default swap).
   in A-Frame (DRACOLoader path works), (b) `aframe-extras` doesn't override `gltf-model` in a
   way that drops the Draco path, (c) the animation plays. **PARKED:** the 36 clips look
   "scattered" (independent durations/loops vs Unity orchestration) — separate diagnosis after Task 6.
+
+### Task 6 result (2026-06-21, browser, owner) — core PASS
+- Console: `AFRAME + EXTRAS + MINDAR ready`, MindAR started, **no Draco error**. Owner pointed
+  the camera at the printed Eleganza marker.
+- **Model decodes + renders + animates in web AR** → Draco path works; `aframe-extras` did not
+  break gltf-model; FR-3.1 core (render + play embedded animation) **met**.
+- Harmless warnings only: "Multiple instances of Three.js", `.useLegacyLights` deprecated.
+- **Scatter confirmed INHERENT:** the web AR animation looks identical to the glTF viewer
+  (36 independent clips, durations 2–27.5s, looping independently → desync). NOT an
+  optimization or web-code regression. Unity differs because it orchestrates the clips.
+- **Open decision (before Task 7 merge/tag):** compare the APK animation over ~20–30s.
+  If APK also drifts → web is faithful, Phase 1 done. If APK stays coherent → Unity bakes a
+  single orchestrated animation; matching it needs a source re-export (separate task).
