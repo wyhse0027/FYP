@@ -11,12 +11,12 @@ deployed all-in on GCP.
 | # | Phase | Branch / Tag | Status | Plan doc |
 |---|-------|--------------|--------|----------|
 | 1 | Web AR fix (animation + GLB optimize) | `phase-1-web-ar` | planned (ready) | `docs/superpowers/plans/2026-06-21-phase-1-web-ar.md` |
-| 2 | Storage → GCS | `phase-2-storage-gcs` | pending | — |
-| 3 | Correctness & config hygiene | `phase-3-hygiene` | pending | — |
+| 2 | Storage → GCS + upload hardening | `phase-2-storage-gcs` | pending | — |
+| 3 | Correctness, security hardening & minimal CI | `phase-3-hygiene` | pending | — |
 | 4 | Backend deploy (Cloud Run + Cloud SQL) | `phase-4-backend-deploy` | pending | — |
 | 5 | Frontend deploy (Firebase Hosting) | `phase-5-frontend-deploy` | pending | — |
 | 6 | Luxury UI/UX redesign (user + admin) | `phase-6-ui-redesign` | pending | — |
-| 7 | Core tests + light CI | `phase-7-tests-ci` | pending | — |
+| 7 | Broaden test coverage | `phase-7-tests` | pending | — |
 
 Per-phase plans are written when each phase begins (one plan doc per phase).
 
@@ -26,9 +26,16 @@ Per-phase plans are written when each phase begins (one plan doc per phase).
 `tools/`, `mobile/`) on branch `phase-restructure` (tag on merge). Governance + planning
 files remain at root.
 
-**Phase 1 — Web AR fix.** Plan written
-(`docs/superpowers/plans/2026-06-21-phase-1-web-ar.md`), paths updated to `web/`. Ready to
-execute on approval.
+**Phase 1 — Web AR fix.** Plan written + amended per Codex review
+(`docs/superpowers/plans/2026-06-21-phase-1-web-ar.md`). Ready to execute on approval.
+
+**Open actions from the Codex review (2026-06-21):**
+- 🔴 **Rotate live credentials NOW** — Neon, R2, Cloudinary confirmed reachable with the
+  stored keys (plus Google OAuth secret, SendGrid, Django `SECRET_KEY`). Owner action.
+- **GCP:** new dedicated project `eleganza-ar` (credit's billing account; reuse OAuth client).
+  First needed at Phase 2.
+- **Resequence adopted:** storage authz + upload validation → Phase 2; security hardening +
+  minimal CI → Phase 3 (before deploy).
 
 ## Errors Encountered
 

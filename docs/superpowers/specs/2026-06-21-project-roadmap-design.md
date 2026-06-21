@@ -22,20 +22,22 @@ only when it is reached.
 
 - **Quality target:** Portfolio / demo-grade. Make it work well, look premium, deploy
   reliably. Not a production commercial build.
-- **Infrastructure:** All-in Google Cloud Platform (credit-funded, single provider).
+- **Infrastructure:** Core infrastructure on Google Cloud Platform (credit-funded) — a **new
+  dedicated project** (e.g. `eleganza-ar`) on the credit's billing account, reusing the
+  existing OAuth client from `fyp-login-system`. SendGrid stays external.
 - **AR:** Keep both delivery paths — in-browser web AR *and* the downloadable Android APK.
   The Unity project is maintained only to produce the `.apk` (stored as a binary).
 - **Aesthetic:** Dark opulent × glass, motion-rich (see §5).
 
-## 3. Target Architecture (demo-grade, all-in GCP)
+## 3. Target Architecture (demo-grade, core infra on GCP)
 
 | Layer | Choice | Notes |
 |---|---|---|
-| Backend | Cloud Run (Django container, gunicorn) | Already Dockerized; scales to zero |
-| Database | Cloud SQL (PostgreSQL) | Migrated from Neon; removes cold-start latency |
-| Media storage | Google Cloud Storage (single bucket) | Replaces **both** Cloudinary and R2; large files via signed URLs |
+| Backend | Cloud Run (Django container, gunicorn) | Already Dockerized; scales to zero (still cold-starts) |
+| Database | Cloud SQL (PostgreSQL) | Migrated from Neon; removes **Neon wake-latency** (not Cloud Run cold-start). Cap max-instances vs the connection budget |
+| Media storage | Google Cloud Storage (single bucket) | Replaces **both** Cloudinary and R2; signed URLs. Direct GCS URLs for the demo; Cloud CDN only if measured AR delivery needs it (requires LB/backend-bucket) |
 | Frontend | Firebase Hosting | SPA + CDN + free managed HTTPS (web AR requires HTTPS) |
-| Secrets | Secret Manager | Replaces `.env`; compromised credentials rotated here |
+| Secrets | Secret Manager | Replaces `.env`; compromised credentials (all confirmed **LIVE** 2026-06-21) rotated immediately |
 | Cache / queue | Deferred | LocMemCache retained for demo; Redis/Memorystore only if needed |
 
 This **supersedes** the earlier interim decision to consolidate storage on Cloudflare R2 —
@@ -56,19 +58,33 @@ Definition of Done per task: code + test evidence + doc update + diff self-revie
 - **Verification:** documented manual AR test (marker detection, model + animation, load time).
 - **Why first:** highest-impact broken feature; infra-independent.
 
-### Phase 2 — Storage consolidated to GCS  `phase-2-storage-gcs`
-- **Goal:** All media served from one GCS bucket; Cloudinary and R2 removed.
-- **Outline:** switch django-storages default to GCS; port big-file presign
-  (`views_upload.py`) to GCS signed URLs; migrate existing media to GCS.
-- **Verification:** automated backend tests for upload/URL behavior; spot-check served assets.
+### Phase 2 — Storage consolidated to GCS + upload hardening  `phase-2-storage-gcs`
+- **Goal:** All media on one GCS bucket; Cloudinary + R2 removed; uploads admin-gated and validated.
+- **Outline:**
+  - Repoint django-storages default to GCS **and the per-field storages in
+    `server/shop/models.py`** (AR fields bind their own R2/Cloudinary storage) — includes
+    field/schema migrations.
+  - Port big-file presign (`views_upload.py`) to GCS signed URLs with CORS, scoped IAM,
+    expiry, and size/type limits; finalize must **verify the object** (exists/size/type), not
+    trust the client key; make presign/finalize/delete **admin-only**.
+  - Data migration Cloudinary/R2 → GCS with a **manifest** (source key, dest key, checksum,
+    rollback mapping).
+- **Verification:** automated backend tests for upload auth + URL behavior; spot-check served
+  assets; manifest reconciled.
 
-### Phase 3 — Correctness & config hygiene  `phase-3-hygiene`
-- **Goal:** Remove latent bugs and config inconsistencies; secure secrets.
-- **Outline:** fix frontend env-var mismatch (drop stale `config/api.js`); fix
-  `ProtectedRoute` `loading`→`loadingUser`; define/clean `MEDIA_URL`/`MEDIA_ROOT`;
-  remove duplicate `dj_rest_auth`/`allauth` route registrations; move secrets to Secret
-  Manager and **rotate the compromised credentials**.
-- **Verification:** automated tests for affected backend paths; manual check of admin gating.
+### Phase 3 — Correctness, security hardening & minimal CI  `phase-3-hygiene`
+- **Goal:** Close the verified correctness/security gaps and stand up a test/CI gate *before* deploy.
+- **Outline:**
+  - Config: delete dead `config/api.js`; fix `ProtectedRoute` `loading`→`loadingUser`;
+    define/clean `MEDIA_URL`/`MEDIA_ROOT`; de-duplicate `dj_rest_auth`/`allauth` routes.
+  - Security: fail-closed `DEBUG`/`SECRET_KEY` in prod; **unify admin authority**
+    (role↔is_staff); admin-gate the AR delete endpoints; password validators + auth/reset
+    throttling; Google login `email_verified` + safe errors; `Decimal` + `select_for_update`
+    for checkout; scope quiz answers to their quiz.
+  - **Minimal CI + test harness** (pytest for critical backend paths + a working frontend
+    test; GitHub Actions on PR) — moved here, before deploy (resolves the `CLAUDE.md` §5.1
+    vs deferred-tests contradiction).
+- **Verification:** CI green; targeted tests for the security/permission fixes.
 
 ### Phase 4 — Backend live on Cloud Run + Cloud SQL  `phase-4-backend-deploy`
 - **Goal:** API running on Cloud Run against Cloud SQL, configured for production.
@@ -95,12 +111,12 @@ Definition of Done per task: code + test evidence + doc update + diff self-revie
   for the owner to choose from before broad implementation.
 - **Verification:** visual review across key screens on mobile + desktop.
 
-### Phase 7 — Core tests + light CI  `phase-7-tests-ci`
-- **Goal:** Safety net for critical paths and an automated gate.
-- **Outline:** `pytest` for critical backend paths (auth, orders, AR endpoints,
-  permissions); minimal GitHub Actions running tests on PR. Demo-grade coverage, not
-  exhaustive.
-- **Verification:** CI green on a test PR.
+### Phase 7 — Broaden test coverage  `phase-7-tests`
+- **Goal:** Extend the Phase 3 CI baseline toward fuller coverage (minimal CI already landed
+  in Phase 3).
+- **Outline:** more `pytest` across endpoints/serializers/permissions; tidy the CI workflow.
+  Demo-grade coverage, not exhaustive.
+- **Verification:** CI green on the expanded suite.
 
 ## 5. Aesthetic Direction (Phase 6)
 

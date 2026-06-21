@@ -3,6 +3,32 @@
 Research and discoveries. External/web content recorded here only (never in `task_plan.md`),
 treated as untrusted reference.
 
+## Security — credential liveness (verified 2026-06-21)
+
+Ran a read-only liveness check with the keys in `server/backend/.env`:
+- **NEON: LIVE** (DB connected, `SELECT 1` ok).
+- **R2: LIVE** (bucket `gerainchan-assets` reachable, KeyCount=1).
+- **CLOUDINARY: LIVE** (`api.ping()` → status ok).
+→ All exposed credentials are active. **Rotate immediately** (Neon, R2, Cloudinary, Google
+OAuth secret, SendGrid, Django SECRET_KEY). Then move to Secret Manager in the new GCP project.
+
+## Codex review (2026-06-21) — verified findings
+
+Spot-checked the load-bearing claims against the code:
+- `web/src/config/api.js` is **not imported** anywhere → dead code (the "env inconsistency"
+  framing was overstated).
+- Admin gating: backend uses `IsAdminUser` (is_staff) throughout `server/shop/views.py`;
+  frontend uses `user.role === "admin"` → split authority, can desync.
+- `ARDeleteMarker/GLB/Mind` views (`server/shop/views.py` ~903) have **no** `permission_classes`
+  → default `IsAuthenticatedOrReadOnly` lets any signed-in user delete AR files.
+- `server/shop/views_upload.py` presign/finalize/delete use `IsAuthenticated` (not admin);
+  finalizer trusts the client key without verifying the object.
+- `DEBUG`/`SECRET_KEY` fail open (default True / "dev-only").
+Accepted (consistent, not line-verified): checkout oversell + float money; password policy
+bypass; unvalidated review uploads; quiz-answer scoping; Google login gaps; JWT/localStorage +
+90d refresh + unversioned CDN/no SRI. Per-field storage binding in `models.py` means Phase 2
+needs field-storage + schema migrations (not just a default swap).
+
 ## Phase 1 — Web AR
 
 ### Animation root cause (confirmed via code review)

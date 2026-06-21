@@ -94,9 +94,10 @@ Derived from code review of `server/shop/models.py`, `server/shop/views.py`,
   orders, payments, quizzes/questions/answers, AR experiences, reviews, about, retailers,
   scent personas.
 
-- **FR-13 — Big-File Upload**: presigned **direct-to-R2** upload for `.glb` / `.apk`
-  (bypasses Django to avoid proxying large files); finalize endpoint records the object key;
-  delete endpoint removes object + clears the field.
+- **FR-13 — Big-File Upload**: presigned **direct-to-object-storage** upload for `.glb` /
+  `.apk` (currently Cloudflare R2; GCS after Phase 2) — bypasses Django to avoid proxying large
+  files; finalize endpoint records the object key; delete endpoint removes object + clears the
+  field. *(Current finalizer trusts the client key and is not admin-gated — see §8 #11.)*
 
 ---
 
@@ -123,8 +124,9 @@ Derived from code review of `server/shop/models.py`, `server/shop/views.py`,
   mobile Chrome and Safari; pinned A-Frame 1.5.0 + MindAR 1.2.3; Android native AR via APK.
 - **NFR-4 Storage**: **single provider (Google Cloud Storage)** for all media; large files
   via signed-URL upload; served read via the GCS bucket (CDN-fronted in production).
-- **NFR-5 Reliability**: stateless app container (gunicorn); managed Postgres (Neon) with
-  connection reuse (`conn_max_age=600`); deploys revertable via tags.
+- **NFR-5 Reliability**: stateless app container (gunicorn); managed Postgres (**Cloud SQL**
+  target; Neon is current/legacy) with connection reuse (`conn_max_age=600`); cap Cloud Run
+  max-instances against the Cloud SQL connection budget; deploys revertable via tags.
 - **NFR-6 Maintainability**: phase-based development, hybrid tests, docs kept aligned
   (per `CLAUDE.md`).
 - **NFR-7 Scalability**: gunicorn workers/threads configurable via env; DB connection pooling.
@@ -134,7 +136,8 @@ Derived from code review of `server/shop/models.py`, `server/shop/views.py`,
 ## 6. External Services & Configuration
 
 Configured via environment variables (`server/backend/.env`, gitignored; shape in
-`server/backend/.env.sample`).
+`server/backend/.env.sample` — note: the sample is **incomplete**, currently only the Django
+key + Google OAuth vars; expand it to cover DB, R2/GCS, Cloudinary, SendGrid, frontend).
 
 | Service | Purpose | Key config | Target status |
 |---|---|---|---|
@@ -166,13 +169,19 @@ must be rotated before redeploy (see `CLAUDE.md` §8).**
   **OAuth**: Google.
 - Terminated and removed; application code is intact, the live service is not.
 
-### 7.2 Incoming deployment (planned) — **all-in Google Cloud Platform**
+### 7.2 Incoming deployment (planned) — **core infrastructure on Google Cloud Platform**
+- **GCP project:** a **new dedicated project** (e.g. `eleganza-ar`) under the billing account
+  holding the credit (credit is billing-account-level, so a new project keeps it); reuse the
+  existing Google OAuth client from `fyp-login-system`.
 - **Backend:** Cloud Run (Django container, gunicorn).
 - **Database:** Cloud SQL (PostgreSQL), migrated from Neon.
-- **Media:** single Google Cloud Storage bucket (Cloudinary + R2 removed; existing media migrated).
+- **Media:** single Google Cloud Storage bucket (Cloudinary + R2 removed; existing media
+  migrated). Direct GCS URLs for the demo; Cloud CDN only if measured AR delivery warrants it.
 - **Frontend:** Firebase Hosting (HTTPS — required for web AR).
-- **Secrets:** Secret Manager; compromised credentials rotated before go-live.
-- **Email / OAuth:** SendGrid + Google OAuth retained.
+- **Secrets:** Secret Manager; compromised credentials **rotated immediately** (all confirmed
+  live 2026-06-21), not just before go-live.
+- **Email / OAuth:** SendGrid (external) + Google OAuth retained — so this is *core infra* on
+  GCP, not literally everything.
 - Deploys revertable (tags per phase). Roadmap:
   `docs/superpowers/specs/2026-06-21-project-roadmap-design.md`.
 
@@ -182,23 +191,53 @@ must be rotated before redeploy (see `CLAUDE.md` §8).**
 
 Tracked so they become requirements/tasks; not yet fixed unless noted.
 
+**Correctness / config**
 1. **Web AR animation not playing** — `web/src/pages/ARViewer.js` loads only A-Frame + MindAR;
    the `<a-gltf-model>` has no `animation-mixer` and `aframe-extras` is never loaded, so
-   embedded glTF clips never play. (Drives FR-3.1.)
-2. **Dual storage** — Cloudinary (images) + R2 (big files). Consolidating to **GCS** (NFR-4);
-   existing media to be migrated. (Supersedes the earlier interim R2-only plan.)
-3. **Frontend env var inconsistency** — `web/src/config/api.js` uses `REACT_APP_API_URL` while
-   `web/src/lib/http.js` / `web/src/pages/ARViewer.js` use `REACT_APP_API_BASE_URL`. The former
-   is likely stale.
-4. **Missing `MEDIA_URL` / `MEDIA_ROOT`** — referenced in `server/backend/urls.py` under DEBUG
-   but not defined in `server/backend/settings.py` (local-dev crash risk).
-5. **`ProtectedRoute` loading flag** — reads `loading` from auth context, which only exposes
-   `loadingUser`; the loading guard never triggers.
-6. **Duplicate route registrations** — `dj_rest_auth` / `allauth` / `accounts/` included in
-   both `server/backend/urls.py` and `server/shop/urls.py`.
-7. **No automated tests** — backend `server/shop/tests.py` is the empty stub; frontend has only
-   the default CRA test. (Test suite to be built per the hybrid standard.)
-8. **Exposed secrets** in `server/backend/.env` — rotate before redeploy.
+   embedded glTF clips never play. (Drives FR-3.1.) → Phase 1
+2. **Dual storage** — Cloudinary + R2 → **GCS** (NFR-4). Storage is **bound per-field** in
+   `server/shop/models.py`, so the migration needs field-storage + schema changes, not just a
+   default-backend swap, plus a data-migration manifest. → Phase 2
+3. **Dead config** — `web/src/config/api.js` (`REACT_APP_API_URL`) is **unused/not imported**;
+   the live config is `web/src/lib/http.js` (`REACT_APP_API_BASE_URL`). Delete the dead file. → Phase 3
+4. **Missing `MEDIA_URL` / `MEDIA_ROOT`** — referenced in `server/backend/urls.py` under DEBUG,
+   not defined in `server/backend/settings.py`. → Phase 3
+5. **`ProtectedRoute` loading flag** — reads `loading`; context exposes `loadingUser`; guard
+   never triggers (can redirect a valid admin mid-load). → Phase 3
+6. **Duplicate/overlapping auth routes** — `dj_rest_auth`/`allauth` registered under multiple
+   prefixes across `server/backend/urls.py` and `server/shop/urls.py`; some paths shadow others. → Phase 3
+7. **Test baseline broken** — `server/shop/tests.py` is an empty stub; `web/src/App.test.js`
+   asserts CRA's deleted "learn react" UI and imports `http.js`, which **throws** when
+   `REACT_APP_API_BASE_URL` is unset → the one frontend test fails. → Phase 3 (minimal CI)
+8. **Checkout oversell + float money** — stock read/rewritten without row-lock/atomic update;
+   totals accumulated as float (`server/shop/serializers.py` ~669). Use `select_for_update`/`F()`
+   + `Decimal`. → Phase 3
+9. **Quiz answers not scoped to their quiz** — answers from other quizzes can influence the
+   result (`server/shop/views.py` ~669). → Phase 3
+
+**Security (verified 2026-06-21 — Codex + code check)**
+10. **Exposed secrets are LIVE** — Neon, R2, Cloudinary all reachable with the keys in
+    `server/backend/.env` (verified). **Rotate immediately** (DB, R2, Cloudinary, Google OAuth
+    secret, SendGrid, Django `SECRET_KEY`) — not "before redeploy". Then move to Secret Manager. → NOW
+11. **Storage mutation open to any authenticated user** — `server/shop/views_upload.py`
+    (presign/finalize/delete) use `IsAuthenticated`; finalizer trusts a client key without
+    verifying the object. Must be **admin-only + verified**. → Phase 2
+12. **AR delete endpoints open to any authenticated user** — `ARDeleteMarker/GLB/Mind`
+    (`server/shop/views.py` ~903) set no `permission_classes` → default `IsAuthenticatedOrReadOnly`
+    lets any signed-in user delete AR files. Must be **admin-only**. → Phase 2/3
+13. **Split admin authority** — backend gates on `IsAdminUser` (`is_staff`); frontend on
+    `user.role === "admin"`. Unify (decide: `role` implies `is_staff`, or `is_staff` is sole). → Phase 3
+14. **Fail-open config** — `DEBUG` defaults `True`, `SECRET_KEY` defaults `"dev-only"` if env
+    unset (`server/backend/settings.py:33,48`). Production must require them and abort if absent. → Phase 3
+15. **Weak auth controls** — signup accepts 6-char passwords without Django validators; SendGrid
+    reset accepts any non-empty password; no auth/reset throttling. → Phase 3
+16. **Unvalidated review uploads** — type inferred from client MIME, no size/type allowlist
+    (`server/shop/serializers.py` ~456) — riskier on a publicly served GCS bucket. → Phase 2/3
+17. **Google login gaps** — no `email_verified` check; username collisions can error; raw
+    verification exception text returned (`server/shop/social_views.py`). → Phase 3
+18. **Token handling** — JWT in `localStorage`; 90-day refresh, not revoked on logout;
+    unversioned CDN scripts (model-viewer, AR libs) without SRI. (Deferred hardening; mitigate
+    by pinning/self-hosting scripts + CSP if cookies stay deferred.)
 
 ---
 

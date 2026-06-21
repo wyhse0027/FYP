@@ -5,6 +5,29 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Codex Review Triaged + Resequence Adopted
+
+**Date:** 2026-06-21
+**Task:** Verified Codex's external review against the code; adopted its valid findings.
+
+- **Credential liveness check (read-only):** Neon, R2, Cloudinary all **LIVE** with the stored
+  keys → rotation elevated to **immediate** (owner action). Logged in `findings.md`.
+- **Verified in code:** dead `web/src/config/api.js`; AR delete + upload endpoints not
+  admin-gated (any authed user can mutate/delete storage); split admin authority
+  (is_staff vs role); fail-open `DEBUG`/`SECRET_KEY`. Accepted (consistent): checkout
+  race/float, password policy, review upload validation, quiz scoping, Google login gaps,
+  token handling; per-field storage binding ⇒ Phase 2 needs field/schema migrations.
+- **Decisions (owner):** GCP = new dedicated project `eleganza-ar` (reuse OAuth client);
+  resequencing adopted; cloud data confirmed live.
+- **Docs updated:** `context.md` §8 expanded (issues 1–18) + NFR-5/FR-13/§6/§7.2 corrections;
+  roadmap Phase 2 (storage authz + upload hardening + per-field migration + manifest), Phase 3
+  (security hardening + minimal CI before deploy), Phase 7 retitled; Phase 1 plan amended
+  (pin CLI, loadScript race, AR query filter, metrics, keep old key); `task_plan.md`.
+
+**Test evidence:** liveness check output (NEON/R2/CLOUDINARY all LIVE). Doc changes only.
+
+---
+
 ## Repo Restructure (nested folders)
 
 **Date:** 2026-06-21

@@ -33,6 +33,28 @@ attach it to the model entity so embedded glTF clips play.
 - No new runtime npm dependencies without explicit approval.
 - Demo-grade: smallest correct change; do not refactor `ARViewer.js` beyond what's listed.
 
+## Amendments (Codex review, 2026-06-21)
+
+Apply these within the relevant tasks below:
+
+- **Pin `@gltf-transform/cli`** (e.g. `@4.4.0`) and verify the texture flag for that version
+  (`--texture-size`, not `--texture-resize`). (Task 2)
+- **Animation parity is more than clip count** — also compare clip duration/channel data and
+  visually confirm the optimized animation plays. (Task 2)
+- **Confirm what is actually served** — record whether the inspected artifact is the live
+  served object or the replacement source; don't infer from the local 413 MB fallback. (Task 1)
+- **Fix the `loadScript` race** — it resolves immediately if an element with the same `id`
+  exists even while still loading. Wait for the `load` event and assert
+  `AFRAME.components["animation-mixer"]` is registered before `setReady(true)`. (Task 4)
+- **Filter the AR lookup** — `/api/ar/` does not filter `enabled`/AR `type`, and the frontend
+  blindly takes the first result, so a disabled or markerless record can be chosen. Filter
+  server-side (`enabled=True`, marker type) and/or select deliberately in `ARViewer.js`
+  (`server/shop/views.py` ~888, `web/src/pages/ARViewer.js` ~129). (Task 5/6)
+- **Record reproducible metrics** in verification — device, browser, network, cold-cache load
+  time, final bytes, animation FPS (not "mid-range phone / single-digit seconds"). (Task 6)
+- **Keep the previous R2 key** until manual verification passes, then explicitly decide whether
+  to delete the orphan. (Task 3)
+
 ## File Structure
 
 - `web/src/pages/ARViewer.js` — **modify**: load aframe-extras; add
@@ -127,11 +149,14 @@ git commit -m "docs(ar): record web AR model animation + baseline size"
 - [ ] **Step 1: Run the optimize pipeline**
 
 ```bash
-npx @gltf-transform/cli optimize /tmp/web_model.glb /tmp/web_model_optimized.glb \
-  --compress draco --texture-compress webp --texture-resize 1024
+# pin the CLI version (unpinned npx resolves to whatever is latest)
+npx @gltf-transform/cli@4.4.0 optimize --help   # confirm the texture-resize flag name first
+npx @gltf-transform/cli@4.4.0 optimize /tmp/web_model.glb /tmp/web_model_optimized.glb \
+  --compress draco --texture-compress webp --texture-size 1024
 ```
 
-Expected: completes without error; prints before/after size.
+Note: v4 uses `--texture-size <px>` (not `--texture-resize`) — confirm via `--help` above
+before running. Expected: completes without error; prints before/after size.
 
 - [ ] **Step 2: Verify clips preserved + size reduced**
 
