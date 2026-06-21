@@ -81,9 +81,27 @@ needs field-storage + schema migrations (not just a default swap).
   - Inspect: `npx @gltf-transform/cli@4.4.0 inspect input.glb` → lists meshes, textures, size,
     and **animation count** (use to confirm clips exist + baseline size).
   - Optimize: `npx @gltf-transform/cli@4.4.0 optimize input.glb output.glb --compress draco \
-    --texture-compress webp --texture-size 1024` → typical 80–95% size reduction.
+    --texture-compress webp --texture-size 1024 --flatten false --join false` → 97.22%
+    reduction here, without introducing the default flatten stage's invalid quaternion.
   Source: https://gltf-transform.dev/cli , https://www.npmjs.com/package/@gltf-transform/cli
 
 ### Task 1 result
 - [x] Confirmed the exact live-served GLBs, their byte identity, and their embedded clips.
       The 36-clip gate passed, so Phase 1 may proceed to optimization and viewer playback.
+
+### Optimized-model result (Task 2, 2026-06-21)
+- Pinned tool/flags: `@gltf-transform/cli@4.4.0`, Draco geometry compression, WebP
+  texture compression, and `--texture-size 1024`. The v4 help output explicitly confirms
+  `--texture-size` is the supported flag.
+- The first default `optimize` output introduced `ROTATION_NON_UNIT` at node 63 even though
+  the source validator reported `No errors found`. Re-running with `--flatten false
+  --join false` preserved the scene transforms and removed that regression.
+- Final artifact: `C:\tmp\web_model_optimized.glb`, 11,499,420 bytes, down from
+  413,910,032 bytes (**97.22% reduction**).
+- Final validation: `@gltf-transform/cli@4.4.0 validate` exited 0 and reported
+  `No errors found`.
+- Animation parity: **PASS** — all 36 clip names, all 67 channels, and every clip duration
+  match the Task 1 baseline. Keyframe counts are lower because the optimizer's documented
+  resample stage losslessly deduplicated redundant keyframes.
+- Visual animation/playback parity remains part of the Task 6 camera + marker manual gate;
+  the optimized object has not yet been written to live R2 or Neon.
