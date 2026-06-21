@@ -151,12 +151,13 @@ false, correct it in the same commit.
 
 ## 8. Security & Secrets
 
-8.1 **Compromised secrets.** The credentials present in `server/backend/.env` (Django key, Google
-OAuth secret, SendGrid key, Neon URL, Cloudinary secret, R2 keys) are treated as
-**compromised** and must be **rotated before any redeployment**. Tracked as a requirement.
+8.1 **Closed credential exposure.** The credentials exposed before 2026-06-21 (Django key,
+Google OAuth secret, Neon URL, Cloudinary secret, and R2 keys) were rotated and the old
+credentials revoked; that exposure is closed. Any credential exposed in the future must be
+rotated and revoked before redeployment.
 
-8.2 **Never commit secrets.** `.env` stays gitignored. `server/backend/.env.sample` documents
-the shape only (no real values).
+8.2 **Never commit secrets.** `server/backend/.env` stays gitignored. The sample documents
+variable shape only; no real credential value belongs in source, logs, tests, or documentation.
 
 8.3 **Flag sensitive changes** for security review (§6.2).
 

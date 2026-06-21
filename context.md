@@ -135,9 +135,8 @@ Derived from code review of `server/shop/models.py`, `server/shop/views.py`,
 
 ## 6. External Services & Configuration
 
-Configured via environment variables (`server/backend/.env`, gitignored; shape in
-`server/backend/.env.sample` — note: the sample is **incomplete**, currently only the Django
-key + Google OAuth vars; expand it to cover DB, R2/GCS, Cloudinary, SendGrid, frontend).
+Configured via environment variables (`server/backend/.env`, gitignored; the complete
+variable shape is documented in `server/backend/.env.sample` without real values).
 
 | Service | Purpose | Key config | Target status |
 |---|---|---|---|
@@ -155,8 +154,9 @@ Other settings: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`,
 `CSRF_TRUSTED_ORIGINS`, `CORS_ALLOWED_ORIGINS`, `FRONTEND_URL`, gunicorn tuning
 (`GUNICORN_WORKERS/THREADS/TIMEOUT`, `PORT`), one-time `RUN_MIGRATIONS` / `RUN_COLLECTSTATIC`.
 
-**All live secret values currently in `server/backend/.env` are considered compromised and
-must be rotated before redeploy (see `CLAUDE.md` §8).**
+**The credentials exposed before 2026-06-21 were rotated and their old values revoked.
+Future production values move to Secret Manager; `.env` remains local and gitignored
+(see `CLAUDE.md` §8).**
 
 ---
 
@@ -180,8 +180,9 @@ must be rotated before redeploy (see `CLAUDE.md` §8).**
 - **Frontend:** Firebase Hosting (HTTPS — required for web AR).
 - **Secrets:** Secret Manager; compromised credentials **rotated immediately** (all confirmed
   live 2026-06-21), not just before go-live.
-- **Email / OAuth:** SendGrid (external) + Google OAuth retained — so this is *core infra* on
-  GCP, not literally everything.
+- **Email / OAuth:** SendGrid is retired and will be replaced by a free transactional provider
+  (Brevo/Resend) in Phase 3; Google OAuth is retained. Core infrastructure is on GCP, while
+  email and OAuth remain external services.
 - Deploys revertable (tags per phase). Roadmap:
   `docs/superpowers/specs/2026-06-21-project-roadmap-design.md`.
 
