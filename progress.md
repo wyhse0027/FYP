@@ -5,6 +5,22 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 1 — Plan Written
+
+**Date:** 2026-06-21
+**Task:** Wrote the Phase 1 (web AR fix) implementation plan; set up file-based planning.
+
+- Planning files: `task_plan.md` (program tracker), `findings.md` (research).
+- Plan doc: `docs/superpowers/plans/2026-06-21-phase-1-web-ar.md` — setup + 7 tasks, hybrid
+  testing, branch `phase-1-web-ar` → tag.
+- Verified: aframe-extras 7.7.0 (`animation-mixer`, A-Frame 1.5 compatible); `gltf-transform`
+  optimize CLI (Draco + WebP/resize).
+- Key risk flagged: must confirm the served web `.glb` contains animation clips (Task 1 gate).
+
+**Test evidence:** N/A (planning).
+
+---
+
 ## Roadmap Approved — Program Plan
 
 **Date:** 2026-06-21
