@@ -76,7 +76,7 @@ unless explicitly asked. Give one recommendation.
 ## 4. Phase Workflow & Version Control (Revertable)
 
 4.1 **Phases.** Work is divided into numbered phases; one phase = one cohesive,
-shippable deliverable (e.g. `phase-1-ar-animation`, `phase-2-storage-r2`).
+shippable deliverable (e.g. `phase-1-web-ar`, `phase-2-storage-gcs`).
 
 4.2 **Branch per phase.** Create `phase-<n>-<slug>` off the mainline before starting.
 Never develop a phase directly on the mainline.
@@ -164,7 +164,8 @@ the shape only (no real values).
 regeneration without listing it and getting approval.
 
 9.2 **Match the stack.** Django 5.2 / DRF / SimpleJWT (backend), CRA React 19 (frontend),
-Cloudflare R2 (storage), MindAR + A-Frame (web AR), Unity-built APK (native AR). Use
+Google Cloud Storage (storage target — Cloudflare R2 is the current backend, migrating in
+Phase 2 per the roadmap), MindAR + A-Frame (web AR), Unity-built APK (native AR). Use
 existing idioms; do not introduce parallel patterns.
 
 ---

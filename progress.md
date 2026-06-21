@@ -72,13 +72,16 @@ deprecation warnings, unrelated). Frontend tree intact (`web/package.json`, `web
 **Decisions captured (from owner):**
 - AR: keep both web AR and APK; Unity maintained only to produce the `.apk`.
 - Storage: consolidate to Cloudflare R2 only; **migrate** existing Cloudinary images.
+  *(Superseded 2026-06-21 → consolidate to GCS, all-in GCP; see "Roadmap Approved" entry above.)*
 - VCS: branch per phase + annotated tag on merge.
 - Testing: hybrid — automated for backend logic, documented manual for UI/AR.
 - Incoming deployment: same split shape, app host TBD.
+  *(Superseded → all-in GCP: Cloud Run + Cloud SQL + GCS + Firebase Hosting.)*
 - NFRs: derived defaults, marked proposed, pending approval.
 
 **Test evidence:** N/A (docs only).
 
 **Next planned phases (not started):**
 - Phase 1 — Web AR animation fix (FR-3.1).
-- Phase 2 — Storage consolidation to R2 + migrate existing images (NFR-4 / issue #2).
+- Phase 2 — Storage consolidation to **GCS** + migrate existing media (NFR-4 / issue #2).
+  *(was "R2"; superseded.)*
