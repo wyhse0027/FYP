@@ -901,6 +901,8 @@ class ARExperienceViewSet(viewsets.ModelViewSet):
         return queryset
         
 class ARDeleteMarkerView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
     def delete(self, request, pk):
         ar = get_object_or_404(ARExperience, pk=pk)
         if ar.marker_image:
@@ -911,6 +913,8 @@ class ARDeleteMarkerView(APIView):
         return Response({"detail": "No marker found."}, status=404)
 
 class ARDeleteGLBView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
     def delete(self, request, pk):
         ar = get_object_or_404(ARExperience, pk=pk)
         if ar.model_glb:
@@ -922,6 +926,8 @@ class ARDeleteGLBView(APIView):
 
 
 class ARDeleteMindView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
     def delete(self, request, pk):
         ar = get_object_or_404(ARExperience, pk=pk)
         if ar.marker_mind:
