@@ -28,6 +28,7 @@ db.sqlite3
 
 # Media & static uploads (generated)
 media/
+migration-manifests/
 staticfiles/
 uploads/
 *.bak
