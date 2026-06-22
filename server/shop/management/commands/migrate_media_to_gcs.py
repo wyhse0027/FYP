@@ -160,7 +160,12 @@ class Command(BaseCommand):
         bucket = self.get_bucket()
         source_stores = {}
 
-        for inventory_item in self.iter_inventory():
+        # Materialize the inventory up front so the server-side DB cursor is
+        # closed before the slow uploads begin; otherwise a long transfer lets
+        # the provider (e.g. Neon) drop the idle connection mid-iteration.
+        inventory = list(self.iter_inventory())
+
+        for inventory_item in inventory:
             source_store = source_stores.get(inventory_item.source_provider)
             if source_store is None:
                 source_store = self.get_source_store(inventory_item.source_provider)
