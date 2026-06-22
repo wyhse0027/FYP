@@ -139,11 +139,13 @@ TEMPLATES = [
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
+    scheme = DATABASE_URL.split("://", 1)[0].lower()
+    ssl_require = scheme in ("postgres", "postgresql")
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
             conn_max_age=600,
-            ssl_require=True,
+            ssl_require=ssl_require,
         )
     }
 else:
