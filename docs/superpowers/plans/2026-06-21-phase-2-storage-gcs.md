@@ -1,6 +1,6 @@
 # Phase 2 — GCS Storage + Upload Hardening Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-developmen
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development
 > (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps
 > use checkbox (`- [ ]`) syntax for tracking.
 
@@ -39,7 +39,7 @@ signed URLs, Google Cloud IAM.
   approval → one Conventional Commit.
 - No live Cloudinary/R2/GCS/database mutation without a separate owner checkpoint.
 - Never print or commit a credential. `server/backend/.env` remains ignored. The downloaded
-  service-account key lives outside the repository and is replaced by attached service-accoun
+  service-account key lives outside the repository and is replaced by attached service-account
   credentials/ADC when Cloud Run is implemented.
 - Existing source objects are not deleted during migration. Their deletion is a separate
   post-verification owner decision.
@@ -62,7 +62,7 @@ Approval of this plan approves these concrete defaults:
 | Upload endpoint | Rename `/uploads/r2-presign/` to provider-neutral `/uploads/presign/` | Avoid another provider-specific API migration |
 
 **Public-read consequence:** every object in this single bucket is anonymously readable if
-its name is known. No secrets, private documents, migration manifests, or service-accoun
+its name is known. No secrets, private documents, migration manifests, or service-account
 keys may be stored in this bucket. If the owner rejects this policy, stop and redesign the
 application around signed GET URLs before implementation.
 
@@ -98,7 +98,7 @@ application around signed GET URLs before implementation.
 **Requirement refs:** NFR-4, FR-13, §8 #2, #11
 **Files touched:** none in the repository
 **Test approach:** read-only `gcloud` describe/list commands; no application tests
-**Rollback point:** before branch creation; owner may delete the new key, bucket, and projec
+**Rollback point:** before branch creation; owner may delete the new key, bucket, and project
 if they contain no migrated data
 
 **Responsibility split**
@@ -117,7 +117,7 @@ Cloud Shell / PowerShell alternative:
 
 ```powershell
 gcloud auth login
-gcloud billing accounts lis
+gcloud billing accounts list
 ```
 
 Expected: the intended billing account is `OPEN=True`.
@@ -229,7 +229,7 @@ The Firebase Hosting origin is added in Phase 5 after its hostname exists.
 
 - [ ] **Step 9: Owner checkpoint**
 
-Owner reports only: final project ID, project number, bucket name, region, service-accoun
+Owner reports only: final project ID, project number, bucket name, region, service-account
 email, enabled API names, uniform-access status, public-read decision, and CORS origins.
 Do not report the key ID or JSON contents. **Stop here. No branch or code until the owner says
 Task 0 is complete.**
@@ -293,7 +293,7 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 ```ini
 [pytest]
-DJANGO_SETTINGS_MODULE = backend.settings_tes
+DJANGO_SETTINGS_MODULE = backend.settings_test
 python_files = test_*.py
 addopts = -q
 ```
@@ -323,21 +323,21 @@ Expected: FAIL because `pytest`/`pytest-django` is unavailable.
 
 Append to `server/requirements.txt`:
 
-```tex
+```text
 google-cloud-storage==3.1.1
 pytest==8.4.1
 pytest-django==4.11.1
 ```
 
 ```powershell
-..\venv\Scripts\python.exe -X utf8 -m pip install -r requirements.tx
+..\venv\Scripts\python.exe -X utf8 -m pip install -r requirements.txt
 ```
 
 - [ ] **Step 4: Run GREEN and the Django system check**
 
 ```powershell
 ..\venv\Scripts\python.exe -X utf8 -m pytest shop\tests\test_harness.py
-..\venv\Scripts\python.exe -X utf8 manage.py check --settings=backend.settings_tes
+..\venv\Scripts\python.exe -X utf8 manage.py check --settings=backend.settings_test
 ```
 
 Expected: 1 test passes; system check reports no errors.
@@ -451,7 +451,7 @@ column/data operation.
 ```powershell
 ..\venv\Scripts\python.exe -X utf8 -m pytest shop\tests\test_storage_config.py -q
 $env:DATABASE_URL = "sqlite:///C:/tmp/eleganza-phase2-migrate.sqlite3"
-..\venv\Scripts\python.exe -X utf8 manage.py migrate --noinpu
+..\venv\Scripts\python.exe -X utf8 manage.py migrate --noinput
 Remove-Item Env:DATABASE_URL
 ```
 
@@ -480,7 +480,7 @@ git commit -m "feat(storage): configure GCS as the sole media backend"
 Cover these exact cases in `test_upload_policy.py`:
 
 ```python
-import pytes
+import pytest
 from rest_framework.exceptions import ValidationError
 from shop.upload_policy import build_upload_claim, load_upload_claim, validate_upload
 
@@ -540,7 +540,7 @@ spec; it never silently converts an invalid MIME type to octet-stream.
 
 The test patches `google.cloud.storage.Client`, calls `GCSGateway.create_signed_put()`, and
 asserts `generate_signed_url` receives `version="v4"`, `method="PUT"`, 15-minute expiry,
-the exact content type, and `headers={"Content-Length": "1234"}`. Tests for `stat()` asser
+the exact content type, and `headers={"Content-Length": "1234"}`. Tests for `stat()` assert
 the returned immutable object contains `name`, `size`, `content_type`, and `generation`.
 
 - [ ] **Step 5: Implement the narrow SDK gateway**
@@ -559,9 +559,9 @@ from google.cloud import storage
 @dataclass(frozen=True)
 class StoredObject:
     name: str
-    size: in
+    size: int
     content_type: str
-    generation: in
+    generation: int
 
 
 class GCSGateway:
@@ -705,7 +705,7 @@ git commit -m "fix(storage): verify and admin-gate direct uploads"
 
 ---
 
-### Task 5: Update the Admin SPA to the Provider-Neutral Upload Contrac
+### Task 5: Update the Admin SPA to the Provider-Neutral Upload Contract
 
 **Requirement refs:** FR-13, NFR-4
 **Files:** modify `web/src/pages/admin/AdminAREditPage.js`
@@ -717,7 +717,7 @@ git commit -m "fix(storage): verify and admin-gate direct uploads"
 Rename R2-specific helpers/messages to provider-neutral names. Presign must send `size` and
 retain the returned token:
 
-```javascrip
+```javascript
 async function presignBigFile(kind, file) {
   const res = await http.post("/uploads/presign/", {
     kind,
@@ -868,7 +868,7 @@ Expected: FAIL because the command does not exist.
 
 The command exposes:
 
-```tex
+```text
 python manage.py migrate_media_to_gcs --manifest <path> --dry-run
 python manage.py migrate_media_to_gcs --manifest <path> --execute
 python manage.py migrate_media_to_gcs --rollback-manifest <path>
@@ -915,7 +915,7 @@ git commit -m "feat(storage): add checksummed GCS migration command"
 live Cloudinary/R2 objects to GCS; no source deletion
 **Test approach:** dry-run reconciliation, checksums, API/browser checks, representative UI/AR files
 **Rollback point:** manifest generation IDs + previous phase tag; rollback command removes only
-new GCS generations while source services and DB names remain intac
+new GCS generations while source services and DB names remain intact
 
 - [ ] **Step 1: Stop for explicit live-write approval**
 
@@ -986,7 +986,7 @@ decision.
 `server/backend/r2_storage.py`, `context.md`, `task_plan.md`, `progress.md`; retain
 `server/requirements.txt` legacy packages and the migration command for migration compatibility
 **Test approach:** secret/provider grep, full backend tests, frontend build, Django check
-**Rollback point:** revert this commit; old providers remain physically intac
+**Rollback point:** revert this commit; old providers remain physically intact
 
 - [ ] **Step 1: Remove active legacy configuration but retain migration compatibility**
 
@@ -1015,9 +1015,9 @@ packages remain installed.
 rg -n "Cloudinary|cloudinary|R2_|AWS_S3|boto3|r2-presign" server web --glob "!shop/management/commands/migrate_media_to_gcs.py"
 cd server
 ..\venv\Scripts\python.exe -X utf8 -m pytest shop\tests -q
-..\venv\Scripts\python.exe -X utf8 manage.py check --settings=backend.settings_tes
+..\venv\Scripts\python.exe -X utf8 manage.py check --settings=backend.settings_test
 $env:DATABASE_URL = "sqlite:///C:/tmp/eleganza-phase2-fresh.sqlite3"
-..\venv\Scripts\python.exe -X utf8 manage.py migrate --noinpu
+..\venv\Scripts\python.exe -X utf8 manage.py migrate --noinput
 Remove-Item Env:DATABASE_URL
 cd ..\web
 $env:CI = "false"
@@ -1050,7 +1050,7 @@ git commit -m "chore(storage): retire legacy storage configuration"
 ```powershell
 cd server
 ..\venv\Scripts\python.exe -X utf8 -m pytest shop\tests -q
-..\venv\Scripts\python.exe -X utf8 manage.py check --settings=backend.settings_tes
+..\venv\Scripts\python.exe -X utf8 manage.py check --settings=backend.settings_test
 cd ..\web
 $env:CI = "false"
 npm run build
@@ -1098,7 +1098,7 @@ git push origin main --tags
   docs, reviews, and phase controls.
 - **No live-write ambiguity:** Task 0 is owner-operated; Task 8 and source deletion each have
   explicit stop points. Task 0 must finish before branch creation.
-- **Rollback:** source objects remain intact; database object names are preserved; the manifes
+- **Rollback:** source objects remain intact; database object names are preserved; the manifest
   records destination generations; every code task is independently revertible.
 - **Placeholder scan:** no implementation placeholder remains. Values not knowable before
   provisioning are generated by explicit commands; an unavailable project ID is a stop condition.
