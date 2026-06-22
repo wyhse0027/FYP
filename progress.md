@@ -5,6 +5,37 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 2 — Tasks 5-6: Admin Upload Contract + Review Media Validation
+
+**Date:** 2026-06-22
+**Branch:** `phase-2-storage-gcs`
+**Requirement refs:** FR-13, NFR-4, context.md §8 #16
+**Commits:** `c132094a` (Task 5 SPA), `05d25d26` (Task 6 review validation)
+
+- **Task 5** — `web/src/pages/admin/AdminAREditPage.js` now uses the provider-neutral
+  contract: presign POST `/uploads/presign/` sends `kind/filename/content_type/size`,
+  `uploadBigFile` returns `{key, upload_token}`, finalize PATCHes
+  `/ar/<id>/finalize-bigfile/` with `kind/key/upload_token`. All visible "R2" text →
+  "cloud storage"; create/edit flow preserved. Verified: 0 R2 refs remain; contract matches
+  the Task 4 endpoints. Build: `CI=false npm run build` exit 0 (pre-existing unrelated lint
+  warnings only).
+- **Task 6** — added `validate_review_file()` + allowlists (`REVIEW_IMAGE_TYPES` jpeg/png/webp
+  ≤10 MiB, `REVIEW_VIDEO_TYPES` mp4/webm ≤50 MiB, `REVIEW_MAX_FILES=5`) and a `validate_files`
+  field-validator on `ReviewSerializer`. Validation runs during `is_valid()` and returns
+  `(file, type)` tuples; `create()`/`update()` now persist the **validated** type instead of
+  inferring from untrusted MIME. Empty, oversized, unsupported, extension/MIME-mismatch, and
+  >5-file uploads are rejected before `ReviewMedia.objects.create()`. (Type is allowlist-based,
+  not magic-byte sniffed; GCS serves objects with the stored validated content-type, so a
+  mismatched-bytes file is still served as its declared image/video type — acceptable for
+  demo-grade §8 #16.)
+
+**Test evidence (independently re-run):** RED proved 8 invalid fixtures reached the old save
+path; after the fix `pytest shop/tests` → **54 passed**; tests patch
+`ReviewMedia.objects.create` and assert it stays uncalled for every rejected fixture. Frontend
+build exit 0.
+
+---
+
 ## Phase 2 — Tasks 3-4: Verified Admin-Only GCS Direct Uploads
 
 **Date:** 2026-06-22
