@@ -183,6 +183,9 @@ class Command(BaseCommand):
                 md5_hex = digest.hexdigest()
                 md5_base64 = base64.b64encode(digest.digest()).decode("ascii")
                 blob = bucket.blob(inventory_item.dest_key)
+                # Resumable chunked upload so large media (e.g. ~417 MB APKs)
+                # are not killed by the single-shot 120s upload timeout.
+                blob.chunk_size = 16 * 1024 * 1024
 
                 if blob.exists():
                     blob.reload()
@@ -193,7 +196,7 @@ class Command(BaseCommand):
                     status_value = "verified_existing"
                 else:
                     spool.seek(0)
-                    blob.upload_from_file(spool, rewind=True)
+                    blob.upload_from_file(spool, rewind=True, timeout=600)
                     blob.reload()
                     if int(blob.size) != byte_count or blob.md5_hash != md5_base64:
                         generation = int(blob.generation)

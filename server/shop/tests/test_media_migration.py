@@ -46,6 +46,7 @@ class FakeBlob:
         self.size = None
         self.md5_hash = None
         self.generation = None
+        self.chunk_size = None
 
     def exists(self):
         return self.name in self.bucket.objects
@@ -56,7 +57,7 @@ class FakeBlob:
         self.md5_hash = base64.b64encode(hashlib.md5(record["data"]).digest()).decode("ascii")
         self.generation = record["generation"]
 
-    def upload_from_file(self, stream, rewind=False):
+    def upload_from_file(self, stream, rewind=False, timeout=None):
         if rewind:
             stream.seek(0)
         self.bucket.uploads.append(self.name)
