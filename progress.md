@@ -5,6 +5,30 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 3 — Plan Written + Reviewed (approved)
+
+**Date:** 2026-06-22
+**Task:** Wrote `docs/superpowers/plans/2026-06-22-phase-3-hygiene.md` (11 tasks → context.md
+§8 items + minimal CI + email). Codex independently reviewed Phase 2-as-merged (no code/security
+defects; 60 tests + fresh sqlite migrate re-passed) and the Phase 3 plan.
+
+- **Codex Phase 2 doc-drift findings (verified + fixed here):** `CLAUDE.md` §9.2 still called R2
+  the current backend; `context.md` deploy §7.2 still implied pending rotation. Both corrected.
+- **Plan amendments accepted (Codex review):** Task 1 must fix the env load-order
+  (`settings.py` reads `DEBUG` at L31 *before* loading `server/backend/.env` at L35) before
+  defaulting `DEBUG=False`; admin authority via one-time backfill + read-only `is_staff` (NO
+  auto-elevate on `role` save); canonicalize duplicate auth/reset routes (Task 6) **before** the
+  email swap (Task 7); Google login = normalized case-insensitive email identity + race handling;
+  CI runs the repaired Jest test (not just build); SRI set before `src` on dynamically-injected
+  AR scripts.
+- **Owner decisions:** email = **Brevo** (no custom domain); `is_staff` sole admin authority
+  (amended mechanics); throttles 5/min login+signup, 3/min reset request+confirm; defer
+  cookie-migration + CSP + refresh-token revocation as tracked security debt.
+
+**Test evidence:** N/A (planning + doc reconciliation). Plan committed; execution not started.
+
+---
+
 ## Phase 2 — Task 10: Review, Source Decision, Merge + Tag — PHASE COMPLETE
 
 **Date:** 2026-06-22

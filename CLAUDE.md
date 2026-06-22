@@ -169,9 +169,9 @@ variable shape only; no real credential value belongs in source, logs, tests, or
 regeneration without listing it and getting approval.
 
 9.2 **Match the stack.** Django 5.2 / DRF / SimpleJWT (backend), CRA React 19 (frontend),
-Google Cloud Storage (storage target — Cloudflare R2 is the current backend, migrating in
-Phase 2 per the roadmap), MindAR + A-Frame (web AR), Unity-built APK (native AR). Use
-existing idioms; do not introduce parallel patterns.
+Google Cloud Storage (sole media backend as of Phase 2; legacy Cloudflare R2/Cloudinary config
+removed, packages retained only as a migration-0031 shim), MindAR + A-Frame (web AR),
+Unity-built APK (native AR). Use existing idioms; do not introduce parallel patterns.
 
 ---
 

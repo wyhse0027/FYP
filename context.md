@@ -180,8 +180,9 @@ Future production values move to Secret Manager; `.env` remains local and gitign
 - **Media:** single Google Cloud Storage bucket (Cloudinary + R2 removed; existing media
   migrated). Direct GCS URLs for the demo; Cloud CDN only if measured AR delivery warrants it.
 - **Frontend:** Firebase Hosting (HTTPS — required for web AR).
-- **Secrets:** Secret Manager; compromised credentials **rotated immediately** (all confirmed
-  live 2026-06-21), not just before go-live.
+- **Secrets:** Secret Manager (target). The credentials exposed before 2026-06-21 were already
+  **rotated and the old values revoked** (exposure closed, see §8 #10); future production values
+  move to Secret Manager at deploy.
 - **Email / OAuth:** SendGrid is retired and will be replaced by a free transactional provider
   (Brevo/Resend) in Phase 3; Google OAuth is retained. Core infrastructure is on GCP, while
   email and OAuth remain external services.
