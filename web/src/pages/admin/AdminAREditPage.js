@@ -4,38 +4,34 @@ import { useNavigate, useParams } from "react-router-dom";
 import PageHeader from "../../components/PageHeader";
 import http from "../../lib/http";
 
-/* -------------------- R2 direct upload helpers -------------------- */
-async function presignR2(kind, file) {
-  const res = await http.post("/uploads/r2-presign/", {
+/* -------------------- Cloud storage direct upload helpers -------------------- */
+async function presignBigFile(kind, file) {
+  const res = await http.post("/uploads/presign/", {
     kind,
     filename: file.name,
     content_type: file.type || "application/octet-stream",
+    size: file.size,
   });
-  return res.data; // { upload_url, public_url, key }
+  return res.data;
 }
 
-async function putToR2(uploadUrl, file) {
-  const resp = await fetch(uploadUrl, {
+async function uploadBigFile(kind, file) {
+  const { upload_url, key, upload_token } = await presignBigFile(kind, file);
+  const response = await fetch(upload_url, {
     method: "PUT",
-    headers: {
-      "Content-Type": file.type || "application/octet-stream",
-    },
+    headers: { "Content-Type": file.type || "application/octet-stream" },
     body: file,
   });
-
-  if (!resp.ok) {
-    throw new Error(`R2 PUT failed: ${resp.status}`);
-  }
+  if (!response.ok) throw new Error(`Storage upload failed: ${response.status}`);
+  return { key, upload_token };
 }
 
-async function uploadBigFileToR2(kind, file) {
-  const { upload_url, key } = await presignR2(kind, file);
-  await putToR2(upload_url, file);
-  return key;
-}
-
-async function finalizeBigFile(arId, kind, key) {
-  await http.patch(`/ar/${arId}/finalize-bigfile/`, { kind, key });
+async function finalizeBigFile(arId, kind, upload) {
+  await http.patch(`/ar/${arId}/finalize-bigfile/`, {
+    kind,
+    key: upload.key,
+    upload_token: upload.upload_token,
+  });
 }
 
 export default function AdminAREditPage() {
@@ -79,7 +75,7 @@ export default function AdminAREditPage() {
     try {
       await http.delete(`/ar/${id}/delete-bigfile/?kind=glb`);
       setForm((prev) => ({ ...prev, model_glb: null }));
-      setMessage("✅ GLB deleted from R2 + database successfully!");
+      setMessage("✅ GLB deleted from cloud storage + database successfully!");
     } catch (err) {
       console.error("Failed to delete GLB:", err);
       setMessage(`❌ Failed to delete GLB. ${err?.response?.data?.detail || ""}`);
@@ -107,7 +103,7 @@ export default function AdminAREditPage() {
     try {
       await http.delete(`/ar/${id}/delete-bigfile/?kind=apk`);
       setForm((prev) => ({ ...prev, app_download_file: null }));
-      setMessage("✅ APK deleted from R2 + database successfully!");
+      setMessage("✅ APK deleted from cloud storage + database successfully!");
     } catch (err) {
       console.error("Failed to delete APK:", err);
       setMessage(`❌ Failed to delete APK. ${err?.response?.data?.detail || ""}`);
@@ -171,18 +167,18 @@ export default function AdminAREditPage() {
     setMessage("");
 
     try {
-      // 1) Upload big files to R2 first (GLB/APK only)
-      let glbKey = null;
-      let apkKey = null;
+      // 1) Upload big files to cloud storage first (GLB/APK only)
+      let glbUpload = null;
+      let apkUpload = null;
 
       if (form.model_glb instanceof File) {
-        setMessage("⬆️ Uploading GLB to R2...");
-        glbKey = await uploadBigFileToR2("glb", form.model_glb);
+        setMessage("⬆️ Uploading GLB to cloud storage...");
+        glbUpload = await uploadBigFile("glb", form.model_glb);
       }
 
       if (form.app_download_file instanceof File) {
-        setMessage("⬆️ Uploading APK to R2...");
-        apkKey = await uploadBigFileToR2("apk", form.app_download_file);
+        setMessage("⬆️ Uploading APK to cloud storage...");
+        apkUpload = await uploadBigFile("apk", form.app_download_file);
       }
 
       // 2) Save the ARExperience (small multipart for marker_image + mind + fields)
@@ -220,15 +216,15 @@ export default function AdminAREditPage() {
         }
       }
 
-      // 3) Finalize: save R2 keys into FileFields (no upload through Django)
-      if (glbKey) {
+      // 3) Finalize: save cloud storage keys into FileFields (no upload through Django)
+      if (glbUpload) {
         setMessage("🔗 Linking GLB to AR record...");
-        await finalizeBigFile(arId, "glb", glbKey);
+        await finalizeBigFile(arId, "glb", glbUpload);
       }
 
-      if (apkKey) {
+      if (apkUpload) {
         setMessage("🔗 Linking APK to AR record...");
-        await finalizeBigFile(arId, "apk", apkKey);
+        await finalizeBigFile(arId, "apk", apkUpload);
       }
 
       setMessage(id ? "✅ AR experience updated successfully!" : "✅ AR experience created successfully!");
@@ -327,7 +323,7 @@ export default function AdminAREditPage() {
                 className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-700"
               />
               <p className="text-xs opacity-70 mt-2">
-                Note: APK uploads go directly to R2 (faster, avoids backend timeouts).
+                Note: APK uploads go directly to cloud storage (faster, avoids backend timeouts).
               </p>
             </div>
 
@@ -390,7 +386,7 @@ export default function AdminAREditPage() {
                 className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-700"
               />
               <p className="text-xs opacity-70 mt-2">
-                Note: GLB uploads go directly to R2 (faster, avoids backend timeouts).
+                Note: GLB uploads go directly to cloud storage (faster, avoids backend timeouts).
               </p>
             </div>
 
