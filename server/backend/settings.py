@@ -201,11 +201,19 @@ cloudinary.config(
     secure=True,
 )
 
-# Cloudinary is DEFAULT for Django media (ImageField / FileField),
-# but we will override big files (.glb/.mind/.apk) per-field using R2 storage.
+GCS_PROJECT_ID = os.getenv("GCS_PROJECT_ID", "")
+GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "")
+
 STORAGES = {
     "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+        "OPTIONS": {
+            "project_id": GCS_PROJECT_ID,
+            "bucket_name": GCS_BUCKET_NAME,
+            "default_acl": None,
+            "querystring_auth": False,
+            "file_overwrite": False,
+        },
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
