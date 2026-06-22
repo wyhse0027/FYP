@@ -5,6 +5,43 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 2 — Task 8 (part 1): Live Data Migration to GCS — DONE
+
+**Date:** 2026-06-22
+**Branch:** `phase-2-storage-gcs`
+**Requirement refs:** NFR-4, FR-13, context.md §8 #2
+**Commits:** `64559123`, `8f61c4ff` (migration-command fixes found during the live run)
+
+- Owner approved the live `--execute` (AskUserQuestion). Dry-run inventory: **46 objects**
+  (40 Cloudinary + 6 R2; the 6 R2 = 2 marker_mind, 2 model_glb 11.5 MB, 2 app_download_file
+  ~398 MiB APKs). Manifest: `migration-manifests/phase-2-gcs.jsonl` (gitignored).
+- **Result: all 46 distinct objects now in GCS** (`copied`/`verified_existing`, none missing),
+  checksum-verified (size + base64 MD5). Independently confirmed anonymous HTTP readability
+  (HTTP 206 on range GET) for samples incl. an APK, a GLB, a card image, and an avatar →
+  public-read works end to end. Sources (Cloudinary/R2) left intact (deletion deferred to Task 10).
+- **Two live failures found + fixed during the run (systematic debugging):**
+  1. `RetryError: write operation timed out` — single-shot upload hit the 120 s timeout on the
+     417 MB APK. Fixed: `blob.chunk_size = 16 MiB` (resumable chunked) + `timeout=600`
+     (`64559123`). APKs then copied + verified.
+  2. `OperationalError: SSL connection has been closed unexpectedly` — `.iterator()` held a
+     server-side Postgres cursor open across the multi-minute uploads; Neon dropped the idle
+     connection. Fixed: materialize the inventory list before uploading so the cursor closes
+     first (`8f61c4ff`).
+- **Known limitation (non-blocking for this dataset):** migrated objects are served as
+  `application/octet-stream` (the command uploads bytes without setting `content_type`). Impact
+  here is nil — **no video media exists** (ReviewMedia all IMAGE, ProductMedia are images),
+  images render via browser sniffing, GLB/`.mind` are fetched as binary, and octet-stream is
+  correct for APK download. Proper content-type preservation noted as optional polish (would
+  need source content-type plumbing; revisit if visual verification shows any issue).
+
+**Test evidence:** `pytest shop/tests` → 60 passed after each fix (`--basetemp=/tmp/elzpt`).
+Manifest: 46/46 distinct objects present; anonymous GCS HTTP 206 confirmed on 4 samples.
+
+**Still owner-operated (Task 8 part 2):** browser direct-upload test (admin PUT+finalize+delete,
+403 for non-admin, 400 for oversize/bad-MIME) and the visual asset/AR/CORS verification.
+
+---
+
 ## Phase 2 — Task 7: Checksum-Manifest GCS Migration Command
 
 **Date:** 2026-06-22
