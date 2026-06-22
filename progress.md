@@ -5,6 +5,35 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 2 — Tasks 3-4: Verified Admin-Only GCS Direct Uploads
+
+**Date:** 2026-06-22
+**Branch:** `phase-2-storage-gcs`
+**Requirement refs:** FR-13, context.md §8 #11, #12
+**Commits:** `7590baee` (Task 3 primitives), `e83e6d05` (Task 4 endpoints + authz)
+
+- **Task 3** — `upload_policy.py` (frozen `UploadSpec`, glb/apk allowlists, `validate_upload`,
+  salted `django.core.signing` claims, `max_age=900`) and `gcs.py` (`GCSGateway`:
+  v4 signed PUT with `Content-Length`, `stat`, generation-guarded `delete`, `public_url`;
+  immutable `StoredObject`). Pure units — no endpoints/live calls. 15 tests.
+- **Task 4** — rewrote `views_upload.py` to GCS: `PresignBigFile` / `ARFinalizeBigFile` /
+  `ARDeleteBigFile`, all `IsAdminUser`. Presign signs `{admin id, kind, key, size, MIME}`
+  and returns `upload_url/public_url/key/upload_token`. Finalize loads the claim, binds it to
+  the requesting admin + key-prefix, then `stat()`s the object and compares name/size/MIME;
+  on mismatch it deletes the candidate by generation and leaves the DB untouched; success is
+  replay-idempotent. Delete stats→generation-deletes→clears the field. Added
+  `IsAdminUser` to legacy `ARDeleteMarker/GLB/Mind` views (§8 #12). Renamed
+  `/uploads/r2-presign/` → `/uploads/presign/` (finalize/delete URLs unchanged). All R2/boto3
+  code removed from `views_upload.py`. No live GCS call path under tests (gateway injected).
+
+**Test evidence (independently re-run):** `pytest shop/tests` → **39 passed**. Authz matrix
+(401 anon / 403 non-staff / admin) verified across all six endpoints; finalize cases (tamper,
+expiry, cross-admin claim, missing object, size/type mismatch→generation-delete, idempotency,
+key-outside-prefix) all covered. Confirmed `ARExperience.updated_at` exists and `permissions`
+imported (no latent save/NameError).
+
+---
+
 ## Phase 2 — Task 2: Repoint Default + Per-Field Storage to GCS
 
 **Date:** 2026-06-22
