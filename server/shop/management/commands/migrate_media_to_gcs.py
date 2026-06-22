@@ -144,9 +144,23 @@ class Command(BaseCommand):
                 )
 
     def get_source_store(self, provider):
+        # The legacy R2/Cloudinary runtime config was retired in Phase 2 (Task 9). Reading
+        # sources for a re-`--execute` therefore requires restoring that config first; fail
+        # with a clear message instead of an opaque AttributeError. (`--rollback-manifest`
+        # never reaches here — it only touches GCS.)
         if provider == "cloudinary":
+            if not (os.getenv("CLOUDINARY_URL") or os.getenv("CLOUDINARY_CLOUD_NAME")):
+                raise CommandError(
+                    "Cloudinary source config was retired in Phase 2. Restore CLOUDINARY_* env "
+                    "+ settings to re-run --execute for Cloudinary sources."
+                )
             return CloudinarySourceStore()
         if provider == "r2":
+            if not getattr(settings, "AWS_S3_ENDPOINT_URL", ""):
+                raise CommandError(
+                    "R2 source config was retired in Phase 2. Restore R2_*/AWS_S3_* env "
+                    "+ settings to re-run --execute for R2 sources."
+                )
             return R2SourceStore()
         raise CommandError(f"Unsupported source provider: {provider}")
 
