@@ -5,6 +5,48 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 2 — Task 0 GCP Storage Prerequisite Provisioned (owner-operated)
+
+**Date:** 2026-06-22
+**Requirement refs:** NFR-4, FR-13, context.md §8 #2/#11
+**Task:** Owner completed the approved GCP project, billing, bucket, IAM, key, and CORS setup.
+
+- Project `eleganza-ar` (`439528178601`) is ACTIVE and billing-enabled on the open
+  `My Billing Account` billing account.
+- Bucket `eleganza-ar-media-439528178601`: `ASIA-SOUTHEAST1`, `STANDARD`, regional,
+  uniform bucket-level access enabled. Public access prevention is inherited (not enforced).
+- Public-read decision applied: `allUsers` has bucket-level `roles/storage.objectViewer`.
+- Scoped service account `eleganza-storage@eleganza-ar.iam.gserviceaccount.com` has
+  bucket-level `roles/storage.objectAdmin`; its local JSON key is outside the repository.
+- CORS origins: `http://localhost:3000`, `https://gerainchan.vercel.app`; methods
+  GET/HEAD/PUT/DELETE; response headers Content-Type/Content-Length/ETag/x-goog-generation;
+  max age 3600 seconds.
+- Required Phase 2 APIs verified enabled: `storage.googleapis.com`, `iam.googleapis.com`,
+  `iamcredentials.googleapis.com`.
+- Complete enabled-service inventory at provisioning time: `analyticshub.googleapis.com`,
+  `bigquery.googleapis.com`, `bigqueryconnection.googleapis.com`,
+  `bigquerydatapolicy.googleapis.com`, `bigquerydatatransfer.googleapis.com`,
+  `bigquerymigration.googleapis.com`, `bigqueryreservation.googleapis.com`,
+  `bigquerystorage.googleapis.com`, `cloudapis.googleapis.com`, `cloudtrace.googleapis.com`,
+  `dataform.googleapis.com`, `dataplex.googleapis.com`, `datastore.googleapis.com`,
+  `iam.googleapis.com`, `iamcredentials.googleapis.com`, `logging.googleapis.com`,
+  `monitoring.googleapis.com`, `servicemanagement.googleapis.com`,
+  `serviceusage.googleapis.com`, `sql-component.googleapis.com`, `storage.googleapis.com`,
+  `storage-api.googleapis.com`, `storage-component.googleapis.com`, and
+  `telemetry.googleapis.com`. Only the three required APIs above were deliberately enabled
+  during Task 0; the remainder were Google-managed/default services already enabled for the
+  new project.
+- Billing note: enabling an API does not by itself prove billable usage. The bucket currently
+  has GCS soft delete enabled with a 7-day retention window, so deleted object bytes may remain
+  billable during that window.
+
+**Verification evidence:** project ACTIVE; billing enabled; bucket describe confirmed region,
+class, uniform access, inherited public-access prevention, and 7-day soft delete; IAM policy
+confirmed public viewer + scoped service-account object admin; CORS describe matched the
+approved configuration; full enabled-service list captured.
+
+**Gate:** Task 0 is complete. No Phase 2 branch or implementation starts until owner approval.
+
 ## Credential Rotation (owner-performed, verified)
 
 **Date:** 2026-06-21
