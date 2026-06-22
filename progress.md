@@ -44,11 +44,19 @@ type (`model/gltf-binary`) → generation-guarded `delete()` removed it (`stat` 
 client uploads that send `Content-Type` are stored correctly typed, so the octet-stream caveat
 above applies only to migrated legacy objects.
 
-**Still owner-operated (Task 8 part 2 — needs a browser):** eyeball the admin SPA upload flow
-(Task 5 wiring) end to end, and visually confirm migrated assets render — avatars, product
-images, AR marker images, **both GLBs rendering + animating in web AR**, APK download, review
-images, About/persona/retailer images — with no Cloudinary/R2 URLs in network requests. The
-401/403/400 permission+validation matrix is already covered by the 39 automated API tests.
+**Task 8 part 2 — manual browser verification (owner): ALL PASSED (2026-06-22).** Owner ran
+the documented checklist against the local app (backend `runserver` + `npm start`):
+- A. Migrated assets render from GCS: product images, avatar, About/persona/retailer, AR
+  marker images, review images — all display.
+- B. Web AR: both AR experiences render **and animate** the GLB at the marker (Phase 1
+  deliverable confirmed on GCS).
+- C. Admin direct upload: GLB + APK upload (PUT 200 → finalize 200) and delete succeed via the
+  SPA.
+- D. Non-admin blocked from admin upload (UI sanity; logic also covered by 39 auto tests).
+- E. No `cloudinary`/`r2`/`gerainchan-assets` URLs in the Network tab — all assets served from
+  `storage.googleapis.com/eleganza-ar-media-439528178601/...`.
+
+**Task 8 COMPLETE.** Legacy sources retained (deletion is the Task 10 owner decision).
 
 ---
 
