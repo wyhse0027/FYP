@@ -3,6 +3,7 @@
 # =========================
 __pycache__/
 **/__pycache__/
+.pytest_cache/
 *.py[cod]
 *.pyo
 *.pyd
@@ -27,6 +28,7 @@ db.sqlite3
 
 # Media & static uploads (generated)
 media/
+migration-manifests/
 staticfiles/
 uploads/
 *.bak

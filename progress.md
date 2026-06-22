@@ -5,6 +5,252 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 2 — Task 10: Review, Source Decision, Merge + Tag — PHASE COMPLETE
+
+**Date:** 2026-06-22
+**Branch/Tag:** `phase-2-storage-gcs`
+**Requirement refs:** NFR-4, FR-13, §8 #2/#11/#12/#16; CLAUDE.md §6
+
+- **Fresh verification:** `pytest shop/tests` → 60 passed; `manage.py check` → only 3
+  pre-existing allauth deprecations; fresh sqlite migrate 0001→0032 clean; `npm run build`
+  compiles; `git diff --check main...HEAD` clean (19 commits).
+- **Formal code review** (holistic, branch vs main): 1 finding — the retained migration command
+  read `AWS_*`/Cloudinary settings removed in Task 9 (opaque `AttributeError` on a future
+  `--execute`). **Fixed** (`4a4ece89`): clear `CommandError` guards. Accepted/low (by design):
+  admin-only generation race on delete/finalize; migrated objects served `octet-stream`
+  (no videos; images sniff-render); octet-stream in the GLB/APK allowlist (admin-only).
+- **Formal security review** (storage creds/presign/CORS/permissions): no findings. SA scoped to
+  bucket-level `objectAdmin`; public bucket is media-only (no secrets/manifests/keys); signed
+  claims bound to admin+key with 15-min expiry + tamper detection; all 6 endpoints `IsAdminUser`
+  + object-verified; `.env`/signer key/manifests gitignored or out-of-repo.
+- **Owner decisions:** (1) **Keep** legacy R2/Cloudinary source objects as the rollback safety
+  net (deletion deferred; R2 6 obj/819 MiB + Cloudinary 40 obj/32 MiB). (2) **Merge + tag now.**
+- Merged `phase-2-storage-gcs` → `main` (`--no-ff`), annotated tag `phase-2-storage-gcs`, pushed.
+
+**Phase 2 COMPLETE.**
+
+---
+
+## Phase 2 — Task 9: Retire Active Legacy Storage Config + Doc Alignment
+
+**Date:** 2026-06-22
+**Branch:** `phase-2-storage-gcs`
+**Requirement refs:** NFR-4, context.md §8 #2
+
+- Removed all active Cloudinary/R2 runtime config from `settings.py` (`import cloudinary`, the
+  `cloudinary`/`cloudinary_storage` INSTALLED_APPS entries, `cloudinary.config()`, and the entire
+  `R2_*`/`AWS_S3_*` block) and their shape vars from `.env.sample`; updated two `models.py`
+  comments. Rewrote `backend/r2_storage.py` into a **settings-free migration-compat shim**
+  (was reading `settings.AWS_S3_CUSTOM_DOMAIN` at class-def, which would break fresh migrate).
+- **Retained** (per plan): `boto3`/`botocore`/`s3transfer`/`cloudinary`/`django-cloudinary-storage`
+  in `requirements.txt`, `r2_storage.py`, and the migration command — historical migration
+  `0031` imports `R2Storage` + `MediaCloudinaryStorage`, so removing them breaks a fresh migrate.
+  Removal awaits a separately approved migration squash.
+- Doc alignment: `context.md` FR-13 + data-flow + services table updated to GCS; §8 issues
+  **#2, #11, #12, #16 marked RESOLVED**. `task_plan.md` Phase 2 = Tasks 0–9 done, Task 10 pending.
+
+**Test evidence:** provider grep clean (only retained pkgs, the shim, migration 0031, the
+migration command, test fixtures, and docs — no active runtime refs); `pytest shop/tests` →
+**60 passed** (incl. 0031 replay with the shim + Cloudinary removed); `manage.py check` → only
+the 3 pre-existing allauth deprecations; fresh sqlite `migrate` 0001→0032 clean; `npm run build`
+compiles.
+
+---
+
+## Phase 2 — Task 8 (part 1): Live Data Migration to GCS — DONE
+
+**Date:** 2026-06-22
+**Branch:** `phase-2-storage-gcs`
+**Requirement refs:** NFR-4, FR-13, context.md §8 #2
+**Commits:** `64559123`, `8f61c4ff` (migration-command fixes found during the live run)
+
+- Owner approved the live `--execute` (AskUserQuestion). Dry-run inventory: **46 objects**
+  (40 Cloudinary + 6 R2; the 6 R2 = 2 marker_mind, 2 model_glb 11.5 MB, 2 app_download_file
+  ~398 MiB APKs). Manifest: `migration-manifests/phase-2-gcs.jsonl` (gitignored).
+- **Result: all 46 distinct objects now in GCS** (`copied`/`verified_existing`, none missing),
+  checksum-verified (size + base64 MD5). Independently confirmed anonymous HTTP readability
+  (HTTP 206 on range GET) for samples incl. an APK, a GLB, a card image, and an avatar →
+  public-read works end to end. Sources (Cloudinary/R2) left intact (deletion deferred to Task 10).
+- **Two live failures found + fixed during the run (systematic debugging):**
+  1. `RetryError: write operation timed out` — single-shot upload hit the 120 s timeout on the
+     417 MB APK. Fixed: `blob.chunk_size = 16 MiB` (resumable chunked) + `timeout=600`
+     (`64559123`). APKs then copied + verified.
+  2. `OperationalError: SSL connection has been closed unexpectedly` — `.iterator()` held a
+     server-side Postgres cursor open across the multi-minute uploads; Neon dropped the idle
+     connection. Fixed: materialize the inventory list before uploading so the cursor closes
+     first (`8f61c4ff`).
+- **Known limitation (non-blocking for this dataset):** migrated objects are served as
+  `application/octet-stream` (the command uploads bytes without setting `content_type`). Impact
+  here is nil — **no video media exists** (ReviewMedia all IMAGE, ProductMedia are images),
+  images render via browser sniffing, GLB/`.mind` are fetched as binary, and octet-stream is
+  correct for APK download. Proper content-type preservation noted as optional polish (would
+  need source content-type plumbing; revisit if visual verification shows any issue).
+
+**Test evidence:** `pytest shop/tests` → 60 passed after each fix (`--basetemp=/tmp/elzpt`).
+Manifest: 46/46 distinct objects present; anonymous GCS HTTP 206 confirmed on 4 samples.
+
+**Live backend direct-upload smoke test (Claude, no browser):** `GCSGateway` signed a real V4
+PUT URL → `curl` PUT returned **200** (signed `Content-Length` header caused **no 403**, so the
+Task 8 browser-compat guard is NOT needed — header retained) → `stat()` confirmed size + content
+type (`model/gltf-binary`) → generation-guarded `delete()` removed it (`stat` after = None). New
+client uploads that send `Content-Type` are stored correctly typed, so the octet-stream caveat
+above applies only to migrated legacy objects.
+
+**Task 8 part 2 — manual browser verification (owner): ALL PASSED (2026-06-22).** Owner ran
+the documented checklist against the local app (backend `runserver` + `npm start`):
+- A. Migrated assets render from GCS: product images, avatar, About/persona/retailer, AR
+  marker images, review images — all display.
+- B. Web AR: both AR experiences render **and animate** the GLB at the marker (Phase 1
+  deliverable confirmed on GCS).
+- C. Admin direct upload: GLB + APK upload (PUT 200 → finalize 200) and delete succeed via the
+  SPA.
+- D. Non-admin blocked from admin upload (UI sanity; logic also covered by 39 auto tests).
+- E. No `cloudinary`/`r2`/`gerainchan-assets` URLs in the Network tab — all assets served from
+  `storage.googleapis.com/eleganza-ar-media-439528178601/...`.
+
+**Task 8 COMPLETE.** Legacy sources retained (deletion is the Task 10 owner decision).
+
+---
+
+## Phase 2 — Task 7: Checksum-Manifest GCS Migration Command
+
+**Date:** 2026-06-22
+**Branch:** `phase-2-storage-gcs`
+**Requirement refs:** NFR-4, context.md §8 #2
+**Commit:** `489c166c`
+
+- `manage.py migrate_media_to_gcs` with `--dry-run` (default) / `--execute --manifest` /
+  `--rollback-manifest`. A hardcoded 13-entry `FIELD_MAP` (10 Cloudinary, 3 R2) — **all field
+  names verified to exist on the real models** — drives inventory. Each source is streamed,
+  MD5+byte-counted, uploaded under the **unchanged DB key**, then GCS metadata is reloaded and
+  compared (`md5_hash` base64 + size). A differing destination collision raises before any
+  upload/delete/DB change; a post-upload mismatch deletes the new generation and aborts; a
+  matching object is `verified_existing` (idempotent). JSONL manifest rows
+  (model/pk/field/provider/source-key/dest-key/bytes/md5/generation/status/timestamp) are
+  fsync-flushed per row. `--rollback-manifest` deletes only `status=="copied"` generations and
+  never initializes or touches Cloudinary/R2. boto3/Cloudinary/GCS imports are lazy. Added
+  `migration-manifests/` to `.gitignore`.
+- **Watch-item for Task 8:** verification relies on GCS `md5_hash`, which is absent for
+  composite objects; single uploads (incl. the 417 MB APK) carry it, so it should hold.
+
+**Test evidence (independently re-run):** `pytest shop/tests` → **60 passed** (run with
+`--basetemp=/tmp/elzpt` to work around a sandbox temp-permission limit; default temp raised
+WinError 5 in this environment only — not a code defect). `--help` exits 0 with all four modes.
+FIELD_MAP field existence confirmed against the live models via Django introspection.
+
+---
+
+## Phase 2 — Tasks 5-6: Admin Upload Contract + Review Media Validation
+
+**Date:** 2026-06-22
+**Branch:** `phase-2-storage-gcs`
+**Requirement refs:** FR-13, NFR-4, context.md §8 #16
+**Commits:** `c132094a` (Task 5 SPA), `05d25d26` (Task 6 review validation)
+
+- **Task 5** — `web/src/pages/admin/AdminAREditPage.js` now uses the provider-neutral
+  contract: presign POST `/uploads/presign/` sends `kind/filename/content_type/size`,
+  `uploadBigFile` returns `{key, upload_token}`, finalize PATCHes
+  `/ar/<id>/finalize-bigfile/` with `kind/key/upload_token`. All visible "R2" text →
+  "cloud storage"; create/edit flow preserved. Verified: 0 R2 refs remain; contract matches
+  the Task 4 endpoints. Build: `CI=false npm run build` exit 0 (pre-existing unrelated lint
+  warnings only).
+- **Task 6** — added `validate_review_file()` + allowlists (`REVIEW_IMAGE_TYPES` jpeg/png/webp
+  ≤10 MiB, `REVIEW_VIDEO_TYPES` mp4/webm ≤50 MiB, `REVIEW_MAX_FILES=5`) and a `validate_files`
+  field-validator on `ReviewSerializer`. Validation runs during `is_valid()` and returns
+  `(file, type)` tuples; `create()`/`update()` now persist the **validated** type instead of
+  inferring from untrusted MIME. Empty, oversized, unsupported, extension/MIME-mismatch, and
+  >5-file uploads are rejected before `ReviewMedia.objects.create()`. (Type is allowlist-based,
+  not magic-byte sniffed; GCS serves objects with the stored validated content-type, so a
+  mismatched-bytes file is still served as its declared image/video type — acceptable for
+  demo-grade §8 #16.)
+
+**Test evidence (independently re-run):** RED proved 8 invalid fixtures reached the old save
+path; after the fix `pytest shop/tests` → **54 passed**; tests patch
+`ReviewMedia.objects.create` and assert it stays uncalled for every rejected fixture. Frontend
+build exit 0.
+
+---
+
+## Phase 2 — Tasks 3-4: Verified Admin-Only GCS Direct Uploads
+
+**Date:** 2026-06-22
+**Branch:** `phase-2-storage-gcs`
+**Requirement refs:** FR-13, context.md §8 #11, #12
+**Commits:** `7590baee` (Task 3 primitives), `e83e6d05` (Task 4 endpoints + authz)
+
+- **Task 3** — `upload_policy.py` (frozen `UploadSpec`, glb/apk allowlists, `validate_upload`,
+  salted `django.core.signing` claims, `max_age=900`) and `gcs.py` (`GCSGateway`:
+  v4 signed PUT with `Content-Length`, `stat`, generation-guarded `delete`, `public_url`;
+  immutable `StoredObject`). Pure units — no endpoints/live calls. 15 tests.
+- **Task 4** — rewrote `views_upload.py` to GCS: `PresignBigFile` / `ARFinalizeBigFile` /
+  `ARDeleteBigFile`, all `IsAdminUser`. Presign signs `{admin id, kind, key, size, MIME}`
+  and returns `upload_url/public_url/key/upload_token`. Finalize loads the claim, binds it to
+  the requesting admin + key-prefix, then `stat()`s the object and compares name/size/MIME;
+  on mismatch it deletes the candidate by generation and leaves the DB untouched; success is
+  replay-idempotent. Delete stats→generation-deletes→clears the field. Added
+  `IsAdminUser` to legacy `ARDeleteMarker/GLB/Mind` views (§8 #12). Renamed
+  `/uploads/r2-presign/` → `/uploads/presign/` (finalize/delete URLs unchanged). All R2/boto3
+  code removed from `views_upload.py`. No live GCS call path under tests (gateway injected).
+
+**Test evidence (independently re-run):** `pytest shop/tests` → **39 passed**. Authz matrix
+(401 anon / 403 non-staff / admin) verified across all six endpoints; finalize cases (tamper,
+expiry, cross-admin claim, missing object, size/type mismatch→generation-delete, idempotency,
+key-outside-prefix) all covered. Confirmed `ARExperience.updated_at` exists and `permissions`
+imported (no latent save/NameError).
+
+---
+
+## Phase 2 — Task 2: Repoint Default + Per-Field Storage to GCS
+
+**Date:** 2026-06-22
+**Branch:** `phase-2-storage-gcs`
+**Requirement refs:** NFR-4, context.md §8 #2
+**Commits:** `78956d6f` (storage), `671efb7c` (DB SSL fix)
+
+- Default `STORAGES["default"]` → `storages.backends.gcloud.GoogleCloudStorage`
+  (`querystring_auth=False`, `default_acl=None`, `file_overwrite=False`); legacy
+  R2/Cloudinary settings left intact (Task 7 still needs source access).
+- Removed the four explicit `storage=` bindings (and the Cloudinary/R2 imports +
+  `r2_storage` instance) from `ARExperience` in `models.py`; `upload_to`/nullability/types
+  unchanged. Migration `0032_alter_arexperience_storage_fields` is **AlterField-only**
+  (state-only, reversible).
+- Added shape-only `GCS_PROJECT_ID` / `GCS_BUCKET_NAME` / `GOOGLE_APPLICATION_CREDENTIALS`
+  to `.env.sample`.
+- **Blocker found + fixed (separate commit `671efb7c`):** `settings.py` passed
+  `ssl_require=True` to `dj_database_url.parse()` for *every* scheme, so the disposable
+  SQLite migration crashed (`sslmode` rejected by sqlite3). Made `ssl_require` conditional
+  on a `postgres`/`postgresql` scheme — **Postgres (Neon) behavior unchanged** (verified
+  `sslmode=require` still applied). Pre-existing bug, unblocks the plan's disposable-DB
+  verification used in Tasks 2/9/10.
+
+**Test evidence (independently re-run):** `pytest shop/tests` → 3 passed; disposable
+`migrate` over `DATABASE_URL=sqlite:///…` applied 0001→**0032**→… exit 0; Postgres parse
+check confirmed `engine=postgresql`, `sslmode=require`. Migration verified `AlterField`-only.
+
+---
+
+## Phase 2 — Task 1: Isolated Pytest Harness + GCS Deps + plan restoration
+
+**Date:** 2026-06-22
+**Branch:** `phase-2-storage-gcs`
+**Requirement refs:** NFR-4, CLAUDE.md §5
+**Commits:** `4d8b86e5` (harness), `911ec784` (plan restore + `.pytest_cache` ignore)
+
+- Added `backend/settings_test.py` (in-memory SQLite, `InMemoryStorage`, fast hashers,
+  locmem email), `pytest.ini`, and `shop/tests/` package with a sentinel harness test;
+  pinned `google-cloud-storage==3.1.1`, `pytest==8.4.1`, `pytest-django==4.11.1` (only deps
+  changed). RED (no pytest) → GREEN (1 passed) verified.
+- **Plan remediation:** the committed Phase 2 plan (`360371cd`) had every line-final `t`
+  stripped by a write glitch (0 `t`-ending lines). Codex restored them; verified **zero
+  content drift** by proving that stripping one trailing `t` per line exactly reproduces the
+  corrupted HEAD (1,106 lines, 24 `t`-ending lines restored). Folded `.pytest_cache/` into
+  `.gitignore` (was untracked, surfaced during Task 1).
+
+**Test evidence:** `pytest shop/tests/test_harness.py` → 1 passed; `manage.py check
+--settings=backend.settings_test` → only 3 pre-existing allauth deprecations.
+
+---
+
 ## Phase 2 — Task 0 GCP Storage Prerequisite Provisioned (owner-operated)
 
 **Date:** 2026-06-22

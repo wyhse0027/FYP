@@ -4,11 +4,6 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.utils import timezone
 from django.apps import apps
-from cloudinary_storage.storage import RawMediaCloudinaryStorage, MediaCloudinaryStorage
-from backend.r2_storage import R2Storage
-
-r2_storage = R2Storage()
-
 # ─── User Management ───────────────────────────────
 class UserRole(models.TextChoices):
     USER = "user", "User"
@@ -99,25 +94,21 @@ class ARExperience(models.Model):
     # 🆕 Uploadable AR app (.apk) file
     marker_image = models.ImageField(
         upload_to="ar/markers/",
-        storage=MediaCloudinaryStorage(),   # keep image as media
         blank=True, null=True
     )
 
     marker_mind = models.FileField(
         upload_to="ar/mind/",
-        storage=r2_storage,
         blank=True, null=True
     )
 
     model_glb = models.FileField(
         upload_to="ar/models/",
-        storage=r2_storage,
         blank=True, null=True
     )
 
     app_download_file = models.FileField(
         upload_to="ar/apk/",
-        storage=r2_storage,
         blank=True, null=True
     )
 
@@ -409,11 +400,11 @@ class ReviewMedia(models.Model):
         return f"{self.review.product.name} - {self.type}"
 
 
-# ✅ Cleanup signal (works for Cloudinary + local)
+# ✅ Cleanup signal (works for GCS + local)
 @receiver(post_delete, sender=ReviewMedia)
 def delete_review_media_file(sender, instance, **kwargs):
     """
-    Remove file from whatever storage backend is used (Cloudinary or local).
+    Remove file from whatever storage backend is used (GCS or local).
     """
     if instance.file:
         try:

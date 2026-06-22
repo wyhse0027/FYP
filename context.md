@@ -94,10 +94,11 @@ Derived from code review of `server/shop/models.py`, `server/shop/views.py`,
   orders, payments, quizzes/questions/answers, AR experiences, reviews, about, retailers,
   scent personas.
 
-- **FR-13 — Big-File Upload**: presigned **direct-to-object-storage** upload for `.glb` /
-  `.apk` (currently Cloudflare R2; GCS after Phase 2) — bypasses Django to avoid proxying large
-  files; finalize endpoint records the object key; delete endpoint removes object + clears the
-  field. *(Current finalizer trusts the client key and is not admin-gated — see §8 #11.)*
+- **FR-13 — Big-File Upload**: presigned **direct-to-Google-Cloud-Storage** upload for `.glb` /
+  `.apk` (Phase 2) — bypasses Django to avoid proxying large files; finalize endpoint verifies
+  the uploaded object (size/type/generation) and records its key; delete endpoint removes the
+  object (generation-guarded) + clears the field. Presign/finalize/delete are **admin-only**
+  (§8 #11 resolved).
 
 ---
 
@@ -105,8 +106,9 @@ Derived from code review of `server/shop/models.py`, `server/shop/views.py`,
 
 - React SPA → Django REST API (`/api/...`) over JSON; JWT in `Authorization: Bearer`.
 - Images/small media: uploaded through Django to object storage (see §6 / storage plan).
-- Large AR assets (`.glb`, `.apk`): browser requests presigned PUT URL → uploads directly
-  to R2 → calls finalize to persist the key. Served via R2 public URL.
+- Large AR assets (`.glb`, `.apk`): browser requests an admin-only presigned PUT URL → uploads
+  directly to GCS → calls finalize (verifies the object) to persist the key. Served via the
+  public GCS object URL.
 - Web AR: frontend fetches the AR record (`/api/ar/?product__name=`), loads A-Frame + MindAR
   from CDN, mounts the `.glb` against the `.mind` marker target.
 - Admin dashboard stats are cached server-side (30 s).
@@ -142,9 +144,9 @@ variable shape is documented in `server/backend/.env.sample` without real values
 |---|---|---|---|
 | Cloud SQL (PostgreSQL) | Primary DB (target) | Cloud SQL connection / `DATABASE_URL` | **Target** — migrate from Neon |
 | Neon (PostgreSQL) | Current DB | `DATABASE_URL` | Being replaced by Cloud SQL |
-| Google Cloud Storage | **All media** (images + `.glb`/`.mind`/`.apk`) | bucket + service-account creds; signed URLs | **Target** — sole storage |
-| Cloudflare R2 | Current big-file storage | `R2_*` | Being replaced by GCS |
-| Cloudinary | Current image storage | `CLOUDINARY_*` | Being removed |
+| Google Cloud Storage | **All media** (images + `.glb`/`.mind`/`.apk`) | `GCS_PROJECT_ID`, `GCS_BUCKET_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`; V4 signed URLs | **Done (Phase 2)** — sole media storage |
+| Cloudflare R2 | (former big-file storage) | — | **Removed (Phase 2)**; `boto3` + `r2_storage.py` retained only as migration-0031 shim |
+| Cloudinary | (former image storage) | — | **Removed (Phase 2)**; `cloudinary` pkg retained only as migration-0031 shim |
 | SendGrid | Password-reset email (retired) | `SENDGRID_API_KEY`, `DEFAULT_FROM_EMAIL` | **Expired** — replacing with a free transactional provider (Brevo/Resend), Phase 3 |
 | Google OAuth | Social login | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | Retained |
 | Secret Manager | Secret storage (prod) | — | **Target** — replaces `.env` |
@@ -197,9 +199,11 @@ Tracked so they become requirements/tasks; not yet fixed unless noted.
    `animation-mixer` + Draco decoder; optimized the model 413.9 MB → 11.5 MB; repointed both AR
    records; verified rendering + animating in-browser. FR-3.1 met. Remaining refinement: clip
    curation (see #20, deferred).
-2. **Dual storage** — Cloudinary + R2 → **GCS** (NFR-4). Storage is **bound per-field** in
-   `server/shop/models.py`, so the migration needs field-storage + schema changes, not just a
-   default-backend swap, plus a data-migration manifest. → Phase 2
+2. **Dual storage — RESOLVED (Phase 2)** ✅ — Cloudinary + R2 consolidated to a single **GCS**
+   bucket (NFR-4). Default + per-field storage repointed (migration `0032`); all 46 existing
+   media objects migrated with a checksum manifest (sources retained pending the Task 10 delete
+   decision); legacy R2/Cloudinary runtime config removed (`boto3`/`cloudinary` pkgs +
+   `r2_storage.py` kept only as a migration-0031 shim).
 3. **Dead config** — `web/src/config/api.js` (`REACT_APP_API_URL`) is **unused/not imported**;
    the live config is `web/src/lib/http.js` (`REACT_APP_API_BASE_URL`). Delete the dead file. → Phase 3
 4. **Missing `MEDIA_URL` / `MEDIA_ROOT`** — referenced in `server/backend/urls.py` under DEBUG,
@@ -226,20 +230,23 @@ Tracked so they become requirements/tasks; not yet fixed unless noted.
     **Decision:** replace with a **free transactional provider** (e.g. Brevo / Resend — no
     Workspace App Password needed) and drop the `sendgrid` dependency. → Phase 3 (sooner if
     password reset is demoed). Verify Google OAuth server-side callback still works post-rotation.
-11. **Storage mutation open to any authenticated user** — `server/shop/views_upload.py`
-    (presign/finalize/delete) use `IsAuthenticated`; finalizer trusts a client key without
-    verifying the object. Must be **admin-only + verified**. → Phase 2
-12. **AR delete endpoints open to any authenticated user** — `ARDeleteMarker/GLB/Mind`
-    (`server/shop/views.py` ~903) set no `permission_classes` → default `IsAuthenticatedOrReadOnly`
-    lets any signed-in user delete AR files. Must be **admin-only**. → Phase 2/3
+11. **Storage mutation authz — RESOLVED (Phase 2)** ✅ — `server/shop/views_upload.py`
+    presign/finalize/delete are now `IsAdminUser`; finalize loads a signed claim bound to the
+    requesting admin and verifies the stored object's key/size/type/generation before saving
+    (mismatch deletes the candidate). Covered by automated API tests.
+12. **AR delete endpoints authz — RESOLVED (Phase 2)** ✅ — `ARDeleteMarker/GLB/Mind`
+    (`server/shop/views.py`) now set `permission_classes = [IsAdminUser]`; covered by automated
+    permission tests (401 anon / 403 non-staff / admin).
 13. **Split admin authority** — backend gates on `IsAdminUser` (`is_staff`); frontend on
     `user.role === "admin"`. Unify (decide: `role` implies `is_staff`, or `is_staff` is sole). → Phase 3
 14. **Fail-open config** — `DEBUG` defaults `True`, `SECRET_KEY` defaults `"dev-only"` if env
     unset (`server/backend/settings.py:33,48`). Production must require them and abort if absent. → Phase 3
 15. **Weak auth controls** — signup accepts 6-char passwords without Django validators; SendGrid
     reset accepts any non-empty password; no auth/reset throttling. → Phase 3
-16. **Unvalidated review uploads** — type inferred from client MIME, no size/type allowlist
-    (`server/shop/serializers.py` ~456) — riskier on a publicly served GCS bucket. → Phase 2/3
+16. **Review upload validation — RESOLVED (Phase 2)** ✅ — `ReviewSerializer.validate_files`
+    enforces an image/video MIME+extension allowlist, per-type size caps (10/50 MiB), and a
+    5-file limit before any `ReviewMedia` is created; the validated type (not client MIME) is
+    persisted. Covered by automated tests.
 17. **Google login gaps** — no `email_verified` check; username collisions can error; raw
     verification exception text returned (`server/shop/social_views.py`). → Phase 3
 18. **Token handling** — JWT in `localStorage`; 90-day refresh, not revoked on logout;

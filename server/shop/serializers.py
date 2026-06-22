@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, time
+from pathlib import Path
 from rest_framework import serializers
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_str
@@ -409,6 +410,45 @@ class ARExperienceSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
     
 # ─── Reviews ─────────────────────
+REVIEW_IMAGE_TYPES = {
+    "image/jpeg": {".jpg", ".jpeg"},
+    "image/png": {".png"},
+    "image/webp": {".webp"},
+}
+REVIEW_VIDEO_TYPES = {
+    "video/mp4": {".mp4"},
+    "video/webm": {".webm"},
+}
+REVIEW_IMAGE_MAX_BYTES = 10 * 1024 * 1024
+REVIEW_VIDEO_MAX_BYTES = 50 * 1024 * 1024
+REVIEW_MAX_FILES = 5
+
+
+def validate_review_file(upload):
+    content_type = getattr(upload, "content_type", "")
+    extension = Path(getattr(upload, "name", "")).suffix.lower()
+    size = getattr(upload, "size", 0)
+
+    if size <= 0:
+        raise serializers.ValidationError("Review media cannot be empty.")
+
+    if content_type in REVIEW_IMAGE_TYPES:
+        if extension not in REVIEW_IMAGE_TYPES[content_type]:
+            raise serializers.ValidationError("Image extension does not match its content type.")
+        if size > REVIEW_IMAGE_MAX_BYTES:
+            raise serializers.ValidationError("Review images cannot exceed 10 MiB.")
+        return "IMAGE"
+
+    if content_type in REVIEW_VIDEO_TYPES:
+        if extension not in REVIEW_VIDEO_TYPES[content_type]:
+            raise serializers.ValidationError("Video extension does not match its content type.")
+        if size > REVIEW_VIDEO_MAX_BYTES:
+            raise serializers.ValidationError("Review videos cannot exceed 50 MiB.")
+        return "VIDEO"
+
+    raise serializers.ValidationError("Unsupported review media type.")
+
+
 class ReviewMediaSerializer(serializers.ModelSerializer):
     file = serializers.SerializerMethodField()
 
@@ -463,21 +503,22 @@ class ReviewSerializer(serializers.ModelSerializer):
         required=False,
     )
 
+    def validate_files(self, files):
+        if len(files) > REVIEW_MAX_FILES:
+            raise serializers.ValidationError("A review can include at most five files.")
+        return [(upload, validate_review_file(upload)) for upload in files]
+
     def create(self, validated_data):
         request = self.context.get("request")
         files = validated_data.pop("files", [])
         # validated_data now includes "product" from product_id
         review = Review.objects.create(user=request.user, **validated_data)
 
-        for f in files:
+        for upload, media_type in files:
             ReviewMedia.objects.create(
                 review=review,
-                file=f,
-                type=(
-                    "VIDEO"
-                    if getattr(f, "content_type", "").startswith("video")
-                    else "IMAGE"
-                ),
+                file=upload,
+                type=media_type,
             )
 
         return review
@@ -488,11 +529,11 @@ class ReviewSerializer(serializers.ModelSerializer):
         instance.comment = validated_data.get("comment", instance.comment)
         instance.save()
 
-        for f in files:
+        for upload, media_type in files:
             ReviewMedia.objects.create(
                 review=instance,
-                file=f,
-                type="VIDEO" if hasattr(f, "content_type") and f.content_type.startswith("video") else "IMAGE",
+                file=upload,
+                type=media_type,
             )
         return instance
 
