@@ -10,8 +10,6 @@ from datetime import timedelta
 
 import dj_database_url
 from dotenv import load_dotenv
-import cloudinary
-from urllib.parse import urlparse
 
 # ───────────────────────────────────────────────────────────────
 # Windows SSL patch (local dev only)
@@ -82,12 +80,8 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "rest_framework.authtoken",
 
-    # django-storages (for R2 S3)
+    # django-storages (for Google Cloud Storage)
     "storages",
-
-    # Cloudinary (for images)
-    "cloudinary",
-    "cloudinary_storage",
 
     # Local
     "shop",
@@ -191,16 +185,6 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
-# ───────────────────────────────────────────────────────────────
-# Cloudinary (Images)
-# ───────────────────────────────────────────────────────────────
-cloudinary.config(
-    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", ""),
-    api_key=os.getenv("CLOUDINARY_API_KEY", ""),
-    api_secret=os.getenv("CLOUDINARY_API_SECRET", ""),
-    secure=True,
-)
-
 GCS_PROJECT_ID = os.getenv("GCS_PROJECT_ID", "")
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "")
 
@@ -221,36 +205,10 @@ STORAGES = {
 }
 
 
-# ───────────────────────────────────────────────────────────────
-# Cloudflare R2 (S3-compatible) for big files
-# ───────────────────────────────────────────────────────────────
-R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID", "")
-R2_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID", "")
-R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY", "")
-R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME", "")
-
-# IMPORTANT:
-# Use Public Development URL for local testing (r2.dev) OR your custom domain in production.
-# Example:
-#   R2_PUBLIC_BASE_URL=https://pub-xxxxxx.r2.dev
-#   OR https://assets.yourdomain.com
-R2_PUBLIC_BASE_URL = os.getenv("R2_PUBLIC_BASE_URL", "").rstrip("/")
-
-AWS_S3_CUSTOM_DOMAIN = urlparse(R2_PUBLIC_BASE_URL).netloc if R2_PUBLIC_BASE_URL else ""
-AWS_S3_URL_PROTOCOL = "https:"
-
-AWS_S3_ENDPOINT_URL = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com" if R2_ACCOUNT_ID else ""
-AWS_ACCESS_KEY_ID = R2_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY = R2_SECRET_ACCESS_KEY
-AWS_STORAGE_BUCKET_NAME = R2_BUCKET_NAME
-
-AWS_S3_REGION_NAME = "auto"
-AWS_S3_SIGNATURE_VERSION = "s3v4"
-AWS_S3_ADDRESSING_STYLE = "virtual"
-AWS_DEFAULT_ACL = None
-AWS_QUERYSTRING_AUTH = False
-AWS_S3_FILE_OVERWRITE = False
-AWS_S3_VERIFY = True
+# Legacy Cloudflare R2 / Cloudinary configuration was removed in Phase 2 after the
+# one-time migration to Google Cloud Storage (see progress.md). The boto3/cloudinary
+# packages and `backend/r2_storage.py` are retained only so the historical migration
+# shop/0031 can still be replayed; nothing in the runtime serving path uses them.
 
 
 # File upload limits

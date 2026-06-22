@@ -400,11 +400,11 @@ class ReviewMedia(models.Model):
         return f"{self.review.product.name} - {self.type}"
 
 
-# ✅ Cleanup signal (works for Cloudinary + local)
+# ✅ Cleanup signal (works for GCS + local)
 @receiver(post_delete, sender=ReviewMedia)
 def delete_review_media_file(sender, instance, **kwargs):
     """
-    Remove file from whatever storage backend is used (Cloudinary or local).
+    Remove file from whatever storage backend is used (GCS or local).
     """
     if instance.file:
         try:

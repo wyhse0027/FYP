@@ -5,6 +5,32 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 2 — Task 9: Retire Active Legacy Storage Config + Doc Alignment
+
+**Date:** 2026-06-22
+**Branch:** `phase-2-storage-gcs`
+**Requirement refs:** NFR-4, context.md §8 #2
+
+- Removed all active Cloudinary/R2 runtime config from `settings.py` (`import cloudinary`, the
+  `cloudinary`/`cloudinary_storage` INSTALLED_APPS entries, `cloudinary.config()`, and the entire
+  `R2_*`/`AWS_S3_*` block) and their shape vars from `.env.sample`; updated two `models.py`
+  comments. Rewrote `backend/r2_storage.py` into a **settings-free migration-compat shim**
+  (was reading `settings.AWS_S3_CUSTOM_DOMAIN` at class-def, which would break fresh migrate).
+- **Retained** (per plan): `boto3`/`botocore`/`s3transfer`/`cloudinary`/`django-cloudinary-storage`
+  in `requirements.txt`, `r2_storage.py`, and the migration command — historical migration
+  `0031` imports `R2Storage` + `MediaCloudinaryStorage`, so removing them breaks a fresh migrate.
+  Removal awaits a separately approved migration squash.
+- Doc alignment: `context.md` FR-13 + data-flow + services table updated to GCS; §8 issues
+  **#2, #11, #12, #16 marked RESOLVED**. `task_plan.md` Phase 2 = Tasks 0–9 done, Task 10 pending.
+
+**Test evidence:** provider grep clean (only retained pkgs, the shim, migration 0031, the
+migration command, test fixtures, and docs — no active runtime refs); `pytest shop/tests` →
+**60 passed** (incl. 0031 replay with the shim + Cloudinary removed); `manage.py check` → only
+the 3 pre-existing allauth deprecations; fresh sqlite `migrate` 0001→0032 clean; `npm run build`
+compiles.
+
+---
+
 ## Phase 2 — Task 8 (part 1): Live Data Migration to GCS — DONE
 
 **Date:** 2026-06-22
