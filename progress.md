@@ -37,8 +37,18 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 **Test evidence:** `pytest shop/tests` → 60 passed after each fix (`--basetemp=/tmp/elzpt`).
 Manifest: 46/46 distinct objects present; anonymous GCS HTTP 206 confirmed on 4 samples.
 
-**Still owner-operated (Task 8 part 2):** browser direct-upload test (admin PUT+finalize+delete,
-403 for non-admin, 400 for oversize/bad-MIME) and the visual asset/AR/CORS verification.
+**Live backend direct-upload smoke test (Claude, no browser):** `GCSGateway` signed a real V4
+PUT URL → `curl` PUT returned **200** (signed `Content-Length` header caused **no 403**, so the
+Task 8 browser-compat guard is NOT needed — header retained) → `stat()` confirmed size + content
+type (`model/gltf-binary`) → generation-guarded `delete()` removed it (`stat` after = None). New
+client uploads that send `Content-Type` are stored correctly typed, so the octet-stream caveat
+above applies only to migrated legacy objects.
+
+**Still owner-operated (Task 8 part 2 — needs a browser):** eyeball the admin SPA upload flow
+(Task 5 wiring) end to end, and visually confirm migrated assets render — avatars, product
+images, AR marker images, **both GLBs rendering + animating in web AR**, APK download, review
+images, About/persona/retailer images — with no Cloudinary/R2 URLs in network requests. The
+401/403/400 permission+validation matrix is already covered by the 39 automated API tests.
 
 ---
 
