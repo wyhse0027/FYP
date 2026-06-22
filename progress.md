@@ -5,6 +5,57 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 2 — Task 2: Repoint Default + Per-Field Storage to GCS
+
+**Date:** 2026-06-22
+**Branch:** `phase-2-storage-gcs`
+**Requirement refs:** NFR-4, context.md §8 #2
+**Commits:** `78956d6f` (storage), `671efb7c` (DB SSL fix)
+
+- Default `STORAGES["default"]` → `storages.backends.gcloud.GoogleCloudStorage`
+  (`querystring_auth=False`, `default_acl=None`, `file_overwrite=False`); legacy
+  R2/Cloudinary settings left intact (Task 7 still needs source access).
+- Removed the four explicit `storage=` bindings (and the Cloudinary/R2 imports +
+  `r2_storage` instance) from `ARExperience` in `models.py`; `upload_to`/nullability/types
+  unchanged. Migration `0032_alter_arexperience_storage_fields` is **AlterField-only**
+  (state-only, reversible).
+- Added shape-only `GCS_PROJECT_ID` / `GCS_BUCKET_NAME` / `GOOGLE_APPLICATION_CREDENTIALS`
+  to `.env.sample`.
+- **Blocker found + fixed (separate commit `671efb7c`):** `settings.py` passed
+  `ssl_require=True` to `dj_database_url.parse()` for *every* scheme, so the disposable
+  SQLite migration crashed (`sslmode` rejected by sqlite3). Made `ssl_require` conditional
+  on a `postgres`/`postgresql` scheme — **Postgres (Neon) behavior unchanged** (verified
+  `sslmode=require` still applied). Pre-existing bug, unblocks the plan's disposable-DB
+  verification used in Tasks 2/9/10.
+
+**Test evidence (independently re-run):** `pytest shop/tests` → 3 passed; disposable
+`migrate` over `DATABASE_URL=sqlite:///…` applied 0001→**0032**→… exit 0; Postgres parse
+check confirmed `engine=postgresql`, `sslmode=require`. Migration verified `AlterField`-only.
+
+---
+
+## Phase 2 — Task 1: Isolated Pytest Harness + GCS Deps + plan restoration
+
+**Date:** 2026-06-22
+**Branch:** `phase-2-storage-gcs`
+**Requirement refs:** NFR-4, CLAUDE.md §5
+**Commits:** `4d8b86e5` (harness), `911ec784` (plan restore + `.pytest_cache` ignore)
+
+- Added `backend/settings_test.py` (in-memory SQLite, `InMemoryStorage`, fast hashers,
+  locmem email), `pytest.ini`, and `shop/tests/` package with a sentinel harness test;
+  pinned `google-cloud-storage==3.1.1`, `pytest==8.4.1`, `pytest-django==4.11.1` (only deps
+  changed). RED (no pytest) → GREEN (1 passed) verified.
+- **Plan remediation:** the committed Phase 2 plan (`360371cd`) had every line-final `t`
+  stripped by a write glitch (0 `t`-ending lines). Codex restored them; verified **zero
+  content drift** by proving that stripping one trailing `t` per line exactly reproduces the
+  corrupted HEAD (1,106 lines, 24 `t`-ending lines restored). Folded `.pytest_cache/` into
+  `.gitignore` (was untracked, surfaced during Task 1).
+
+**Test evidence:** `pytest shop/tests/test_harness.py` → 1 passed; `manage.py check
+--settings=backend.settings_test` → only 3 pre-existing allauth deprecations.
+
+---
+
 ## Phase 2 — Task 0 GCP Storage Prerequisite Provisioned (owner-operated)
 
 **Date:** 2026-06-22
