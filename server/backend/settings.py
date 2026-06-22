@@ -9,6 +9,7 @@ import sys
 from datetime import timedelta
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 # ───────────────────────────────────────────────────────────────
@@ -26,13 +27,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ───────────────────────────────────────────────────────────────
 # Load Environment Variables
 # ───────────────────────────────────────────────────────────────
-load_dotenv()  # OS env first (Koyeb)
+# Load the project-local environment before evaluating any setting. Existing
+# process variables retain precedence because python-dotenv does not override them.
+load_dotenv(BASE_DIR / "backend" / ".env")
 
-DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
-
-# Load local .env ONLY in debug (your local dev)
-if DEBUG:
-    load_dotenv(BASE_DIR / "backend" / ".env")
+DEBUG = os.getenv("DJANGO_DEBUG", "False").strip().lower() == "true"
 
 
 def env_list(name: str, default: str = ""):
@@ -44,6 +43,10 @@ def env_list(name: str, default: str = ""):
 # Security
 # ───────────────────────────────────────────────────────────────
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only")
+if not DEBUG and SECRET_KEY in ("", "dev-only"):
+    raise ImproperlyConfigured(
+        "DJANGO_SECRET_KEY must be set to a non-development value when DEBUG is False."
+    )
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 
@@ -183,6 +186,8 @@ USE_TZ = False
 # ───────────────────────────────────────────────────────────────
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 
 GCS_PROJECT_ID = os.getenv("GCS_PROJECT_ID", "")
