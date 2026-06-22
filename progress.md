@@ -5,6 +5,34 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 2 — Task 7: Checksum-Manifest GCS Migration Command
+
+**Date:** 2026-06-22
+**Branch:** `phase-2-storage-gcs`
+**Requirement refs:** NFR-4, context.md §8 #2
+**Commit:** `489c166c`
+
+- `manage.py migrate_media_to_gcs` with `--dry-run` (default) / `--execute --manifest` /
+  `--rollback-manifest`. A hardcoded 13-entry `FIELD_MAP` (10 Cloudinary, 3 R2) — **all field
+  names verified to exist on the real models** — drives inventory. Each source is streamed,
+  MD5+byte-counted, uploaded under the **unchanged DB key**, then GCS metadata is reloaded and
+  compared (`md5_hash` base64 + size). A differing destination collision raises before any
+  upload/delete/DB change; a post-upload mismatch deletes the new generation and aborts; a
+  matching object is `verified_existing` (idempotent). JSONL manifest rows
+  (model/pk/field/provider/source-key/dest-key/bytes/md5/generation/status/timestamp) are
+  fsync-flushed per row. `--rollback-manifest` deletes only `status=="copied"` generations and
+  never initializes or touches Cloudinary/R2. boto3/Cloudinary/GCS imports are lazy. Added
+  `migration-manifests/` to `.gitignore`.
+- **Watch-item for Task 8:** verification relies on GCS `md5_hash`, which is absent for
+  composite objects; single uploads (incl. the 417 MB APK) carry it, so it should hold.
+
+**Test evidence (independently re-run):** `pytest shop/tests` → **60 passed** (run with
+`--basetemp=/tmp/elzpt` to work around a sandbox temp-permission limit; default temp raised
+WinError 5 in this environment only — not a code defect). `--help` exits 0 with all four modes.
+FIELD_MAP field existence confirmed against the live models via Django introspection.
+
+---
+
 ## Phase 2 — Tasks 5-6: Admin Upload Contract + Review Media Validation
 
 **Date:** 2026-06-22
