@@ -5,6 +5,32 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 2 — Task 10: Review, Source Decision, Merge + Tag — PHASE COMPLETE
+
+**Date:** 2026-06-22
+**Branch/Tag:** `phase-2-storage-gcs`
+**Requirement refs:** NFR-4, FR-13, §8 #2/#11/#12/#16; CLAUDE.md §6
+
+- **Fresh verification:** `pytest shop/tests` → 60 passed; `manage.py check` → only 3
+  pre-existing allauth deprecations; fresh sqlite migrate 0001→0032 clean; `npm run build`
+  compiles; `git diff --check main...HEAD` clean (19 commits).
+- **Formal code review** (holistic, branch vs main): 1 finding — the retained migration command
+  read `AWS_*`/Cloudinary settings removed in Task 9 (opaque `AttributeError` on a future
+  `--execute`). **Fixed** (`4a4ece89`): clear `CommandError` guards. Accepted/low (by design):
+  admin-only generation race on delete/finalize; migrated objects served `octet-stream`
+  (no videos; images sniff-render); octet-stream in the GLB/APK allowlist (admin-only).
+- **Formal security review** (storage creds/presign/CORS/permissions): no findings. SA scoped to
+  bucket-level `objectAdmin`; public bucket is media-only (no secrets/manifests/keys); signed
+  claims bound to admin+key with 15-min expiry + tamper detection; all 6 endpoints `IsAdminUser`
+  + object-verified; `.env`/signer key/manifests gitignored or out-of-repo.
+- **Owner decisions:** (1) **Keep** legacy R2/Cloudinary source objects as the rollback safety
+  net (deletion deferred; R2 6 obj/819 MiB + Cloudinary 40 obj/32 MiB). (2) **Merge + tag now.**
+- Merged `phase-2-storage-gcs` → `main` (`--no-ff`), annotated tag `phase-2-storage-gcs`, pushed.
+
+**Phase 2 COMPLETE.**
+
+---
+
 ## Phase 2 — Task 9: Retire Active Legacy Storage Config + Doc Alignment
 
 **Date:** 2026-06-22
