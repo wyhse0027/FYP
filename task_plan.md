@@ -14,7 +14,7 @@ deployed all-in on GCP.
 | 2 | Storage → GCS + upload hardening | `phase-2-storage-gcs` | ✅ complete (tag `phase-2-storage-gcs`) | `docs/superpowers/plans/2026-06-21-phase-2-storage-gcs.md` |
 | 3 | Correctness, security hardening & minimal CI | `phase-3-hygiene` | ✅ complete (tag `phase-3-hygiene`) | `docs/superpowers/plans/2026-06-22-phase-3-hygiene.md` |
 | 4 | Backend deploy (Cloud Run + Cloud SQL) | `phase-4-backend-deploy` | ✅ complete (tag `phase-4-backend-deploy`) | `docs/superpowers/plans/2026-06-23-phase-4-backend-deploy.md` |
-| 5 | Frontend deploy (Firebase Hosting) | `phase-5-frontend-deploy` | pending | — |
+| 5 | Frontend deploy (Firebase Hosting) | `phase-5-frontend-deploy` | ✅ complete (tag `phase-5-frontend-deploy`) | `docs/superpowers/plans/2026-06-23-phase-5-frontend-deploy.md` |
 | 6 | Luxury UI/UX redesign (user + admin) | `phase-6-ui-redesign` | pending | — |
 | 7 | Broaden test coverage | `phase-7-tests` | pending | — |
 

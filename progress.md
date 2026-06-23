@@ -5,6 +5,36 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 5 — Tasks 4–6: OAuth origins, verification, review, merge + tag — PHASE COMPLETE
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 5 plan Tasks 4–6.
+
+- **Task 4 (owner):** added `https://eleganza-ar.web.app` + `https://eleganza-ar.firebaseapp.com`
+  to the Google OAuth client's **Authorized JavaScript origins** (project `409741672143`). No
+  redirect URIs needed — `@react-oauth/google` uses the GIS token flow (origin-authorized).
+- **Task 5 — manual end-to-end (owner-verified, `CLAUDE.md` §5.2):** on
+  `https://eleganza-ar.web.app` — email login (JWT), **Google login**, browse shop + product detail
+  (GCS media), cart → checkout → order, **web AR** (HTTPS camera + render), **admin** panel +
+  upload. Owner reported **done and tested → passed**. (The deferred `127.0.0.1` About fallback did
+  not surface — media is absolute GCS URLs.)
+- **Task 6 — review:** self-review of the Phase 5 diff (`web/firebase.json`, `.firebaserc`,
+  `.env.production`, `.gitignore` exception; backend changes were runtime env only). Security:
+  CORS/CSRF/OAuth origins are explicit (no wildcards); `.env.production` holds only the public API
+  URL; SPA rewrite + cache headers standard. PASS, no changes required.
+
+**Docs:** `context.md` §7.2 (frontend live), `docs/services-and-billing.md` (Firebase active),
+`task_plan.md` Phase 5 ✅.
+
+**Deferred follow-up (carried):** hardcoded `127.0.0.1` media fallback in `AboutPage.js` /
+`AdminAboutPage.js` — dormant; fix when convenient (derive origin from `REACT_APP_API_BASE_URL`).
+
+**Merge:** `phase-5-frontend-deploy` → `main` `--no-ff`, tag `phase-5-frontend-deploy`, pushed.
+
+**Test evidence:** owner manual e2e pass; CORS preflight 200; site + deep-link 200 (Tasks 0–3 entry).
+
+---
+
 ## Phase 5 — Tasks 0–3: Firebase Hosting config, build, backend wiring, deploy
 
 **Date:** 2026-06-23

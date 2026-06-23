@@ -185,7 +185,12 @@ Future production values move to Secret Manager; `.env` remains local and gitign
 - **Media:** the existing GCS bucket `eleganza-ar-media-439528178601`. **Signed uploads** use the
   attached SA via the **IAM signBlob** API (no key in the container; a cloud-platform-scoped token
   is fetched for signing) — verified live.
-- **Frontend:** Firebase Hosting (Phase 5 — not yet deployed).
+- **Frontend (Phase 5 — LIVE 2026-06-23):** React SPA on **Firebase Hosting**, project
+  `eleganza-ar`, **`https://eleganza-ar.web.app`** (+ `…firebaseapp.com`). SPA rewrite to
+  `/index.html`; static assets cached immutable, `index.html` no-cache. `REACT_APP_API_BASE_URL`
+  baked at build (`web/.env.production`) → the Cloud Run API. Backend `CORS_ALLOWED_ORIGINS`,
+  `CSRF_TRUSTED_ORIGINS`, `FRONTEND_URL` updated to the Firebase origins; Google OAuth client
+  (`409741672143`) has both Firebase domains in Authorized JavaScript origins.
 - **Secrets:** **Secret Manager** holds `DJANGO_SECRET_KEY`, `DATABASE_URL`, `BREVO_API_KEY`,
   `GOOGLE_OAUTH_CLIENT_SECRET`, granted to `eleganza-run@` per-secret and injected as Cloud Run
   secret env vars. Non-secret config (`DJANGO_DEBUG=False`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`,

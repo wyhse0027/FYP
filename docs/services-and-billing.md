@@ -1,7 +1,7 @@
 # Services & Billing Tracker
 
 Operational reference of every external service the Eleganza / GERAIN CHAN AR project depends
-on, for cost tracking. **Last updated: 2026-06-23 (after Phase 4 backend deploy).**
+on, for cost tracking. **Last updated: 2026-06-23 (after Phase 5 frontend deploy).**
 
 > No secrets here — identifiers and account names only. Real credentials live in
 > `server/backend/.env` (gitignored) and, in production, Secret Manager.
@@ -26,6 +26,7 @@ on, for cost tracking. **Last updated: 2026-06-23 (after Phase 4 backend deploy)
 | **GCP – Cloud SQL (Postgres 17)** | Primary DB (`elz-pg`) | project `eleganza-ar`, ENTERPRISE `db-f1-micro`, 10 GB, zonal, `asia-southeast1`; conn `eleganza-ar:asia-southeast1:elz-pg` | Pay-as-you-go on the **credit** | **⚠ ~24/7 = steady burn** | ⚠ Biggest ongoing cost. `--no-backup`. Stop/start between demos to save credit. |
 | **GCP – Secret Manager** | Prod secrets | project `eleganza-ar`: `DJANGO_SECRET_KEY`, `DATABASE_URL`, `BREVO_API_KEY`, `GOOGLE_OAUTH_CLIENT_SECRET` | Pay-as-you-go | Tiny (per-secret/version + access) | — |
 | **GCP – Artifact Registry** | Backend images | project `eleganza-ar`, repo `eleganza-backend` (`asia-southeast1`) | Pay-as-you-go | Tiny (image storage) | — |
+| **Firebase Hosting** | Frontend SPA (HTTPS) | project `eleganza-ar`, `https://eleganza-ar.web.app` | Free tier (Spark) | Free; egress beyond free tier bills to the credit | — |
 | **GCP – Cloud Storage** | All media (images, `.glb`, `.mind`, `.apk`) | project `eleganza-ar` (`439528178601`), bucket `eleganza-ar-media-439528178601`, region `asia-southeast1`, STANDARD | Pay-as-you-go on the **credit** | On credit (free until credit runs out) | ⚠ Storage ≈ **0.85 GB** (46 objects). Egress + Class-A/B ops are billable; AR/GLB downloads = egress. 7-day soft-delete keeps deleted bytes billable for the window. |
 | **GCP – IAM / IAM Credentials** | Service accounts + keyless signed-URL signing | project `eleganza-ar`; runtime SA `eleganza-run@eleganza-ar.iam.gserviceaccount.com` (signs via IAM signBlob), storage signer `eleganza-storage@…` | — | Free | — |
 | **Google OAuth** | Social login | OAuth client `409741672143-…` (separate project `409741672143`, reused) | Free | Free | ⚠ Set frontend origins/redirects in Phase 5. |
@@ -48,7 +49,7 @@ on, for cost tracking. **Last updated: 2026-06-23 (after Phase 4 backend deploy)
 | Service | Phase | Purpose | Billing note |
 |---|---|---|---|
 | ~~Cloud Run / Cloud SQL / Secret Manager / Artifact Registry~~ | 4 | ✅ Done — now in Active services above | Cloud SQL ~24/7 is the main ongoing draw |
-| **Firebase Hosting** | 5 | Frontend (HTTPS, required for web AR) | Free tier generous; egress beyond it bills to the GCP project. |
+| ~~Firebase Hosting~~ | 5 | ✅ Done — now in Active services above | Free tier |
 | **Cloud CDN** | (only if needed) | AR asset delivery | Optional; add only if measured AR egress warrants it. |
 
 ---
