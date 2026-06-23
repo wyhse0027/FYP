@@ -5,6 +5,30 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 3 — Task 10: minimal CI (executed by Claude; Codex out of tokens)
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #7 (CI)
+**Commits:** `731fc42e` (workflow), `<cloudinary shim>` (CI-caught fix)
+
+- Added `.github/workflows/ci.yml`: **backend** job (Python 3.13, `pip install`, `pytest shop/tests`
+  under `settings_test` — in-memory sqlite/InMemoryStorage/locmem, no live services) and
+  **frontend** job (Node 20, `npm ci`, `npm test --watchAll=false`, `npm run build`). Triggers on
+  push + PR.
+- **CI caught a real latent bug** (passes locally only because the local `.env` still has Cloudinary
+  vars): migration `0031` instantiates `cloudinary_storage.MediaCloudinaryStorage`, which raises
+  unless `CLOUD_NAME/API_KEY/API_SECRET` are present — so `migrate` `KeyError`'d in CI (and would
+  on a fresh Cloud Run deploy). **Fixed:** added a dummy `CLOUDINARY_STORAGE` migration-compat shim
+  to base settings (parallel to `r2_storage.py`; env-overridable, never used at runtime). Verified
+  `MediaCloudinaryStorage` instantiates with the dummy dict and no env.
+- **Verified on GitHub Actions: both jobs GREEN** (backend 30s, frontend 51s).
+
+**Test evidence:** GitHub Actions run `27999995031` — Backend + Frontend both ✓; local clean-env
+isolation test passed; local suite 96 passed.
+
+---
+
 ## Phase 3 — Task 9: CDN pinning + SRI (executed by Claude; Codex out of tokens)
 
 **Date:** 2026-06-22
