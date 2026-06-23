@@ -5,6 +5,37 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 3 — Task 2: password validators + scoped auth throttling
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #15
+**Commit:** `5e8740ec`
+
+- **Validators:** `AUTH_PASSWORD_VALIDATORS` (MinimumLength 8, CommonPassword, NumericPassword,
+  UserAttributeSimilarity) now enforced via `validate_password()` on **all three** password-set
+  paths — signup (`UserSignupSerializer.validate`), the SendGrid reset-confirm view, and the
+  serializer-based reset-confirm.
+- **Throttling:** DRF `ScopedRateThrottle` with scoped rates — login `5/min` (`/api/token/` +
+  `/api/auth/login/` via new `ThrottledLoginView`), signup `5/min`, reset-request `3/min`,
+  reset-confirm `3/min`. Global default is `ScopedRateThrottle` (no-op for unscoped views).
+  LocMem = per-process/per-instance under Cloud Run (shared enforcement deferred to deploy).
+- **Test isolation (added during review):** `server/shop/tests/conftest.py` autouse cache-clear
+  so DRF throttle counters never leak between tests.
+
+**Penetration inspection (owner-requested, re-grabbed task):** challenged and verified —
+validators reject common/weak + accept strong on signup *and* reset-confirm; `/api/token/`
+resolves to the **throttled** `MyTokenObtainPairView` (shop include precedes the base route, so
+the throttle is live — confirmed by 429); global throttle doesn't affect product/AR endpoints;
+suite deterministic (79 passed ×2); `manage.py check` clean. **Finding flagged for Task 6:**
+`backend/urls.py:21` registers a **dead, shadowed, unthrottled** `/api/token/`
+(base `TokenObtainPairView`, duplicate `name="token_obtain_pair"`) — harmless now but a
+throttle-bypass footgun; Task 6 must remove it during route canonicalization.
+
+**Test evidence:** RED 6-fail → GREEN 9 pass; full suite **79 passed** (×2 deterministic).
+
+---
+
 ## Phase 3 — Tasks 1, 3, 4: config safety, atomic checkout, quiz scoping
 
 **Date:** 2026-06-22

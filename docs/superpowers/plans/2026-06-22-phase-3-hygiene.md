@@ -110,6 +110,11 @@ dep: **Brevo** transactional email (HTTP API or SMTP; decided in Task 7) — rep
 - **Files:** `server/backend/urls.py`, `server/shop/urls.py` (de-duplicate the overlapping
   `dj_rest_auth`/`allauth`/reset prefixes — **do this before Task 7 wires email into them**);
   `server/shop/social_views.py`; tests `test_routes.py`, `test_google_login.py`.
+- **MUST also remove (Task 2 review finding):** the dead, shadowed, **unthrottled**
+  `path("api/token/", TokenObtainPairView…)` at `backend/urls.py:21` (the throttled
+  `MyTokenObtainPairView` from `shop.urls` already serves `/api/token/`; the base route is a
+  throttle-bypass footgun + duplicate `name="token_obtain_pair"`). Verify `/api/token/` stays
+  throttled after removal.
 - **Do:** collapse duplicate auth/reset routes to one canonical set. For Google: require
   `email_verified`; treat email identity as **normalized + case-insensitive**; handle
   username/email collisions and the create race deterministically; never return raw
