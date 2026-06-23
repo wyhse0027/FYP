@@ -5,6 +5,36 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 4 — Task 9: review, docs, merge + tag — PHASE COMPLETE
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Task 9.
+
+**Review (code + security self-review of `main..phase-4-backend-deploy`):** PASS, no changes
+required. Verified: DEBUG=False live; the 4 secrets are Secret Manager references (never inlined
+or committed); `.dockerignore`/`.gcloudignore` keep `.env`/`db.sqlite3` out of image + build
+upload; runtime SA least-privilege; signed PUT scoped (15-min, content-type/length-bound,
+IsAdminUser); `--allow-unauthenticated` intended (DRF JWT enforces). Non-blocking follow-ups:
+(1) per-presign ADC/token refresh could be cached; (2) collectstatic runs each cold start;
+(3) **future deploys with new migrations need an explicit migrate step** (none runs today since the
+DB was already at head); (4) `CORS_ALLOWED_ORIGINS` empty until Phase 5 sets the frontend origin.
+
+**Docs:** `context.md` §7.2 rewritten as the live deployment; `docs/services-and-billing.md` moved
+Cloud Run/Cloud SQL/Secret Manager/Artifact Registry to Active (Neon → rollback); `task_plan.md`
+Phase 4 ✅.
+
+**Decisions recorded:** Brevo Authorized-IP enforcement deactivated for API keys instead of Cloud
+NAT (supersedes plan decision #6); Cloud SQL recreated as PG17 to match Neon; `FRONTEND_URL` +
+Google OAuth frontend origins deferred to Phase 5.
+
+**Merge:** `phase-4-backend-deploy` → `main` `--no-ff`, annotated tag `phase-4-backend-deploy`,
+pushed. Commits: `ac3cfd03`, `40edbd80`, `a7dd1a39`, `a74c23f6`, `ef89c867`.
+
+**Test evidence:** 102 backend tests pass; live smoke (products/admin/static/login/GCS-media,
+signed upload presign+PUT 200, Brevo email delivered) all green.
+
+---
+
 ## Phase 4 — Task 7 + Task 8: post-deploy wiring + full smoke (incl. SignBlob fix)
 
 **Date:** 2026-06-23
@@ -34,8 +64,9 @@ Rebuilt → image `:a74c23f6`, redeployed (revision `eleganza-api-00004-r7w`, DE
 - **GCS signed upload (presign→PUT)**: presign **200** with a V4 `X-Goog-Signature` (keyless IAM
   SignBlob), **PUT 200**, object landed in the bucket, then deleted. Tested with a throwaway
   superuser (created via the Cloud SQL proxy, **deleted after** → `shop_user` back to 7).
-- **Password-reset email via Brevo**: `POST /api/auth/password-reset/` → 200, **no Brevo error in
-  logs** (the code raises+logs on any non-2xx) ⇒ sent. *Owner to confirm inbox delivery.*
+- **Password-reset email via Brevo**: `POST /api/auth/password-reset/` → 200, no Brevo error in
+  logs ⇒ sent. **Delivery confirmed by owner** (received, spam folder). The reset link points at
+  `localhost:3000` because `FRONTEND_URL` is unset in prod — **deferred to Phase 5** wiring.
 
 **Test evidence:** 102 backend tests pass; live presign 200 + PUT 200 + object verified; email 200
 with clean logs. `manage.py` settings unchanged since Task 1.
