@@ -5,6 +5,88 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 4 — Task 4: data migration Neon → Cloud SQL
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Task 4. Owner checkpoint passed before the live restore.
+
+**Method:** `pg_dump` (PG17 client) of Neon → custom-format `neon.dump` (`-Fc --no-owner
+--no-acl`); Cloud SQL Auth Proxy v2.22.1 on `127.0.0.1:5433`; `pg_restore --no-owner --no-acl
+--exit-on-error` into the `eleganza` DB as `eleganza_app` (tables owned by the app user →
+future Django migrations work). Password sourced from the `DATABASE_URL` secret at runtime,
+never printed. Neon left intact as rollback. `cloud-sql-proxy.exe`/`*.dump` gitignored.
+
+**Verification (parity vs Neon baseline):**
+- Row counts: **35 tables / 377 rows on both, 0 mismatches** (key tables: users 7, products 5,
+  AR 2, orders 16, order-items 16, payments 16, product-media 12, reviews 9).
+- Restore exit 0 with `--exit-on-error` (no errors); dump had no extensions.
+- Identity sequences: all **33** at/above their max PK (no insert-collision risk).
+
+**Gotchas resolved:** (1) Proxy first failed `accessNotConfigured (project=sadify)` — ADC quota
+project was wrong; fixed with `gcloud auth application-default set-quota-project eleganza-ar`.
+(2) ENTERPRISE_PLUS default edition / PG16↔Neon17 mismatch handled earlier (Task 2).
+
+**Test evidence:** count-diff script → 0 mismatches; sequence-check script → 0 behind-max.
+
+**Next:** Task 5 — build + push the image to Artifact Registry via Cloud Build.
+
+---
+
+## Phase 4 — Tasks 2 & 3: Cloud SQL instance + Secret Manager (owner-operated)
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Tasks 2 (Cloud SQL) & 3 (Secret Manager). **First billable step.**
+
+**Task 2 — Cloud SQL (owner-approved before run):**
+- Instance `elz-pg`: **`POSTGRES_17`** (matches Neon 17.10 — initially created as 16 then
+  recreated as 17 to allow the `pg_dump`/restore; Cloud SQL can't change major version in place),
+  **ENTERPRISE edition**, tier `db-f1-micro` (shared-core, smallest), 10 GB SSD, zonal,
+  `asia-southeast1`, `--no-backup` (Neon is the rollback through Task 4). Connection name
+  `eleganza-ar:asia-southeast1:elz-pg` (unchanged across recreate → secret stays valid).
+  Status RUNNABLE.
+  ⚠ ENTERPRISE_PLUS is the default edition and rejects shared-core tiers — must pass
+  `--edition=ENTERPRISE` for `db-f1-micro`.
+- Database `eleganza`; app user `eleganza_app` (32-char alphanumeric password, generated
+  locally, never echoed).
+
+**Task 3 — Secret Manager (4 secrets, automatic replication):** `DATABASE_URL` (Cloud SQL
+Unix-socket form), `DJANGO_SECRET_KEY` (fresh 50-char prod key, not the dev one), `BREVO_API_KEY`
+and `GOOGLE_OAUTH_CLIENT_SECRET` (read from local `.env`, never printed). Each granted
+`roles/secretmanager.secretAccessor` to `eleganza-run@` **per-secret** (least-privilege).
+- ⚠ Gotcha: piping a PowerShell string into `gcloud secrets … --data-file=-` appends a trailing
+  newline; secrets were (re)written via `[IO.File]::WriteAllText` (no newline). Verified lengths:
+  DATABASE_URL 118, DJANGO_SECRET_KEY 50, BREVO_API_KEY 89, GOOGLE_OAUTH_CLIENT_SECRET 35.
+
+**Test evidence:** instance RUNNABLE; `gcloud secrets versions access` length check confirms all
+four non-empty and newline-free; IAM bindings shown in command output.
+
+**Next:** Task 4 — data migration Neon → Cloud SQL (owner checkpoint before the live restore;
+Neon kept intact as rollback).
+
+---
+
+## Phase 4 — Task 0: GCP prerequisites (owner-operated)
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Task 0. Free; no billing.
+
+- Enabled APIs: `run`, `sqladmin`, `secretmanager`, `artifactregistry`, `cloudbuild`,
+  `iamcredentials` (verified via `gcloud services list --enabled`).
+- Created Artifact Registry Docker repo `eleganza-backend` in `asia-southeast1`.
+- Created **dedicated runtime SA** `eleganza-run@eleganza-ar.iam.gserviceaccount.com`
+  (least-privilege, separate from the `eleganza-storage@` signer). Grants:
+  `roles/cloudsql.client` (project), `roles/storage.objectAdmin` on bucket
+  `eleganza-ar-media-439528178601`, `roles/iam.serviceAccountTokenCreator` on itself
+  (keyless GCS signed URLs). `roles/secretmanager.secretAccessor` deferred to Task 3
+  (granted per-secret once secrets exist).
+
+**Test evidence:** `gcloud services list --enabled` shows all six APIs; repo + SA + bindings
+confirmed in command output.
+
+**Next:** Task 2 — Cloud SQL instance. **First billable step**; owner approval gate before run.
+
+---
+
 ## Phase 4 — Task 1: production settings + entrypoint hardening (validation-first)
 
 **Date:** 2026-06-23

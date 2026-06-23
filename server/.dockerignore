@@ -1,0 +1,23 @@
+# Secrets — never bake into the image (prod uses Cloud Run env + Secret Manager)
+.env
+*.env
+backend/.env
+
+# Local dev database and media (media is served from GCS)
+db.sqlite3
+media/
+
+# Python caches and test artifacts
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# Collected static is generated at deploy (RUN_COLLECTSTATIC), not shipped
+staticfiles/
+
+# Local-only / dead files
+sendgrid_test.py
+*.dump
+*.sec.tmp

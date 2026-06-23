@@ -166,3 +166,8 @@ desktop.ini
 server/backend/.env
 .env
 sendgrid_test.py
+
+# Phase 4 deploy tooling / data dumps (never commit)
+cloud-sql-proxy.exe
+*.dump
+*.sec.tmp
