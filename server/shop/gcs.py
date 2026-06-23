@@ -3,6 +3,8 @@ from datetime import timedelta
 from urllib.parse import quote
 
 from django.conf import settings
+from google.auth import credentials as google_credentials
+from google.auth.transport.requests import Request as GoogleAuthRequest
 from google.cloud import storage
 
 
@@ -26,7 +28,26 @@ class GCSGateway:
             method="PUT",
             content_type=content_type,
             headers={"Content-Length": str(size)},
+            **self._signing_credentials(),
         )
+
+    def _signing_credentials(self) -> dict:
+        """Kwargs that let generate_signed_url produce a V4 signature.
+
+        Local dev uses a service-account JSON key (GOOGLE_APPLICATION_CREDENTIALS)
+        whose credentials can sign locally, so no extra kwargs are needed. On Cloud
+        Run the attached service account has no private key, so the URL is signed via
+        the IAM signBlob API by passing the service account email and a fresh access
+        token (requires roles/iam.serviceAccountTokenCreator on the SA itself).
+        """
+        creds = self.client._credentials
+        if isinstance(creds, google_credentials.Signing):
+            return {}
+        creds.refresh(GoogleAuthRequest())
+        return {
+            "service_account_email": creds.service_account_email,
+            "access_token": creds.token,
+        }
 
     def stat(self, key: str) -> StoredObject | None:
         blob = self.bucket.blob(key)
