@@ -5,6 +5,29 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 3 — Task 11: review, merge + tag — PHASE COMPLETE
+
+**Date:** 2026-06-22
+**Branch/Tag:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #3-9,#13-19; CLAUDE.md §6
+
+- **Formal review (inline):** code review = no outstanding correctness issues (the one cross-task
+  bug, migration-0031 cloudinary config in clean envs, was caught by the new CI and fixed).
+  Security review = fail-closed `DEBUG`/`SECRET_KEY`, password validators on all set-password
+  paths, per-IP auth throttling, `is_staff` sole admin authority (no role escalation), hardened
+  Google login, canonicalized routes, Brevo key in gitignored `.env`, SRI on CDN scripts; **no
+  secrets in git**. Deferred + tracked (§8 #18): cookie migration, CSP, refresh-token revocation,
+  cross-instance throttle storage.
+- **Verification:** GitHub Actions CI **green** (backend + frontend); fresh clean-env migrate
+  `0001→0034` no errors; secret scan clean (`.env` gitignored; only test-fixture passwords).
+- **Owner approved merge.** Merged `phase-3-hygiene` → `main` (`--no-ff`), annotated tag
+  `phase-3-hygiene`, pushed.
+
+**Phase 3 COMPLETE.** Resolved §8: #3,#4,#5,#6,#7,#8,#9,#13,#14,#15,#16(P2),#17,#19; #18 partial
+(SRI/pinning done, rest tracked). **Next: Phase 4 — backend deploy (Cloud Run + Cloud SQL).**
+
+---
+
 ## Phase 3 — Task 10: minimal CI (executed by Claude; Codex out of tokens)
 
 **Date:** 2026-06-22
