@@ -671,7 +671,10 @@ class QuizSubmitView(APIView):
 
         quiz = get_object_or_404(Quiz, id=quiz_id)
 
-        selected_answers = QuizAnswer.objects.filter(id__in=answers)
+        selected_answers = QuizAnswer.objects.filter(
+            id__in=answers,
+            question__quiz=quiz,
+        )
         if not selected_answers.exists():
             return Response({"error": "No answers provided"}, status=status.HTTP_400_BAD_REQUEST)
 
