@@ -5,6 +5,27 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 4 — Plan Written (approved)
+
+**Date:** 2026-06-23
+**Task:** Wrote `docs/superpowers/plans/2026-06-23-phase-4-backend-deploy.md` (10 tasks): Cloud
+Run + Cloud SQL deploy, Secret Manager, Neon→Cloud SQL data migration, reusing the existing
+`server/Dockerfile`. Owner checkpoints before every billable/live-data step.
+
+**Locked decisions (owner):** migrate Neon→Cloud SQL (Neon kept as rollback); smallest Cloud SQL
+tier (shared-core, `asia-southeast1`, ~24/7 — consider stop/start); Cloud Run min-instances=0
+(scale-to-zero); secrets in **Secret Manager**; GCS signed URLs via **attached SA + IAM SignBlob**
+(no key in container); Brevo egress via **static IP (Cloud NAT)** authorized in Brevo; backend on
+the `*.run.app` URL (no custom domain).
+
+**Key risks flagged:** Cloud SQL ~24/7 credit burn (budget alert); no-key SignBlob signing must be
+proven live (Task 8); prod CORS/CSRF origins must be set (the Phase 3 local-dev CORS lesson).
+
+**Test evidence:** N/A (planning). Execution not started; branch `phase-4-backend-deploy` to be
+created off `main` at Task 0.
+
+---
+
 ## Phase 3 — Task 11: review, merge + tag — PHASE COMPLETE
 
 **Date:** 2026-06-22
