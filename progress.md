@@ -5,6 +5,36 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 3 — Tasks 1, 3, 4: config safety, atomic checkout, quiz scoping
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #14, #4, #8, #9 (+ folded qty guard)
+**Commits:** `e41aaa73` (config), `56b47c6a` (checkout atomic/Decimal), `e77a757b` (quiz),
+`2c92c271` (order-item qty ≥ 1)
+
+- **Task 1 (#14, #4):** fixed `settings.py` env load-order (project `.env` now loads **before**
+  `DEBUG`/`SECRET_KEY`); `DEBUG` defaults False; prod **requires** a real `DJANGO_SECRET_KEY`
+  (raises `ImproperlyConfigured` on unset/`dev-only`); defined `MEDIA_URL`/`MEDIA_ROOT`.
+  `settings_test.py` opts into dev mode before importing base so the guard is skipped under tests.
+- **Task 3 (#8):** Order create wrapped in `transaction.atomic` + `select_for_update()` with a
+  fresh re-query + per-product quantity aggregation (also closes the same-product-multi-line
+  oversell), `F()` stock decrement, `Decimal` totals (quantized). Response shape unchanged.
+- **Task 4 (#9 + folded):** quiz scoring filters answers by `question__quiz=<submitted quiz>`
+  (foreign answers can't influence the result); `OrderItemSerializer.quantity` now
+  `IntegerField(min_value=1)` (rejects 0-qty items).
+
+**Deep integration inspection (owner-requested):** full suite **70 passed** (Phase 2 storage +
+Phase 3 together); `manage.py check` (local `.env`) starts clean; fresh sqlite migrate 0001→0032
+clean; `makemigrations --check` = no drift. Penetration notes: price/total read-only
+(no client manipulation), oversell + negative qty blocked, no parallel order path bypasses the
+fix. Non-blocking observation logged: the PDF **receipt** renders the stored Decimal total via
+`float()` for `:.2f` display only (no money-integrity impact).
+
+**Test evidence:** RED→GREEN for each task; full suite 70 passed (`--basetemp=/tmp/elzpt`).
+
+---
+
 ## Phase 3 — Plan Written + Reviewed (approved)
 
 **Date:** 2026-06-22
