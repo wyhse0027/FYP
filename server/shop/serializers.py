@@ -620,6 +620,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
         queryset=Product.objects.all(), source="product", write_only=True
     )
     product = ProductCardSerializer(read_only=True)
+    quantity = serializers.IntegerField(min_value=1)
 
     class Meta:
         model = OrderItem

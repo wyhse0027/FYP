@@ -87,3 +87,22 @@ def test_checkout_totals_use_exact_decimal_money(django_user_model):
     assert order.total == Decimal("0.30")
     assert order.items.get().price == Decimal("0.10")
     assert order.payment.amount == Decimal("0.30")
+
+
+@pytest.mark.django_db
+def test_checkout_rejects_zero_quantity_order_items(django_user_model):
+    user = django_user_model.objects.create_user(username="zero-buyer", password="password")
+    product = make_product(stock=3)
+
+    serializer = build_order_serializer(user, order_payload(product, quantity=0))
+
+    assert not serializer.is_valid()
+    assert serializer.errors == {
+        "items": [
+            {
+                "quantity": [
+                    "Ensure this value is greater than or equal to 1."
+                ]
+            }
+        ]
+    }
