@@ -5,6 +5,35 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 3 — Task 7: transactional email via Brevo HTTP API
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #19
+**Commit:** `0fccf2ac`
+
+- Replaced SendGrid with **Brevo's HTTP transactional API**. `email_service.send_transactional_email()`
+  POSTs to `api.brevo.com/v3/smtp/email` (stdlib `urllib`, no new dep) when `BREVO_API_KEY` is set,
+  else falls back to Django's `send_mail` (console in dev, locmem in tests) so CI never sends.
+  Password-reset views now call it; `sendgrid` dependency removed; `.env.sample` + `context.md`
+  updated (§8 #19 resolved). **Decision (owner):** Brevo over **HTTP API** not SMTP, because
+  Brevo enforces account-level **Authorized IPs** (SMTP 525 + API 401 from an unrecognized IP);
+  the HTTP API is the path that works from Cloud Run's dynamic egress IP (still IP-gated, so the
+  egress IP must be authorized at deploy — tracked in `docs/services-and-billing.md`).
+- **Live proof (Claude, owner-authorized):** real send via the Brevo HTTP API returned **HTTP 201**
+  with a `messageId` after the owner authorized the sending IP `60.53.186.250` in Brevo Security.
+
+**Inspection:** 96 passed; reset view calls `send_transactional_email`; tests make **no live
+call** (fallback patches `urlopen`→`call_count==0` + locmem outbox; Brevo path mocks `urlopen`
+and asserts the exact payload/headers); no residual `sendgrid` in committed code; tests use the
+pytest-django `settings` fixture (auto-restored — no settings leak). **Note:** the owner's local
+`.env` still held the dead `SENDGRID_API_KEY` (expired trial) — to be deleted locally (not
+committed; nothing reads it).
+
+**Test evidence:** RED 2-fail → GREEN 2 pass; full suite **96 passed**; live Brevo API 201.
+
+---
+
 ## Phase 3 — Task 6: route canonicalization + Google login hardening
 
 **Date:** 2026-06-22
