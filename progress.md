@@ -5,6 +5,36 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 5 — Tasks 0–3: Firebase Hosting config, build, backend wiring, deploy
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 5 plan Tasks 0–3. Branch `phase-5-frontend-deploy` off `main`.
+
+- **Task 0 (owner):** installed `firebase-tools`, `firebase login` (yhwoo516@gmail.com),
+  `firebase projects:addfirebase eleganza-ar` → Firebase added to the existing GCP project.
+- **Task 1 (commit `732f194a`):** `web/firebase.json` (SPA rewrite `**`→`/index.html`; static
+  assets `immutable`, `index.html` `no-cache`), `web/.firebaserc` (default `eleganza-ar`),
+  `web/.env.production` (`REACT_APP_API_BASE_URL=…run.app/api`), `.gitignore` exception for
+  `web/.env.production` (REACT_APP_* are public-by-nature). `npm run build` OK; **prod API URL
+  verified baked into the bundle**, no stray localhost API base.
+- **Task 2:** Cloud Run env updated (revision `eleganza-api-00005-nn5`): `FRONTEND_URL`,
+  `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS` now include `https://eleganza-ar.web.app` +
+  `https://eleganza-ar.firebaseapp.com`. **CORS preflight from the Firebase origin → 200 with
+  `access-control-allow-origin`.**
+- **Task 3:** `firebase deploy --only hosting` → **LIVE `https://eleganza-ar.web.app`** (98 files).
+  Root 200, deep link `/shop` 200 (SPA rewrite), HTTPS.
+
+**Deferred (flagged, not fixed — dormant):** hardcoded `http://127.0.0.1:8000` media fallbacks in
+`AboutPage.js:136` + `AdminAboutPage.js:146,380` (only hit for relative URLs; all media is absolute
+GCS URLs). Pending owner approval to derive the origin from `REACT_APP_API_BASE_URL`.
+
+**Test evidence:** build URL grep; CORS preflight 200; site + deep-link 200 over HTTPS.
+
+**Next:** Task 4 — add the Firebase origins to the Google OAuth client (project `409741672143`);
+Task 5 — manual end-to-end verification.
+
+---
+
 ## Phase 4 — Task 9: review, docs, merge + tag — PHASE COMPLETE
 
 **Date:** 2026-06-23
