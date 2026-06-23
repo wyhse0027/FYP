@@ -5,6 +5,99 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 4 — Task 7 + Task 8: post-deploy wiring + full smoke (incl. SignBlob fix)
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Tasks 7 & 8.
+
+**Task 7 — post-deploy wiring:**
+- **Brevo egress (decision changed from the plan):** instead of Cloud NAT static IP, owner
+  **deactivated Brevo's Authorized-IP enforcement for API keys** (Security → Authorized IPs).
+  Cloud Run's dynamic egress can now send. Rationale: demo-grade, avoids NAT infra + ongoing
+  credit burn. *(Supersedes locked decision #6.)*
+- **Google OAuth origins:** deferred to Phase 5 — the OAuth client (`409741672143-…`, which lives
+  in a **separate GCP project `409741672143`**) needs the *frontend* origin, which doesn't exist
+  until Firebase deploy. No backend-side OAuth change needed now.
+
+**SignBlob fix (the flagged Task 8 risk — keyless signed uploads):** the first presign attempt
+returned **500**. Root cause via a brief `DJANGO_DEBUG=True` diagnostic (reverted immediately):
+`generate_signed_url` with the attached SA has no private key. Two fixes:
+1. `a7dd1a39` — pass `service_account_email` + `access_token` so signing uses the IAM signBlob API
+   (local JSON-key creds still sign directly; both paths unit-tested).
+2. `a74c23f6` — fetch that token with the **cloud-platform** scope via
+   `google.auth.default(scopes=[…])`; the storage client's own creds are devstorage-scoped and
+   signBlob rejected them with `ACCESS_TOKEN_SCOPE_INSUFFICIENT`.
+Rebuilt → image `:a74c23f6`, redeployed (revision `eleganza-api-00004-r7w`, DEBUG back to False).
+
+**Smoke test (full, passed):**
+- `/api/products/` from Cloud SQL; `/admin/` 302; static 200; `/api/auth/login/` 400; GCS media 200.
+- **GCS signed upload (presign→PUT)**: presign **200** with a V4 `X-Goog-Signature` (keyless IAM
+  SignBlob), **PUT 200**, object landed in the bucket, then deleted. Tested with a throwaway
+  superuser (created via the Cloud SQL proxy, **deleted after** → `shop_user` back to 7).
+- **Password-reset email via Brevo**: `POST /api/auth/password-reset/` → 200, **no Brevo error in
+  logs** (the code raises+logs on any non-2xx) ⇒ sent. *Owner to confirm inbox delivery.*
+
+**Test evidence:** 102 backend tests pass; live presign 200 + PUT 200 + object verified; email 200
+with clean logs. `manage.py` settings unchanged since Task 1.
+
+**Next:** Task 9 — review (`/code-review` + `/security-review`), docs (context.md §7,
+services-and-billing.md, task_plan.md), owner-approved merge `--no-ff` + tag `phase-4-backend-deploy`.
+
+---
+
+## Phase 4 — Task 6: deploy to Cloud Run + Task 8 (partial) smoke test
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Tasks 6 & 8.
+
+**Deploy:** `gcloud run deploy eleganza-api` (region `asia-southeast1`), image
+`…/eleganza-api:40edbd80`, attached SA `eleganza-run@`, `--add-cloudsql-instances=eleganza-ar:asia-southeast1:elz-pg`,
+`--allow-unauthenticated`, `min=0 max=4`, `cpu=1 memory=512Mi port=8000`,
+`RUN_COLLECTSTATIC=1` (no `RUN_MIGRATIONS` — DB already at head from the Task 4 restore).
+Secrets wired via `--set-secrets` (DJANGO_SECRET_KEY/DATABASE_URL/BREVO_API_KEY/
+GOOGLE_OAUTH_CLIENT_SECRET). Revision `eleganza-api-00001-tfz`, 100% traffic.
+**URL: `https://eleganza-api-439528178601.asia-southeast1.run.app`**.
+
+**Smoke test (passed):**
+- `GET /api/products/` → full product JSON **from Cloud SQL**, media as GCS URLs (cold start OK).
+- `GET /admin/` → 302; `GET /static/admin/css/base.css` → 200 `text/css` (WhiteNoise/collectstatic).
+- `POST /api/auth/login/` (bad creds) → 400 validation error (DB auth path live, not 500).
+- GCS public media object → 200.
+
+**Still to verify (Task 8 remainder, needs Task 7 + owner):**
+- GCS **signed upload** (presign→PUT→finalize) via attached-SA **IAM SignBlob** (locked decision
+  #5) — requires an admin JWT; faithful test is the live presign endpoint (gcloud impersonation
+  is a poor proxy because `roles/owner` lacks `serviceAccountTokenCreator` by default).
+- Password-reset **email via Brevo** — blocked until Task 7 authorizes the Cloud Run egress IP
+  in Brevo (otherwise Brevo rejects the IP, as it did locally).
+
+**Note:** Google OAuth client ID `409741672143-…` lives in a **different** GCP project
+(`409741672143`); its authorized origins/redirects are edited there in Task 7.
+
+**Next:** Task 7 — post-deploy wiring (Brevo egress IP, Google OAuth origins). **Decision needed**
+on Brevo egress approach (Cloud NAT cost vs alternatives).
+
+---
+
+## Phase 4 — Task 5: build + push image (Cloud Build → Artifact Registry)
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Task 5.
+
+- Added `server/.dockerignore` + `server/.gcloudignore` to keep `backend/.env`, `db.sqlite3`,
+  `media/`, caches, and `staticfiles/` out of both the image (`COPY . .`) and the Cloud Build
+  source upload. (Security: the unguarded `COPY . .` would otherwise have baked the live `.env`
+  into the image.)
+- Built `server/Dockerfile` via `gcloud builds submit --region=asia-southeast1` →
+  `asia-southeast1-docker.pkg.dev/eleganza-ar/eleganza-backend/eleganza-api:40edbd80`
+  (tag = commit `40edbd80`; digest `sha256:3caf438471198868cd628c8c43cf01f596b98eef96cd502fd983750561c4307b`).
+
+**Test evidence:** Cloud Build STATUS **SUCCESS** (2M5S), image pushed to Artifact Registry.
+
+**Next:** Task 6 — deploy to Cloud Run (owner checkpoint; first public exposure + secret wiring).
+
+---
+
 ## Phase 4 — Task 4: data migration Neon → Cloud SQL
 
 **Date:** 2026-06-23

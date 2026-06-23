@@ -1,7 +1,7 @@
 # Services & Billing Tracker
 
 Operational reference of every external service the Eleganza / GERAIN CHAN AR project depends
-on, for cost tracking. **Last updated: 2026-06-22 (after Phase 2).**
+on, for cost tracking. **Last updated: 2026-06-23 (after Phase 4 backend deploy).**
 
 > No secrets here — identifiers and account names only. Real credentials live in
 > `server/backend/.env` (gitignored) and, in production, Secret Manager.
@@ -22,11 +22,15 @@ on, for cost tracking. **Last updated: 2026-06-22 (after Phase 2).**
 
 | Service | Purpose | Account / identifier | Plan / tier | Cost status | Watch |
 |---|---|---|---|---|---|
+| **GCP – Cloud Run** | Django backend (`eleganza-api`) | project `eleganza-ar`, `asia-southeast1`, `https://eleganza-api-439528178601.asia-southeast1.run.app` | Pay-per-use on the **credit**; `min=0` `max=4`, 512Mi | On credit; **scale-to-zero** ⇒ ~no idle cost | ⚠ Cold starts (min=0). max=4 caps Cloud SQL connections. |
+| **GCP – Cloud SQL (Postgres 17)** | Primary DB (`elz-pg`) | project `eleganza-ar`, ENTERPRISE `db-f1-micro`, 10 GB, zonal, `asia-southeast1`; conn `eleganza-ar:asia-southeast1:elz-pg` | Pay-as-you-go on the **credit** | **⚠ ~24/7 = steady burn** | ⚠ Biggest ongoing cost. `--no-backup`. Stop/start between demos to save credit. |
+| **GCP – Secret Manager** | Prod secrets | project `eleganza-ar`: `DJANGO_SECRET_KEY`, `DATABASE_URL`, `BREVO_API_KEY`, `GOOGLE_OAUTH_CLIENT_SECRET` | Pay-as-you-go | Tiny (per-secret/version + access) | — |
+| **GCP – Artifact Registry** | Backend images | project `eleganza-ar`, repo `eleganza-backend` (`asia-southeast1`) | Pay-as-you-go | Tiny (image storage) | — |
 | **GCP – Cloud Storage** | All media (images, `.glb`, `.mind`, `.apk`) | project `eleganza-ar` (`439528178601`), bucket `eleganza-ar-media-439528178601`, region `asia-southeast1`, STANDARD | Pay-as-you-go on the **credit** | On credit (free until credit runs out) | ⚠ Storage ≈ **0.85 GB** (46 objects). Egress + Class-A/B ops are billable; AR/GLB downloads = egress. 7-day soft-delete keeps deleted bytes billable for the window. |
-| **GCP – IAM / IAM Credentials** | Service account + signed-URL signing | project `eleganza-ar`; SA `eleganza-storage@eleganza-ar.iam.gserviceaccount.com` | — | Free | — |
-| **Neon** | Current Postgres DB | `DATABASE_URL` (Neon) | Free/launch tier (verify) | Free (verify) | ⚠ Confirm the Neon plan; being replaced by Cloud SQL in Phase 4. |
-| **Google OAuth** | Social login | OAuth client from `fyp-login-system` (reused) | Free | Free | — |
-| **Brevo** | Transactional email (password reset) via HTTP API | `BREVO_API_KEY` (in `.env`); sender `yhwoo516@gmail.com` | Free (300 emails/day) | Free | ⚠ Brevo enforces **Authorized IPs** — local IP `60.53.186.250` authorized. **At Cloud Run deploy (Phase 4): authorize the egress IP** or sends 401, or use a static egress IP. |
+| **GCP – IAM / IAM Credentials** | Service accounts + keyless signed-URL signing | project `eleganza-ar`; runtime SA `eleganza-run@eleganza-ar.iam.gserviceaccount.com` (signs via IAM signBlob), storage signer `eleganza-storage@…` | — | Free | — |
+| **Google OAuth** | Social login | OAuth client `409741672143-…` (separate project `409741672143`, reused) | Free | Free | ⚠ Set frontend origins/redirects in Phase 5. |
+| **Brevo** | Transactional email (password reset) via HTTP API | `BREVO_API_KEY` (Secret Manager + `.env`); sender `yhwoo516@gmail.com` | Free (300 emails/day) | Free | Authorized-IP enforcement **deactivated for API keys** (so Cloud Run's dynamic egress can send; no Cloud NAT). |
+| **Neon** | Legacy Postgres DB — **rollback net** | `DATABASE_URL` (Neon, in `.env` only) | Free/launch tier (verify) | Free (verify) | Replaced by Cloud SQL (Phase 4); kept intact as rollback. Decommission after the demo is stable. |
 | **GitHub** | Source hosting | `github.com:wyhse0027/FYP` | Free | Free | — |
 
 ## Legacy / retained (being decommissioned — do not top up)
@@ -43,11 +47,8 @@ on, for cost tracking. **Last updated: 2026-06-22 (after Phase 2).**
 
 | Service | Phase | Purpose | Billing note |
 |---|---|---|---|
-| **GCP – Cloud Run** | 4 | Django backend container | Billed per request/CPU/memory on the credit. ⚠ Cap max-instances. |
-| **GCP – Cloud SQL (Postgres)** | 4 | Primary DB (replaces Neon) | ⚠ Runs ~24/7 → steady credit burn; pick the smallest viable tier. |
+| ~~Cloud Run / Cloud SQL / Secret Manager / Artifact Registry~~ | 4 | ✅ Done — now in Active services above | Cloud SQL ~24/7 is the main ongoing draw |
 | **Firebase Hosting** | 5 | Frontend (HTTPS, required for web AR) | Free tier generous; egress beyond it bills to the GCP project. |
-| **GCP – Secret Manager** | 4 | Production secrets (replaces `.env`) | Tiny cost (per-secret/version + access ops). |
-| ~~Brevo or Resend~~ | 3 | ✅ Done — **Brevo** chosen (HTTP API), now in Active services above | — |
 | **Cloud CDN** | (only if needed) | AR asset delivery | Optional; add only if measured AR egress warrants it. |
 
 ---

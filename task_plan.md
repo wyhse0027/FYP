@@ -13,7 +13,7 @@ deployed all-in on GCP.
 | 1 | Web AR fix (animation + GLB optimize) | `phase-1-web-ar` | ✅ complete (tag `phase-1-web-ar`) | `docs/superpowers/plans/2026-06-21-phase-1-web-ar.md` |
 | 2 | Storage → GCS + upload hardening | `phase-2-storage-gcs` | ✅ complete (tag `phase-2-storage-gcs`) | `docs/superpowers/plans/2026-06-21-phase-2-storage-gcs.md` |
 | 3 | Correctness, security hardening & minimal CI | `phase-3-hygiene` | ✅ complete (tag `phase-3-hygiene`) | `docs/superpowers/plans/2026-06-22-phase-3-hygiene.md` |
-| 4 | Backend deploy (Cloud Run + Cloud SQL) | `phase-4-backend-deploy` | plan approved; not started | `docs/superpowers/plans/2026-06-23-phase-4-backend-deploy.md` |
+| 4 | Backend deploy (Cloud Run + Cloud SQL) | `phase-4-backend-deploy` | deployed + verified live; pending review + merge/tag | `docs/superpowers/plans/2026-06-23-phase-4-backend-deploy.md` |
 | 5 | Frontend deploy (Firebase Hosting) | `phase-5-frontend-deploy` | pending | — |
 | 6 | Luxury UI/UX redesign (user + admin) | `phase-6-ui-redesign` | pending | — |
 | 7 | Broaden test coverage | `phase-7-tests` | pending | — |
