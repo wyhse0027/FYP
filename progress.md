@@ -5,6 +5,38 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 3 — Task 6: route canonicalization + Google login hardening
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #6, #17
+**Commits:** `9e58c9cc` (routes), `2617a553` (Google login)
+
+- **Routes (#6):** collapsed duplicate auth/login/reset/token routes to one canonical set and
+  removed the dead shadowed unthrottled `/api/token/` (Task 2 finding) plus duplicate
+  `dj-rest-auth`/`registration`/`accounts` mounts. Survivors: `/api/token/` (throttled
+  `MyTokenObtainPairView`), `/api/token/refresh/`, `/api/signup/`, `/api/auth/login/`,
+  `/api/auth/password-reset/` + `-confirm/` (SendGrid views, keep Task 2 throttles + validators),
+  `/api/auth/google/` (`GoogleLoginView`), `/accounts/` (allauth — server-side OAuth callback
+  preserved). **No frontend source change needed** — all callers already pointed at survivors.
+- **Google login (#17):** require `email_verified`; normalize email lowercase + look up
+  `email__iexact`; deterministic username-collision handling (sha256 suffix); atomic create with
+  `IntegrityError` re-query for the race; generic error body (no raw provider text leaked).
+
+**Careful/detailed inspection (owner-requested, riskiest task):** `manage.py check` clean (no
+broken imports/URLs); **94 passed**; every surviving route resolved to the correct view;
+`/accounts/google/login/` still resolves (OAuth callback intact); full frontend endpoint-caller
+grep confirmed **zero** calls to any removed route; Google test mock target
+(`shop.social_views.id_token`) valid; frontend build exit 0. **Manual check deferred to Task 11:**
+real Google Sign-In in the browser (token verification is mocked in unit tests). **Leftover (note):**
+`/api/auth/login/` (`ThrottledLoginView`) is unused by the frontend now (login goes via
+`/api/token/`) — harmless + throttled, left in place.
+
+**Test evidence:** RED 9-fail → GREEN 11 pass; full suite **94 passed**; routes resolve/404 as
+expected.
+
+---
+
 ## Phase 3 — Task 5: unify admin authority on is_staff
 
 **Date:** 2026-06-22
