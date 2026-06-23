@@ -67,6 +67,9 @@ yarn-error.log*
 .env.development
 .env.production
 .env.test
+# Exception: the CRA prod build env holds only the public API URL (REACT_APP_* are
+# baked into the public bundle and are never secret), so it is committed for reproducible builds.
+!web/.env.production
 
 # =========================
 # 🎮 UNITY / AR PROJECTS
