@@ -217,6 +217,16 @@ STORAGES = {
 # one-time migration to Google Cloud Storage (see progress.md). The boto3/cloudinary
 # packages and `backend/r2_storage.py` are retained only so the historical migration
 # shop/0031 can still be replayed; nothing in the runtime serving path uses them.
+#
+# Migration-compat shim: shop/0031 instantiates cloudinary_storage's MediaCloudinaryStorage,
+# which raises unless CLOUD_NAME/API_KEY/API_SECRET are present. Cloudinary is retired, so
+# provide dummy values (env-overridable) purely so `migrate` can replay 0031 in a clean
+# environment (CI, fresh Cloud Run deploy). Never used at runtime.
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": os.getenv("CLOUDINARY_CLOUD_NAME", "retired-migration-shim"),
+    "API_KEY": os.getenv("CLOUDINARY_API_KEY", "unused"),
+    "API_SECRET": os.getenv("CLOUDINARY_API_SECRET", "unused"),
+}
 
 
 # File upload limits
