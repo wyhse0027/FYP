@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 from datetime import datetime, time
 from pathlib import Path
 from rest_framework import serializers
@@ -6,7 +7,8 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth import get_user_model
-from django.db.models import Q
+from django.db import transaction
+from django.db.models import F, Q
 from django.contrib.auth.models import update_last_login
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -694,60 +696,76 @@ class OrderSerializer(serializers.ModelSerializer):
         - Online: order starts TO_PAY
         Also creates/updates a Payment row with the chosen method.
         """
-        request = self.context["request"]
-        user = request.user
+        with transaction.atomic():
+            request = self.context["request"]
+            user = request.user
 
-        items_data = validated_data.pop("items", [])
-        payment_method = validated_data.pop("payment_method", "COD")
+            items_data = validated_data.pop("items", [])
+            payment_method = validated_data.pop("payment_method", "COD")
 
-        if payment_method == "COD":
-            initial_status = "TO_SHIP"
-        else:
-            initial_status = "TO_PAY"
+            if payment_method == "COD":
+                initial_status = "TO_SHIP"
+            else:
+                initial_status = "TO_PAY"
 
-        order = Order.objects.create(user=user, status=initial_status, **validated_data)
+            required_quantities = {}
+            for item_data in items_data:
+                product = item_data["product"]
+                qty = item_data["quantity"]
+                required_quantities[product.pk] = required_quantities.get(product.pk, 0) + qty
 
-        total = 0
-        for item_data in items_data:
-            product = item_data["product"]
-            qty = item_data["quantity"]
+            locked_products = {
+                product.pk: product
+                for product in Product.objects.select_for_update().filter(pk__in=required_quantities)
+            }
 
-            if product.stock < qty:
-                raise serializers.ValidationError(
-                    {"detail": f"Not enough stock for {product.name}. Remaining: {product.stock}"}
+            for product_id, required_qty in required_quantities.items():
+                product = locked_products[product_id]
+                if product.stock < required_qty:
+                    raise serializers.ValidationError(
+                        {"detail": f"Not enough stock for {product.name}. Remaining: {product.stock}"}
+                    )
+
+            order = Order.objects.create(user=user, status=initial_status, **validated_data)
+
+            cents = Decimal("0.01")
+            total = Decimal("0.00")
+            decrements = {}
+            for item_data in items_data:
+                product = locked_products[item_data["product"].pk]
+                qty = item_data["quantity"]
+                price = product.price
+                OrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    quantity=qty,
+                    price=price,
                 )
+                total += (price * qty).quantize(cents)
+                decrements[product.pk] = decrements.get(product.pk, 0) + qty
 
-            product.stock -= qty
-            product.save()
+            for product_id, decrement in decrements.items():
+                Product.objects.filter(pk=product_id).update(stock=F("stock") - decrement)
 
-            price = product.price
-            OrderItem.objects.create(
+            order.total = total.quantize(cents)
+            order.save(update_fields=["total"])
+
+            # ✅ ensure payment row exists and matches chosen method
+            payment, created = Payment.objects.get_or_create(
                 order=order,
-                product=product,
-                quantity=qty,
-                price=price,
+                defaults={
+                    "amount": order.total,
+                    "method": payment_method,
+                    "status": "PENDING" if payment_method == "COD" else "PENDING",
+                },
             )
-            total += float(price) * qty
+            if not created:
+                payment.amount = order.total
+                payment.method = payment_method
+                payment.status = "PENDING"
+                payment.save(update_fields=["amount", "method", "status"])
 
-        order.total = total
-        order.save(update_fields=["total"])
-
-        # ✅ ensure payment row exists and matches chosen method
-        payment, created = Payment.objects.get_or_create(
-            order=order,
-            defaults={
-                "amount": order.total,
-                "method": payment_method,
-                "status": "PENDING" if payment_method == "COD" else "PENDING",
-            },
-        )
-        if not created:
-            payment.amount = order.total
-            payment.method = payment_method
-            payment.status = "PENDING"
-            payment.save(update_fields=["amount", "method", "status"])
-
-        return order
+            return order
 
 class OrderLiteSerializer(serializers.ModelSerializer):
     class Meta:
