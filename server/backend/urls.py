@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from shop.views import ThrottledLoginView
 
 # ✅ add these imports
 from shop.password_reset_sendgrid import (
@@ -21,6 +22,7 @@ urlpatterns = [
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 
     # ─── User Auth (Email + Social) ─────────────
+    path("api/auth/login/", ThrottledLoginView.as_view()),
     path("api/auth/", include("dj_rest_auth.urls")),
     path("api/auth/registration/", include("dj_rest_auth.registration.urls")),
 

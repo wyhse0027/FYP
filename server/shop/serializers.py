@@ -3,7 +3,9 @@ from decimal import Decimal
 from datetime import datetime, time
 from pathlib import Path
 from rest_framework import serializers
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth import get_user_model
@@ -98,6 +100,17 @@ class UserSignupSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Email already registered")
         return value
 
+    def validate(self, attrs):
+        candidate_user = User(
+            username=attrs.get("username", ""),
+            email=attrs.get("email", ""),
+        )
+        try:
+            validate_password(attrs["password"], user=candidate_user)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"password": list(exc.messages)})
+        return attrs
+
     def create(self, validated_data):
         password = validated_data.pop("password")
         user = User(**validated_data)
@@ -153,6 +166,11 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
         if not default_token_generator.check_token(user, attrs["token"]):
             raise serializers.ValidationError("Invalid or expired token")
+
+        try:
+            validate_password(attrs["new_password"], user=user)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"new_password": list(exc.messages)})
 
         attrs["user"] = user
         return attrs
