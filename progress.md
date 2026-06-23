@@ -5,6 +5,34 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 3 — Task 9: CDN pinning + SRI (executed by Claude; Codex out of tokens)
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #18 (partial)
+**Commit:** `4dd43a04`
+
+- Pinned **model-viewer → `@4.3.1`** (was unversioned/mutable — the core #18 risk) and added
+  `sha384` SRI + `crossorigin="anonymous"` to it and the AR libs (A-Frame 1.5.0, MindAR 1.2.3,
+  aframe-extras 7.7.0). `ARViewer.js` `loadScript` now sets `integrity`/`crossOrigin` **before**
+  `src`. Hashes computed from the exact files (all origins serve `ACAO: *`) and verified
+  deterministic (identity == compressed). Draco decoder path left (WASM via GLTFLoader, SRI N/A).
+  CSP + cookie migration + refresh-token revocation explicitly **deferred + tracked** in §8 #18;
+  #17 also marked resolved.
+- **Manual gate PASSED (owner):** web AR renders + animates with SRI active; no SRI console
+  errors; build exit 0.
+
+**Local-dev finding (from the manual test):** Task 1's `DEBUG` default→False means a local
+`.env` **must set `DJANGO_DEBUG=True`** (already in `.env.sample`), otherwise `DEBUG=False`
+locally flips `CORS_ALLOW_ALL_ORIGINS=False` + `SECURE_SSL_REDIRECT=True` and blocks every
+`localhost:3000` API call (CORS). Owner added `DJANGO_DEBUG=True` to local `.env` → resolved.
+(No code change — correct fail-closed prod behavior; documented in `.env.sample`.)
+
+**Test evidence:** SRI hashes verified deterministic; `npm run build` exit 0; owner manual AR
+render+animate PASS.
+
+---
+
 ## Phase 3 — Task 8: frontend hygiene + Task 5 follow-ups
 
 **Date:** 2026-06-22
