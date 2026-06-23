@@ -5,6 +5,47 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 4 — Task 1: production settings + entrypoint hardening (validation-first)
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Task 1 (prod settings hardening, test-first); NFR security/deploy.
+**Branch:** `phase-4-backend-deploy` (created off `main`).
+
+**Validation baseline:** 96 backend tests green before changes.
+
+**Changes (code, test-first):**
+- `backend/settings.py` — DB URL parsing now disables SSL for the Cloud SQL Unix-socket form
+  (`…?host=/cloudsql/PROJECT:REGION:INSTANCE`): Postgres cannot negotiate TLS over a local
+  socket, so `sslmode=require` would break the connection. Network Postgres (Neon) still uses
+  SSL. Detection: `uses_unix_socket = "host=/" in DATABASE_URL`.
+- `backend/settings.py` — added env-gated HSTS in the `not DEBUG` block
+  (`SECURE_HSTS_SECONDS` default **0**, `INCLUDE_SUBDOMAINS` follows it, `PRELOAD=False`):
+  opt-in because `*.run.app` is already HSTS-preloaded by Google and careless HSTS is
+  irreversible. Resolves `check --deploy` W004 as a documented opt-in.
+- `backend/.env.sample` — documented the Cloud SQL Unix-socket `DATABASE_URL` form and the
+  prod `DJANGO_ALLOWED_HOSTS` / `CSRF_TRUSTED_ORIGINS` / `CORS_ALLOWED_ORIGINS` guidance.
+- `shop/tests/test_prod_settings.py` (new, 5 tests) — asserts prod security flags
+  (SSL redirect, secure cookies, proxy SSL header, CORS not allow-all), hosts/CSRF/CORS
+  sourced from env, Cloud SQL socket URL → no `sslmode`, network URL → `sslmode=require`,
+  and HSTS default-off / env-opt-in.
+
+**Verified (already correct, no change needed):** `SECURE_*`/`SECURE_PROXY_SSL_HEADER` gated for
+the Cloud Run proxy; WhiteNoise + `collectstatic` static path; GCS uses ADC (no key in OPTIONS)
+when `GOOGLE_APPLICATION_CREDENTIALS` is unset.
+
+**`check --deploy` triage:** W004 → resolved via opt-in HSTS above. W009 (weak SECRET_KEY) →
+false positive from the short triage secret; the fail-closed guard already rejects empty/`dev-only`
+and prod uses a 50-char random key. 3× allauth `ACCOUNT_*` deprecations → pre-existing
+django-allauth 65.x notices, not security, not in Phase 4 scope (changing them alters auth).
+
+**Test evidence:** `pytest shop/tests` → **101 passed** (96 + 5 new). `manage.py check --deploy`
+under `DEBUG=False` → only the triaged warnings above.
+
+**Next:** Task 0 (owner GCP: enable run/sqladmin/secretmanager/artifactregistry/cloudbuild/
+iamcredentials APIs + Artifact Registry repo + runtime SA) — free, no billing.
+
+---
+
 ## Phase 4 — Plan Written (approved)
 
 **Date:** 2026-06-23
