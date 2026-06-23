@@ -5,6 +5,34 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 3 — Task 8: frontend hygiene + Task 5 follow-ups
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #3, #5, #7 (frontend), #13 follow-ups
+**Commits:** `ce282955` (dead config + route guard + test), `d1a2fa03` (admin badge),
+`5e2ed452` (reverse backfill migration)
+
+- **#3:** deleted unused `web/src/config/api.js` (nothing imports it; live config is
+  `web/src/lib/http.js`).
+- **#5:** `ProtectedRoute.js` now reads `loadingUser` (the real `AuthContext` flag) instead of
+  the never-defined `loading`, so a valid admin isn't redirected mid-profile-load.
+- **#7 (frontend):** replaced the stale CRA `App.test.js` (asserted deleted "learn react" UI +
+  threw on unset API base) with 2 meaningful tests (route shell renders; protected routes wait
+  while loading).
+- **Task 5 follow-ups:** `AdminUsersPage.js` badge now keys on `is_staff`; migration `0034`
+  reverse-backfills `is_staff=True`/`role=user` → `role="admin"` (with 0033, every user's
+  `role` ⟺ `is_staff` is now consistent).
+
+**Inspection:** backend **96 passed**; Jest `App.test.js` **2 passed** (run independently);
+fresh sqlite migrate applies 0033+0034; `makemigrations --check` = no drift; `npm run build`
+exit 0; confirmed `ProtectedRoute`'s `loadingUser` matches the `AuthContext` export and
+`config/api.js` is gone with no importers.
+
+**Test evidence:** RED→GREEN (Jest); full backend suite 96 passed; build exit 0.
+
+---
+
 ## Phase 3 — Task 7: transactional email via Brevo HTTP API
 
 **Date:** 2026-06-22
