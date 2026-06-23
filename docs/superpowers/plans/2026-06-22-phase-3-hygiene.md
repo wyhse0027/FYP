@@ -133,6 +133,10 @@ dep: **Brevo** transactional email (HTTP API or SMTP; decided in Task 7) — rep
 - **Files:** delete `web/src/config/api.js`; fix `web/src/components/ProtectedRoute.js` (it reads
   `loading` from `useAuth()` — verify the context's real flag name and use it so a valid admin
   isn't redirected mid-load); repair `web/src/App.test.js` into a meaningful passing test.
+- **Also (Task 5 review follow-ups, cosmetic):** switch `web/src/pages/admin/AdminUsersPage.js`
+  (~L144) badge from `role === "admin"` to `is_staff`; and add a reverse backfill so existing
+  `is_staff=True`/`role=user` users get `role="admin"` (display consistency — append to a data
+  migration; the invariant is otherwise enforced by `User.save()`).
 - **Test:** `npm run build` exits 0; the repaired Jest test passes; guard no longer flickers
   (manual).
 

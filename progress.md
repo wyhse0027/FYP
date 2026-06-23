@@ -5,6 +5,34 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 3 — Task 5: unify admin authority on is_staff
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #13
+**Commit:** `52a94693`
+
+- `is_staff` is now the **sole** admin authority. `User.save()` mirrors `role` from `is_staff`
+  (`role = ADMIN if is_staff else USER`), so writing `role="admin"` alone no longer promotes.
+  One-time data migration `0033` backfills existing `role=="admin"` users to `is_staff=True`.
+  `UserSerializer` exposes `is_staff` **read-only**; token + Google login responses include it;
+  frontend admin routing/nav/login redirect now check `user?.is_staff === true`.
+
+**Penetration inspection (owner-requested):** escalation surface **clean** — no writable
+`is_staff`/`role` in any serializer; signup fields are only id/username/email/password (no
+self-promotion); no dead `user.role =` promotion code. Invariant verified: a `role=admin` /
+`is_staff=False` user is forced to `role=user` and gets **403** on the admin API. 83 passed;
+`makemigrations --check` = no drift; fresh migrate applies 0033. **Two cosmetic, non-security
+gaps deferred to Task 8** (role now faithfully mirrors is_staff so both are display-only):
+(1) migration is one-directional — a pre-existing superuser (`is_staff=True`/`role=user`) keeps
+`role=user` until next save (still admin everywhere that matters; self-heals); a reverse
+backfill would tidy this. (2) `web/src/pages/admin/AdminUsersPage.js:144` still uses
+`role === "admin"` for a badge colour inside an admin-gated page.
+
+**Test evidence:** RED 3-fail → GREEN 4 pass; full suite **83 passed**; fresh migrate 0001→0033.
+
+---
+
 ## Phase 3 — Task 2: password validators + scoped auth throttling
 
 **Date:** 2026-06-22
