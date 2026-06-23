@@ -63,7 +63,7 @@ export default function TopNav() {
             <span>Account</span>
           </NavLink>
 
-          {user?.role === "admin" && (
+          {user?.is_staff === true && (
             <NavLink to="/admin/dashboard" className={navClass}>
               <IoSettingsOutline className="text-3xl" />
               <span>Admin</span>

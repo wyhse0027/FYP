@@ -15,7 +15,7 @@ export default function ProtectedRoute({ children, adminOnly = false }) {
   }
 
   // 🔒 Only admin accounts allowed
-  if (adminOnly && user?.role !== "admin") {
+  if (adminOnly && user?.is_staff !== true) {
     return <Navigate to="/" replace />;
   }
 

@@ -71,11 +71,11 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "id", "username", "email", "phone", "avatar", "role",
+            "id", "username", "email", "phone", "avatar", "role", "is_staff",
             "address_line1", "address_line2", "postal_code", "city", "state", "country",
             "last_login", "date_joined"
         ]
-        read_only_fields = ["id", "role"]
+        read_only_fields = ["id", "role", "is_staff"]
 
     def get_avatar_url(self, obj):
         request = self.context.get("request")
@@ -142,6 +142,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             "username": user.username,
             "email": user.email,
             "role": user.role,
+            "is_staff": user.is_staff,
             "last_login": user.last_login,
             "date_joined": user.date_joined,
         }

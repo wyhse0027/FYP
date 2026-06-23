@@ -26,6 +26,10 @@ class User(AbstractUser):
         default=UserRole.USER,
     )
 
+    def save(self, *args, **kwargs):
+        self.role = UserRole.ADMIN if self.is_staff else UserRole.USER
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.username
 

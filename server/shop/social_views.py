@@ -44,7 +44,13 @@ class GoogleLoginView(APIView):
 
         refresh = RefreshToken.for_user(user)
         return Response({
-            "user": {"id": user.id, "username": user.username, "email": user.email},
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "role": user.role,
+                "is_staff": user.is_staff,
+            },
             "access": str(refresh.access_token),
             "refresh": str(refresh),
         })
