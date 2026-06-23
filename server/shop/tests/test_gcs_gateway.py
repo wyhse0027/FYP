@@ -27,10 +27,11 @@ class _LocalSigner(google_credentials.Credentials, google_credentials.Signing):
         return object()
 
 
+@patch("shop.gcs.google_auth_default")
 @patch("google.cloud.storage.Client")
-def test_create_signed_put_with_local_key_signs_directly(client_class):
+def test_create_signed_put_with_local_key_signs_directly(client_class, auth_default):
+    auth_default.return_value = (_LocalSigner(), "eleganza-ar")
     client = client_class.return_value
-    client._credentials = _LocalSigner()
     blob = client.bucket.return_value.blob.return_value
     blob.generate_signed_url.return_value = "https://signed.example/upload"
 
@@ -41,6 +42,9 @@ def test_create_signed_put_with_local_key_signs_directly(client_class):
     )
 
     assert result == "https://signed.example/upload"
+    auth_default.assert_called_once_with(
+        scopes=["https://www.googleapis.com/auth/cloud-platform"]
+    )
     blob.generate_signed_url.assert_called_once_with(
         version="v4",
         expiration=timedelta(minutes=15),
@@ -50,22 +54,30 @@ def test_create_signed_put_with_local_key_signs_directly(client_class):
     )
 
 
+@patch("shop.gcs.google_auth_default")
 @patch("google.cloud.storage.Client")
-def test_create_signed_put_keyless_signs_via_iam(client_class):
-    """On Cloud Run the attached SA has no private key → sign via IAM signBlob."""
+def test_create_signed_put_keyless_signs_via_iam(client_class, auth_default):
+    """On Cloud Run the attached SA has no private key → sign via IAM signBlob,
+    using a cloud-platform-scoped token (not the storage client's devstorage scope)."""
     refreshed = []
-    client = client_class.return_value
-    client._credentials = SimpleNamespace(
-        service_account_email="run-sa@eleganza-ar.iam.gserviceaccount.com",
-        token="ya29.fake-access-token",
-        refresh=lambda request: refreshed.append(request),
+    auth_default.return_value = (
+        SimpleNamespace(
+            service_account_email="run-sa@eleganza-ar.iam.gserviceaccount.com",
+            token="ya29.fake-access-token",
+            refresh=lambda request: refreshed.append(request),
+        ),
+        "eleganza-ar",
     )
+    client = client_class.return_value
     blob = client.bucket.return_value.blob.return_value
     blob.generate_signed_url.return_value = "https://signed.example/upload"
 
     GCSGateway().create_signed_put("ar/models/random_model.glb", 1234, "model/gltf-binary")
 
     assert refreshed, "credentials must be refreshed to obtain a token"
+    auth_default.assert_called_once_with(
+        scopes=["https://www.googleapis.com/auth/cloud-platform"]
+    )
     blob.generate_signed_url.assert_called_once_with(
         version="v4",
         expiration=timedelta(minutes=15),

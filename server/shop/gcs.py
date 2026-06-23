@@ -4,8 +4,12 @@ from urllib.parse import quote
 
 from django.conf import settings
 from google.auth import credentials as google_credentials
+from google.auth import default as google_auth_default
 from google.auth.transport.requests import Request as GoogleAuthRequest
 from google.cloud import storage
+
+
+_CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
 
 
 @dataclass(frozen=True)
@@ -39,14 +43,18 @@ class GCSGateway:
         Run the attached service account has no private key, so the URL is signed via
         the IAM signBlob API by passing the service account email and a fresh access
         token (requires roles/iam.serviceAccountTokenCreator on the SA itself).
+
+        The token is fetched with the cloud-platform scope: the storage client's own
+        credentials are scoped to devstorage and would be rejected by signBlob with
+        ACCESS_TOKEN_SCOPE_INSUFFICIENT.
         """
-        creds = self.client._credentials
-        if isinstance(creds, google_credentials.Signing):
+        credentials, _ = google_auth_default(scopes=[_CLOUD_PLATFORM_SCOPE])
+        if isinstance(credentials, google_credentials.Signing):
             return {}
-        creds.refresh(GoogleAuthRequest())
+        credentials.refresh(GoogleAuthRequest())
         return {
-            "service_account_email": creds.service_account_email,
-            "access_token": creds.token,
+            "service_account_email": credentials.service_account_email,
+            "access_token": credentials.token,
         }
 
     def stat(self, key: str) -> StoredObject | None:
