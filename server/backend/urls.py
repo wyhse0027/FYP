@@ -19,7 +19,7 @@ urlpatterns = [
     # ─── User Auth (Email + Social) ─────────────
     path("api/auth/login/", ThrottledLoginView.as_view()),
 
-    # ✅ SendGrid password reset (custom)
+    # Custom password reset (transactional email)
     path("api/auth/password-reset/", PasswordResetRequestSendGrid.as_view()),
     path("api/auth/password-reset-confirm/", PasswordResetConfirmSendGrid.as_view()),
 

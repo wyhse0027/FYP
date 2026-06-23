@@ -48,7 +48,7 @@ Derived from code review of `server/shop/models.py`, `server/shop/views.py`,
 - **FR-1 — Authentication & Accounts**
   - Email/username + password signup and login (JWT access 30 min / refresh 90 d).
   - Google OAuth login via verified `id_token` (`server/shop/social_views.py`).
-  - Password reset via SendGrid (request + confirm).
+  - Password reset via Brevo HTTP API (request + confirm) with console/locmem fallback when unconfigured.
   - Roles: `user`, `admin` (gates admin panel + admin API).
   - Profile: avatar, phone, structured address.
 
@@ -147,7 +147,7 @@ variable shape is documented in `server/backend/.env.sample` without real values
 | Google Cloud Storage | **All media** (images + `.glb`/`.mind`/`.apk`) | `GCS_PROJECT_ID`, `GCS_BUCKET_NAME`, `GOOGLE_APPLICATION_CREDENTIALS`; V4 signed URLs | **Done (Phase 2)** — sole media storage |
 | Cloudflare R2 | (former big-file storage) | — | **Removed (Phase 2)**; `boto3` + `r2_storage.py` retained only as migration-0031 shim |
 | Cloudinary | (former image storage) | — | **Removed (Phase 2)**; `cloudinary` pkg retained only as migration-0031 shim |
-| SendGrid | Password-reset email (retired) | `SENDGRID_API_KEY`, `DEFAULT_FROM_EMAIL` | **Expired** — replacing with a free transactional provider (Brevo/Resend), Phase 3 |
+| Brevo | Password-reset / transactional email | `BREVO_API_KEY`, `DEFAULT_FROM_EMAIL` | **Active (Phase 3)** - HTTP API; console/locmem fallback when unconfigured |
 | Google OAuth | Social login | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | Retained |
 | Secret Manager | Secret storage (prod) | — | **Target** — replaces `.env` |
 | Frontend | API base | `REACT_APP_API_BASE_URL` | Retained |
@@ -183,8 +183,8 @@ Future production values move to Secret Manager; `.env` remains local and gitign
 - **Secrets:** Secret Manager (target). The credentials exposed before 2026-06-21 were already
   **rotated and the old values revoked** (exposure closed, see §8 #10); future production values
   move to Secret Manager at deploy.
-- **Email / OAuth:** SendGrid is retired and will be replaced by a free transactional provider
-  (Brevo/Resend) in Phase 3; Google OAuth is retained. Core infrastructure is on GCP, while
+- **Email / OAuth:** Brevo transactional email is retained for password reset; Google OAuth is retained.
+  Core infrastructure is on GCP, while
   email and OAuth remain external services.
 - Deploys revertable (tags per phase). Roadmap:
   `docs/superpowers/specs/2026-06-21-project-roadmap-design.md`.
@@ -226,11 +226,10 @@ Tracked so they become requirements/tasks; not yet fixed unless noted.
 10. **Secrets rotated + old keys revoked (2026-06-21)** — Neon, R2, Cloudinary, Google OAuth
     secret, and Django `SECRET_KEY` rotated, re-verified working, and the **old credentials
     deleted** (owner confirmed) → exposure closed. Values move to Secret Manager at deploy. → DONE
-19. **Email delivery broken** — SendGrid free trial **expired**, so password-reset email
-    (`server/shop/email_service.py`, `server/shop/password_reset_sendgrid.py`) fails.
-    **Decision:** replace with a **free transactional provider** (e.g. Brevo / Resend — no
-    Workspace App Password needed) and drop the `sendgrid` dependency. → Phase 3 (sooner if
-    password reset is demoed). Verify Google OAuth server-side callback still works post-rotation.
+19. **Email delivery broken - RESOLVED (Phase 3)** - SendGrid was retired after the
+    free trial expired. Password reset now uses Brevo's HTTP transactional API when
+    `BREVO_API_KEY` is configured, with Django console/locmem fallback when unconfigured;
+    the `sendgrid` dependency was removed. Google OAuth callback hardening was verified in Task 6.
 11. **Storage mutation authz — RESOLVED (Phase 2)** ✅ — `server/shop/views_upload.py`
     presign/finalize/delete are now `IsAdminUser`; finalize loads a signed claim bound to the
     requesting admin and verifies the stored object's key/size/type/generation before saving
@@ -242,8 +241,8 @@ Tracked so they become requirements/tasks; not yet fixed unless noted.
     `user.role === "admin"`. Unify (decide: `role` implies `is_staff`, or `is_staff` is sole). → Phase 3
 14. **Fail-open config** — `DEBUG` defaults `True`, `SECRET_KEY` defaults `"dev-only"` if env
     unset (`server/backend/settings.py:33,48`). Production must require them and abort if absent. → Phase 3
-15. **Weak auth controls** — signup accepts 6-char passwords without Django validators; SendGrid
-    reset accepts any non-empty password; no auth/reset throttling. → Phase 3
+15. **Weak auth controls - RESOLVED (Phase 3)** - signup and password-reset confirm
+    now run Django password validators; login/signup/reset routes are scoped-throttled.
 16. **Review upload validation — RESOLVED (Phase 2)** ✅ — `ReviewSerializer.validate_files`
     enforces an image/video MIME+extension allowlist, per-type size caps (10/50 MiB), and a
     5-file limit before any `ReviewMedia` is created; the validated type (not client MIME) is

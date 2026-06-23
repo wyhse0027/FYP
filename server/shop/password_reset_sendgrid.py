@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.throttling import ScopedRateThrottle
 
-from .email_service import send_via_sendgrid
+from .email_service import send_transactional_email
 
 User = get_user_model()
 
@@ -49,7 +49,7 @@ class PasswordResetRequestSendGrid(APIView):
                 "If you did not request this, please ignore this email."
             )
 
-            send_via_sendgrid(subject, message, [email])
+            send_transactional_email(subject, message, [email])
 
         return Response(
             {"detail": "If the email exists, a reset link has been sent."},
