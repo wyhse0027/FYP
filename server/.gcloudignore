@@ -1,0 +1,20 @@
+# Controls what `gcloud builds submit` uploads to Cloud Build.
+# Keep secrets and local-only artifacts out of the uploaded source tarball.
+.env
+*.env
+backend/.env
+
+db.sqlite3
+media/
+
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+staticfiles/
+
+sendgrid_test.py
+*.dump
+*.sec.tmp

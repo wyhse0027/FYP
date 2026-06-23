@@ -171,22 +171,31 @@ Future production values move to Secret Manager; `.env` remains local and gitign
   **OAuth**: Google.
 - Terminated and removed; application code is intact, the live service is not.
 
-### 7.2 Incoming deployment (planned) — **core infrastructure on Google Cloud Platform**
-- **GCP project:** a **new dedicated project** (e.g. `eleganza-ar`) under the billing account
-  holding the credit (credit is billing-account-level, so a new project keeps it); reuse the
-  existing Google OAuth client from `fyp-login-system`.
-- **Backend:** Cloud Run (Django container, gunicorn).
-- **Database:** Cloud SQL (PostgreSQL), migrated from Neon.
-- **Media:** single Google Cloud Storage bucket (Cloudinary + R2 removed; existing media
-  migrated). Direct GCS URLs for the demo; Cloud CDN only if measured AR delivery warrants it.
-- **Frontend:** Firebase Hosting (HTTPS — required for web AR).
-- **Secrets:** Secret Manager (target). The credentials exposed before 2026-06-21 were already
-  **rotated and the old values revoked** (exposure closed, see §8 #10); future production values
-  move to Secret Manager at deploy.
-- **Email / OAuth:** Brevo transactional email is retained for password reset; Google OAuth is retained.
-  Core infrastructure is on GCP, while
-  email and OAuth remain external services.
-- Deploys revertable (tags per phase). Roadmap:
+### 7.2 Backend deployment (Phase 4 — LIVE 2026-06-23) — **core infrastructure on GCP**
+- **GCP project:** `eleganza-ar` (number `439528178601`) on the credit-bearing billing account.
+- **Backend:** Cloud Run service **`eleganza-api`** (`asia-southeast1`), image from Artifact
+  Registry repo `eleganza-backend`, gunicorn/WhiteNoise. `min-instances=0`, `max-instances=4`,
+  512Mi. Runtime SA **`eleganza-run@eleganza-ar.iam.gserviceaccount.com`** (least-privilege:
+  `cloudsql.client`, bucket `objectAdmin`, `iam.serviceAccountTokenCreator` on itself).
+  **URL: `https://eleganza-api-439528178601.asia-southeast1.run.app`**.
+- **Database:** Cloud SQL **`elz-pg`** (PostgreSQL 17, ENTERPRISE edition, `db-f1-micro`, 10 GB,
+  zonal, `asia-southeast1`), connected via the `/cloudsql` Unix socket (`--add-cloudsql-instances`).
+  Data migrated from Neon (`pg_dump`/`pg_restore`, 35 tables/377 rows verified). **Neon kept as
+  rollback.** Settings disable `sslmode` for the socket form.
+- **Media:** the existing GCS bucket `eleganza-ar-media-439528178601`. **Signed uploads** use the
+  attached SA via the **IAM signBlob** API (no key in the container; a cloud-platform-scoped token
+  is fetched for signing) — verified live.
+- **Frontend:** Firebase Hosting (Phase 5 — not yet deployed).
+- **Secrets:** **Secret Manager** holds `DJANGO_SECRET_KEY`, `DATABASE_URL`, `BREVO_API_KEY`,
+  `GOOGLE_OAUTH_CLIENT_SECRET`, granted to `eleganza-run@` per-secret and injected as Cloud Run
+  secret env vars. Non-secret config (`DJANGO_DEBUG=False`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`,
+  `GCS_*`, `GOOGLE_OAUTH_CLIENT_ID`) are plain env vars.
+- **Email / OAuth:** Brevo HTTP API (Authorized-IP enforcement **deactivated for API keys** so the
+  Cloud Run dynamic egress can send — no Cloud NAT). Google OAuth client lives in a separate
+  project (`409741672143`); its frontend origins/redirects are set in Phase 5.
+- **CORS/CSRF:** `CORS_ALLOWED_ORIGINS` is empty until the Phase 5 frontend origin exists;
+  `CSRF_TRUSTED_ORIGINS` includes the Cloud Run host.
+- Deploys revertable (Cloud Run revisions + per-phase tags). Roadmap:
   `docs/superpowers/specs/2026-06-21-project-roadmap-design.md`.
 
 ---

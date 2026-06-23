@@ -5,6 +5,253 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 4 — Task 9: review, docs, merge + tag — PHASE COMPLETE
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Task 9.
+
+**Review (code + security self-review of `main..phase-4-backend-deploy`):** PASS, no changes
+required. Verified: DEBUG=False live; the 4 secrets are Secret Manager references (never inlined
+or committed); `.dockerignore`/`.gcloudignore` keep `.env`/`db.sqlite3` out of image + build
+upload; runtime SA least-privilege; signed PUT scoped (15-min, content-type/length-bound,
+IsAdminUser); `--allow-unauthenticated` intended (DRF JWT enforces). Non-blocking follow-ups:
+(1) per-presign ADC/token refresh could be cached; (2) collectstatic runs each cold start;
+(3) **future deploys with new migrations need an explicit migrate step** (none runs today since the
+DB was already at head); (4) `CORS_ALLOWED_ORIGINS` empty until Phase 5 sets the frontend origin.
+
+**Docs:** `context.md` §7.2 rewritten as the live deployment; `docs/services-and-billing.md` moved
+Cloud Run/Cloud SQL/Secret Manager/Artifact Registry to Active (Neon → rollback); `task_plan.md`
+Phase 4 ✅.
+
+**Decisions recorded:** Brevo Authorized-IP enforcement deactivated for API keys instead of Cloud
+NAT (supersedes plan decision #6); Cloud SQL recreated as PG17 to match Neon; `FRONTEND_URL` +
+Google OAuth frontend origins deferred to Phase 5.
+
+**Merge:** `phase-4-backend-deploy` → `main` `--no-ff`, annotated tag `phase-4-backend-deploy`,
+pushed. Commits: `ac3cfd03`, `40edbd80`, `a7dd1a39`, `a74c23f6`, `ef89c867`.
+
+**Test evidence:** 102 backend tests pass; live smoke (products/admin/static/login/GCS-media,
+signed upload presign+PUT 200, Brevo email delivered) all green.
+
+---
+
+## Phase 4 — Task 7 + Task 8: post-deploy wiring + full smoke (incl. SignBlob fix)
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Tasks 7 & 8.
+
+**Task 7 — post-deploy wiring:**
+- **Brevo egress (decision changed from the plan):** instead of Cloud NAT static IP, owner
+  **deactivated Brevo's Authorized-IP enforcement for API keys** (Security → Authorized IPs).
+  Cloud Run's dynamic egress can now send. Rationale: demo-grade, avoids NAT infra + ongoing
+  credit burn. *(Supersedes locked decision #6.)*
+- **Google OAuth origins:** deferred to Phase 5 — the OAuth client (`409741672143-…`, which lives
+  in a **separate GCP project `409741672143`**) needs the *frontend* origin, which doesn't exist
+  until Firebase deploy. No backend-side OAuth change needed now.
+
+**SignBlob fix (the flagged Task 8 risk — keyless signed uploads):** the first presign attempt
+returned **500**. Root cause via a brief `DJANGO_DEBUG=True` diagnostic (reverted immediately):
+`generate_signed_url` with the attached SA has no private key. Two fixes:
+1. `a7dd1a39` — pass `service_account_email` + `access_token` so signing uses the IAM signBlob API
+   (local JSON-key creds still sign directly; both paths unit-tested).
+2. `a74c23f6` — fetch that token with the **cloud-platform** scope via
+   `google.auth.default(scopes=[…])`; the storage client's own creds are devstorage-scoped and
+   signBlob rejected them with `ACCESS_TOKEN_SCOPE_INSUFFICIENT`.
+Rebuilt → image `:a74c23f6`, redeployed (revision `eleganza-api-00004-r7w`, DEBUG back to False).
+
+**Smoke test (full, passed):**
+- `/api/products/` from Cloud SQL; `/admin/` 302; static 200; `/api/auth/login/` 400; GCS media 200.
+- **GCS signed upload (presign→PUT)**: presign **200** with a V4 `X-Goog-Signature` (keyless IAM
+  SignBlob), **PUT 200**, object landed in the bucket, then deleted. Tested with a throwaway
+  superuser (created via the Cloud SQL proxy, **deleted after** → `shop_user` back to 7).
+- **Password-reset email via Brevo**: `POST /api/auth/password-reset/` → 200, no Brevo error in
+  logs ⇒ sent. **Delivery confirmed by owner** (received, spam folder). The reset link points at
+  `localhost:3000` because `FRONTEND_URL` is unset in prod — **deferred to Phase 5** wiring.
+
+**Test evidence:** 102 backend tests pass; live presign 200 + PUT 200 + object verified; email 200
+with clean logs. `manage.py` settings unchanged since Task 1.
+
+**Next:** Task 9 — review (`/code-review` + `/security-review`), docs (context.md §7,
+services-and-billing.md, task_plan.md), owner-approved merge `--no-ff` + tag `phase-4-backend-deploy`.
+
+---
+
+## Phase 4 — Task 6: deploy to Cloud Run + Task 8 (partial) smoke test
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Tasks 6 & 8.
+
+**Deploy:** `gcloud run deploy eleganza-api` (region `asia-southeast1`), image
+`…/eleganza-api:40edbd80`, attached SA `eleganza-run@`, `--add-cloudsql-instances=eleganza-ar:asia-southeast1:elz-pg`,
+`--allow-unauthenticated`, `min=0 max=4`, `cpu=1 memory=512Mi port=8000`,
+`RUN_COLLECTSTATIC=1` (no `RUN_MIGRATIONS` — DB already at head from the Task 4 restore).
+Secrets wired via `--set-secrets` (DJANGO_SECRET_KEY/DATABASE_URL/BREVO_API_KEY/
+GOOGLE_OAUTH_CLIENT_SECRET). Revision `eleganza-api-00001-tfz`, 100% traffic.
+**URL: `https://eleganza-api-439528178601.asia-southeast1.run.app`**.
+
+**Smoke test (passed):**
+- `GET /api/products/` → full product JSON **from Cloud SQL**, media as GCS URLs (cold start OK).
+- `GET /admin/` → 302; `GET /static/admin/css/base.css` → 200 `text/css` (WhiteNoise/collectstatic).
+- `POST /api/auth/login/` (bad creds) → 400 validation error (DB auth path live, not 500).
+- GCS public media object → 200.
+
+**Still to verify (Task 8 remainder, needs Task 7 + owner):**
+- GCS **signed upload** (presign→PUT→finalize) via attached-SA **IAM SignBlob** (locked decision
+  #5) — requires an admin JWT; faithful test is the live presign endpoint (gcloud impersonation
+  is a poor proxy because `roles/owner` lacks `serviceAccountTokenCreator` by default).
+- Password-reset **email via Brevo** — blocked until Task 7 authorizes the Cloud Run egress IP
+  in Brevo (otherwise Brevo rejects the IP, as it did locally).
+
+**Note:** Google OAuth client ID `409741672143-…` lives in a **different** GCP project
+(`409741672143`); its authorized origins/redirects are edited there in Task 7.
+
+**Next:** Task 7 — post-deploy wiring (Brevo egress IP, Google OAuth origins). **Decision needed**
+on Brevo egress approach (Cloud NAT cost vs alternatives).
+
+---
+
+## Phase 4 — Task 5: build + push image (Cloud Build → Artifact Registry)
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Task 5.
+
+- Added `server/.dockerignore` + `server/.gcloudignore` to keep `backend/.env`, `db.sqlite3`,
+  `media/`, caches, and `staticfiles/` out of both the image (`COPY . .`) and the Cloud Build
+  source upload. (Security: the unguarded `COPY . .` would otherwise have baked the live `.env`
+  into the image.)
+- Built `server/Dockerfile` via `gcloud builds submit --region=asia-southeast1` →
+  `asia-southeast1-docker.pkg.dev/eleganza-ar/eleganza-backend/eleganza-api:40edbd80`
+  (tag = commit `40edbd80`; digest `sha256:3caf438471198868cd628c8c43cf01f596b98eef96cd502fd983750561c4307b`).
+
+**Test evidence:** Cloud Build STATUS **SUCCESS** (2M5S), image pushed to Artifact Registry.
+
+**Next:** Task 6 — deploy to Cloud Run (owner checkpoint; first public exposure + secret wiring).
+
+---
+
+## Phase 4 — Task 4: data migration Neon → Cloud SQL
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Task 4. Owner checkpoint passed before the live restore.
+
+**Method:** `pg_dump` (PG17 client) of Neon → custom-format `neon.dump` (`-Fc --no-owner
+--no-acl`); Cloud SQL Auth Proxy v2.22.1 on `127.0.0.1:5433`; `pg_restore --no-owner --no-acl
+--exit-on-error` into the `eleganza` DB as `eleganza_app` (tables owned by the app user →
+future Django migrations work). Password sourced from the `DATABASE_URL` secret at runtime,
+never printed. Neon left intact as rollback. `cloud-sql-proxy.exe`/`*.dump` gitignored.
+
+**Verification (parity vs Neon baseline):**
+- Row counts: **35 tables / 377 rows on both, 0 mismatches** (key tables: users 7, products 5,
+  AR 2, orders 16, order-items 16, payments 16, product-media 12, reviews 9).
+- Restore exit 0 with `--exit-on-error` (no errors); dump had no extensions.
+- Identity sequences: all **33** at/above their max PK (no insert-collision risk).
+
+**Gotchas resolved:** (1) Proxy first failed `accessNotConfigured (project=sadify)` — ADC quota
+project was wrong; fixed with `gcloud auth application-default set-quota-project eleganza-ar`.
+(2) ENTERPRISE_PLUS default edition / PG16↔Neon17 mismatch handled earlier (Task 2).
+
+**Test evidence:** count-diff script → 0 mismatches; sequence-check script → 0 behind-max.
+
+**Next:** Task 5 — build + push the image to Artifact Registry via Cloud Build.
+
+---
+
+## Phase 4 — Tasks 2 & 3: Cloud SQL instance + Secret Manager (owner-operated)
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Tasks 2 (Cloud SQL) & 3 (Secret Manager). **First billable step.**
+
+**Task 2 — Cloud SQL (owner-approved before run):**
+- Instance `elz-pg`: **`POSTGRES_17`** (matches Neon 17.10 — initially created as 16 then
+  recreated as 17 to allow the `pg_dump`/restore; Cloud SQL can't change major version in place),
+  **ENTERPRISE edition**, tier `db-f1-micro` (shared-core, smallest), 10 GB SSD, zonal,
+  `asia-southeast1`, `--no-backup` (Neon is the rollback through Task 4). Connection name
+  `eleganza-ar:asia-southeast1:elz-pg` (unchanged across recreate → secret stays valid).
+  Status RUNNABLE.
+  ⚠ ENTERPRISE_PLUS is the default edition and rejects shared-core tiers — must pass
+  `--edition=ENTERPRISE` for `db-f1-micro`.
+- Database `eleganza`; app user `eleganza_app` (32-char alphanumeric password, generated
+  locally, never echoed).
+
+**Task 3 — Secret Manager (4 secrets, automatic replication):** `DATABASE_URL` (Cloud SQL
+Unix-socket form), `DJANGO_SECRET_KEY` (fresh 50-char prod key, not the dev one), `BREVO_API_KEY`
+and `GOOGLE_OAUTH_CLIENT_SECRET` (read from local `.env`, never printed). Each granted
+`roles/secretmanager.secretAccessor` to `eleganza-run@` **per-secret** (least-privilege).
+- ⚠ Gotcha: piping a PowerShell string into `gcloud secrets … --data-file=-` appends a trailing
+  newline; secrets were (re)written via `[IO.File]::WriteAllText` (no newline). Verified lengths:
+  DATABASE_URL 118, DJANGO_SECRET_KEY 50, BREVO_API_KEY 89, GOOGLE_OAUTH_CLIENT_SECRET 35.
+
+**Test evidence:** instance RUNNABLE; `gcloud secrets versions access` length check confirms all
+four non-empty and newline-free; IAM bindings shown in command output.
+
+**Next:** Task 4 — data migration Neon → Cloud SQL (owner checkpoint before the live restore;
+Neon kept intact as rollback).
+
+---
+
+## Phase 4 — Task 0: GCP prerequisites (owner-operated)
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Task 0. Free; no billing.
+
+- Enabled APIs: `run`, `sqladmin`, `secretmanager`, `artifactregistry`, `cloudbuild`,
+  `iamcredentials` (verified via `gcloud services list --enabled`).
+- Created Artifact Registry Docker repo `eleganza-backend` in `asia-southeast1`.
+- Created **dedicated runtime SA** `eleganza-run@eleganza-ar.iam.gserviceaccount.com`
+  (least-privilege, separate from the `eleganza-storage@` signer). Grants:
+  `roles/cloudsql.client` (project), `roles/storage.objectAdmin` on bucket
+  `eleganza-ar-media-439528178601`, `roles/iam.serviceAccountTokenCreator` on itself
+  (keyless GCS signed URLs). `roles/secretmanager.secretAccessor` deferred to Task 3
+  (granted per-secret once secrets exist).
+
+**Test evidence:** `gcloud services list --enabled` shows all six APIs; repo + SA + bindings
+confirmed in command output.
+
+**Next:** Task 2 — Cloud SQL instance. **First billable step**; owner approval gate before run.
+
+---
+
+## Phase 4 — Task 1: production settings + entrypoint hardening (validation-first)
+
+**Date:** 2026-06-23
+**Requirement ref:** Phase 4 plan Task 1 (prod settings hardening, test-first); NFR security/deploy.
+**Branch:** `phase-4-backend-deploy` (created off `main`).
+
+**Validation baseline:** 96 backend tests green before changes.
+
+**Changes (code, test-first):**
+- `backend/settings.py` — DB URL parsing now disables SSL for the Cloud SQL Unix-socket form
+  (`…?host=/cloudsql/PROJECT:REGION:INSTANCE`): Postgres cannot negotiate TLS over a local
+  socket, so `sslmode=require` would break the connection. Network Postgres (Neon) still uses
+  SSL. Detection: `uses_unix_socket = "host=/" in DATABASE_URL`.
+- `backend/settings.py` — added env-gated HSTS in the `not DEBUG` block
+  (`SECURE_HSTS_SECONDS` default **0**, `INCLUDE_SUBDOMAINS` follows it, `PRELOAD=False`):
+  opt-in because `*.run.app` is already HSTS-preloaded by Google and careless HSTS is
+  irreversible. Resolves `check --deploy` W004 as a documented opt-in.
+- `backend/.env.sample` — documented the Cloud SQL Unix-socket `DATABASE_URL` form and the
+  prod `DJANGO_ALLOWED_HOSTS` / `CSRF_TRUSTED_ORIGINS` / `CORS_ALLOWED_ORIGINS` guidance.
+- `shop/tests/test_prod_settings.py` (new, 5 tests) — asserts prod security flags
+  (SSL redirect, secure cookies, proxy SSL header, CORS not allow-all), hosts/CSRF/CORS
+  sourced from env, Cloud SQL socket URL → no `sslmode`, network URL → `sslmode=require`,
+  and HSTS default-off / env-opt-in.
+
+**Verified (already correct, no change needed):** `SECURE_*`/`SECURE_PROXY_SSL_HEADER` gated for
+the Cloud Run proxy; WhiteNoise + `collectstatic` static path; GCS uses ADC (no key in OPTIONS)
+when `GOOGLE_APPLICATION_CREDENTIALS` is unset.
+
+**`check --deploy` triage:** W004 → resolved via opt-in HSTS above. W009 (weak SECRET_KEY) →
+false positive from the short triage secret; the fail-closed guard already rejects empty/`dev-only`
+and prod uses a 50-char random key. 3× allauth `ACCOUNT_*` deprecations → pre-existing
+django-allauth 65.x notices, not security, not in Phase 4 scope (changing them alters auth).
+
+**Test evidence:** `pytest shop/tests` → **101 passed** (96 + 5 new). `manage.py check --deploy`
+under `DEBUG=False` → only the triaged warnings above.
+
+**Next:** Task 0 (owner GCP: enable run/sqladmin/secretmanager/artifactregistry/cloudbuild/
+iamcredentials APIs + Artifact Registry repo + runtime SA) — free, no billing.
+
+---
+
 ## Phase 4 — Plan Written (approved)
 
 **Date:** 2026-06-23

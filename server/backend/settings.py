@@ -58,6 +58,12 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = True
+    # HSTS is opt-in via env, default off. Cloud Run's *.run.app is already
+    # HSTS-preloaded by Google; this matters only for a custom domain. Careless
+    # HSTS (long max-age / preload) is effectively irreversible, so default to 0.
+    SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = SECURE_HSTS_SECONDS > 0
+    SECURE_HSTS_PRELOAD = False
 
 
 # ───────────────────────────────────────────────────────────────
@@ -137,7 +143,12 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 if DATABASE_URL:
     scheme = DATABASE_URL.split("://", 1)[0].lower()
-    ssl_require = scheme in ("postgres", "postgresql")
+    is_postgres = scheme in ("postgres", "postgresql")
+    # Cloud SQL via the Unix-socket form (…?host=/cloudsql/PROJECT:REGION:INSTANCE)
+    # must not request SSL: Postgres does not negotiate TLS over a local socket, so
+    # sslmode=require would break the connection. Network Postgres (Neon) still uses SSL.
+    uses_unix_socket = "host=/" in DATABASE_URL
+    ssl_require = is_postgres and not uses_unix_socket
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,

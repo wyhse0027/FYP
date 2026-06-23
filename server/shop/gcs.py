@@ -3,7 +3,13 @@ from datetime import timedelta
 from urllib.parse import quote
 
 from django.conf import settings
+from google.auth import credentials as google_credentials
+from google.auth import default as google_auth_default
+from google.auth.transport.requests import Request as GoogleAuthRequest
 from google.cloud import storage
+
+
+_CLOUD_PLATFORM_SCOPE = "https://www.googleapis.com/auth/cloud-platform"
 
 
 @dataclass(frozen=True)
@@ -26,7 +32,30 @@ class GCSGateway:
             method="PUT",
             content_type=content_type,
             headers={"Content-Length": str(size)},
+            **self._signing_credentials(),
         )
+
+    def _signing_credentials(self) -> dict:
+        """Kwargs that let generate_signed_url produce a V4 signature.
+
+        Local dev uses a service-account JSON key (GOOGLE_APPLICATION_CREDENTIALS)
+        whose credentials can sign locally, so no extra kwargs are needed. On Cloud
+        Run the attached service account has no private key, so the URL is signed via
+        the IAM signBlob API by passing the service account email and a fresh access
+        token (requires roles/iam.serviceAccountTokenCreator on the SA itself).
+
+        The token is fetched with the cloud-platform scope: the storage client's own
+        credentials are scoped to devstorage and would be rejected by signBlob with
+        ACCESS_TOKEN_SCOPE_INSUFFICIENT.
+        """
+        credentials, _ = google_auth_default(scopes=[_CLOUD_PLATFORM_SCOPE])
+        if isinstance(credentials, google_credentials.Signing):
+            return {}
+        credentials.refresh(GoogleAuthRequest())
+        return {
+            "service_account_email": credentials.service_account_email,
+            "access_token": credentials.token,
+        }
 
     def stat(self, key: str) -> StoredObject | None:
         blob = self.bucket.blob(key)
