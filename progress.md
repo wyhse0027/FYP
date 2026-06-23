@@ -5,6 +5,259 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 3 — Task 11: review, merge + tag — PHASE COMPLETE
+
+**Date:** 2026-06-22
+**Branch/Tag:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #3-9,#13-19; CLAUDE.md §6
+
+- **Formal review (inline):** code review = no outstanding correctness issues (the one cross-task
+  bug, migration-0031 cloudinary config in clean envs, was caught by the new CI and fixed).
+  Security review = fail-closed `DEBUG`/`SECRET_KEY`, password validators on all set-password
+  paths, per-IP auth throttling, `is_staff` sole admin authority (no role escalation), hardened
+  Google login, canonicalized routes, Brevo key in gitignored `.env`, SRI on CDN scripts; **no
+  secrets in git**. Deferred + tracked (§8 #18): cookie migration, CSP, refresh-token revocation,
+  cross-instance throttle storage.
+- **Verification:** GitHub Actions CI **green** (backend + frontend); fresh clean-env migrate
+  `0001→0034` no errors; secret scan clean (`.env` gitignored; only test-fixture passwords).
+- **Owner approved merge.** Merged `phase-3-hygiene` → `main` (`--no-ff`), annotated tag
+  `phase-3-hygiene`, pushed.
+
+**Phase 3 COMPLETE.** Resolved §8: #3,#4,#5,#6,#7,#8,#9,#13,#14,#15,#16(P2),#17,#19; #18 partial
+(SRI/pinning done, rest tracked). **Next: Phase 4 — backend deploy (Cloud Run + Cloud SQL).**
+
+---
+
+## Phase 3 — Task 10: minimal CI (executed by Claude; Codex out of tokens)
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #7 (CI)
+**Commits:** `731fc42e` (workflow), `<cloudinary shim>` (CI-caught fix)
+
+- Added `.github/workflows/ci.yml`: **backend** job (Python 3.13, `pip install`, `pytest shop/tests`
+  under `settings_test` — in-memory sqlite/InMemoryStorage/locmem, no live services) and
+  **frontend** job (Node 20, `npm ci`, `npm test --watchAll=false`, `npm run build`). Triggers on
+  push + PR.
+- **CI caught a real latent bug** (passes locally only because the local `.env` still has Cloudinary
+  vars): migration `0031` instantiates `cloudinary_storage.MediaCloudinaryStorage`, which raises
+  unless `CLOUD_NAME/API_KEY/API_SECRET` are present — so `migrate` `KeyError`'d in CI (and would
+  on a fresh Cloud Run deploy). **Fixed:** added a dummy `CLOUDINARY_STORAGE` migration-compat shim
+  to base settings (parallel to `r2_storage.py`; env-overridable, never used at runtime). Verified
+  `MediaCloudinaryStorage` instantiates with the dummy dict and no env.
+- **Verified on GitHub Actions: both jobs GREEN** (backend 30s, frontend 51s).
+
+**Test evidence:** GitHub Actions run `27999995031` — Backend + Frontend both ✓; local clean-env
+isolation test passed; local suite 96 passed.
+
+---
+
+## Phase 3 — Task 9: CDN pinning + SRI (executed by Claude; Codex out of tokens)
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #18 (partial)
+**Commit:** `4dd43a04`
+
+- Pinned **model-viewer → `@4.3.1`** (was unversioned/mutable — the core #18 risk) and added
+  `sha384` SRI + `crossorigin="anonymous"` to it and the AR libs (A-Frame 1.5.0, MindAR 1.2.3,
+  aframe-extras 7.7.0). `ARViewer.js` `loadScript` now sets `integrity`/`crossOrigin` **before**
+  `src`. Hashes computed from the exact files (all origins serve `ACAO: *`) and verified
+  deterministic (identity == compressed). Draco decoder path left (WASM via GLTFLoader, SRI N/A).
+  CSP + cookie migration + refresh-token revocation explicitly **deferred + tracked** in §8 #18;
+  #17 also marked resolved.
+- **Manual gate PASSED (owner):** web AR renders + animates with SRI active; no SRI console
+  errors; build exit 0.
+
+**Local-dev finding (from the manual test):** Task 1's `DEBUG` default→False means a local
+`.env` **must set `DJANGO_DEBUG=True`** (already in `.env.sample`), otherwise `DEBUG=False`
+locally flips `CORS_ALLOW_ALL_ORIGINS=False` + `SECURE_SSL_REDIRECT=True` and blocks every
+`localhost:3000` API call (CORS). Owner added `DJANGO_DEBUG=True` to local `.env` → resolved.
+(No code change — correct fail-closed prod behavior; documented in `.env.sample`.)
+
+**Test evidence:** SRI hashes verified deterministic; `npm run build` exit 0; owner manual AR
+render+animate PASS.
+
+---
+
+## Phase 3 — Task 8: frontend hygiene + Task 5 follow-ups
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #3, #5, #7 (frontend), #13 follow-ups
+**Commits:** `ce282955` (dead config + route guard + test), `d1a2fa03` (admin badge),
+`5e2ed452` (reverse backfill migration)
+
+- **#3:** deleted unused `web/src/config/api.js` (nothing imports it; live config is
+  `web/src/lib/http.js`).
+- **#5:** `ProtectedRoute.js` now reads `loadingUser` (the real `AuthContext` flag) instead of
+  the never-defined `loading`, so a valid admin isn't redirected mid-profile-load.
+- **#7 (frontend):** replaced the stale CRA `App.test.js` (asserted deleted "learn react" UI +
+  threw on unset API base) with 2 meaningful tests (route shell renders; protected routes wait
+  while loading).
+- **Task 5 follow-ups:** `AdminUsersPage.js` badge now keys on `is_staff`; migration `0034`
+  reverse-backfills `is_staff=True`/`role=user` → `role="admin"` (with 0033, every user's
+  `role` ⟺ `is_staff` is now consistent).
+
+**Inspection:** backend **96 passed**; Jest `App.test.js` **2 passed** (run independently);
+fresh sqlite migrate applies 0033+0034; `makemigrations --check` = no drift; `npm run build`
+exit 0; confirmed `ProtectedRoute`'s `loadingUser` matches the `AuthContext` export and
+`config/api.js` is gone with no importers.
+
+**Test evidence:** RED→GREEN (Jest); full backend suite 96 passed; build exit 0.
+
+---
+
+## Phase 3 — Task 7: transactional email via Brevo HTTP API
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #19
+**Commit:** `0fccf2ac`
+
+- Replaced SendGrid with **Brevo's HTTP transactional API**. `email_service.send_transactional_email()`
+  POSTs to `api.brevo.com/v3/smtp/email` (stdlib `urllib`, no new dep) when `BREVO_API_KEY` is set,
+  else falls back to Django's `send_mail` (console in dev, locmem in tests) so CI never sends.
+  Password-reset views now call it; `sendgrid` dependency removed; `.env.sample` + `context.md`
+  updated (§8 #19 resolved). **Decision (owner):** Brevo over **HTTP API** not SMTP, because
+  Brevo enforces account-level **Authorized IPs** (SMTP 525 + API 401 from an unrecognized IP);
+  the HTTP API is the path that works from Cloud Run's dynamic egress IP (still IP-gated, so the
+  egress IP must be authorized at deploy — tracked in `docs/services-and-billing.md`).
+- **Live proof (Claude, owner-authorized):** real send via the Brevo HTTP API returned **HTTP 201**
+  with a `messageId` after the owner authorized the sending IP `60.53.186.250` in Brevo Security.
+
+**Inspection:** 96 passed; reset view calls `send_transactional_email`; tests make **no live
+call** (fallback patches `urlopen`→`call_count==0` + locmem outbox; Brevo path mocks `urlopen`
+and asserts the exact payload/headers); no residual `sendgrid` in committed code; tests use the
+pytest-django `settings` fixture (auto-restored — no settings leak). **Note:** the owner's local
+`.env` still held the dead `SENDGRID_API_KEY` (expired trial) — to be deleted locally (not
+committed; nothing reads it).
+
+**Test evidence:** RED 2-fail → GREEN 2 pass; full suite **96 passed**; live Brevo API 201.
+
+---
+
+## Phase 3 — Task 6: route canonicalization + Google login hardening
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #6, #17
+**Commits:** `9e58c9cc` (routes), `2617a553` (Google login)
+
+- **Routes (#6):** collapsed duplicate auth/login/reset/token routes to one canonical set and
+  removed the dead shadowed unthrottled `/api/token/` (Task 2 finding) plus duplicate
+  `dj-rest-auth`/`registration`/`accounts` mounts. Survivors: `/api/token/` (throttled
+  `MyTokenObtainPairView`), `/api/token/refresh/`, `/api/signup/`, `/api/auth/login/`,
+  `/api/auth/password-reset/` + `-confirm/` (SendGrid views, keep Task 2 throttles + validators),
+  `/api/auth/google/` (`GoogleLoginView`), `/accounts/` (allauth — server-side OAuth callback
+  preserved). **No frontend source change needed** — all callers already pointed at survivors.
+- **Google login (#17):** require `email_verified`; normalize email lowercase + look up
+  `email__iexact`; deterministic username-collision handling (sha256 suffix); atomic create with
+  `IntegrityError` re-query for the race; generic error body (no raw provider text leaked).
+
+**Careful/detailed inspection (owner-requested, riskiest task):** `manage.py check` clean (no
+broken imports/URLs); **94 passed**; every surviving route resolved to the correct view;
+`/accounts/google/login/` still resolves (OAuth callback intact); full frontend endpoint-caller
+grep confirmed **zero** calls to any removed route; Google test mock target
+(`shop.social_views.id_token`) valid; frontend build exit 0. **Manual check deferred to Task 11:**
+real Google Sign-In in the browser (token verification is mocked in unit tests). **Leftover (note):**
+`/api/auth/login/` (`ThrottledLoginView`) is unused by the frontend now (login goes via
+`/api/token/`) — harmless + throttled, left in place.
+
+**Test evidence:** RED 9-fail → GREEN 11 pass; full suite **94 passed**; routes resolve/404 as
+expected.
+
+---
+
+## Phase 3 — Task 5: unify admin authority on is_staff
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #13
+**Commit:** `52a94693`
+
+- `is_staff` is now the **sole** admin authority. `User.save()` mirrors `role` from `is_staff`
+  (`role = ADMIN if is_staff else USER`), so writing `role="admin"` alone no longer promotes.
+  One-time data migration `0033` backfills existing `role=="admin"` users to `is_staff=True`.
+  `UserSerializer` exposes `is_staff` **read-only**; token + Google login responses include it;
+  frontend admin routing/nav/login redirect now check `user?.is_staff === true`.
+
+**Penetration inspection (owner-requested):** escalation surface **clean** — no writable
+`is_staff`/`role` in any serializer; signup fields are only id/username/email/password (no
+self-promotion); no dead `user.role =` promotion code. Invariant verified: a `role=admin` /
+`is_staff=False` user is forced to `role=user` and gets **403** on the admin API. 83 passed;
+`makemigrations --check` = no drift; fresh migrate applies 0033. **Two cosmetic, non-security
+gaps deferred to Task 8** (role now faithfully mirrors is_staff so both are display-only):
+(1) migration is one-directional — a pre-existing superuser (`is_staff=True`/`role=user`) keeps
+`role=user` until next save (still admin everywhere that matters; self-heals); a reverse
+backfill would tidy this. (2) `web/src/pages/admin/AdminUsersPage.js:144` still uses
+`role === "admin"` for a badge colour inside an admin-gated page.
+
+**Test evidence:** RED 3-fail → GREEN 4 pass; full suite **83 passed**; fresh migrate 0001→0033.
+
+---
+
+## Phase 3 — Task 2: password validators + scoped auth throttling
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #15
+**Commit:** `5e8740ec`
+
+- **Validators:** `AUTH_PASSWORD_VALIDATORS` (MinimumLength 8, CommonPassword, NumericPassword,
+  UserAttributeSimilarity) now enforced via `validate_password()` on **all three** password-set
+  paths — signup (`UserSignupSerializer.validate`), the SendGrid reset-confirm view, and the
+  serializer-based reset-confirm.
+- **Throttling:** DRF `ScopedRateThrottle` with scoped rates — login `5/min` (`/api/token/` +
+  `/api/auth/login/` via new `ThrottledLoginView`), signup `5/min`, reset-request `3/min`,
+  reset-confirm `3/min`. Global default is `ScopedRateThrottle` (no-op for unscoped views).
+  LocMem = per-process/per-instance under Cloud Run (shared enforcement deferred to deploy).
+- **Test isolation (added during review):** `server/shop/tests/conftest.py` autouse cache-clear
+  so DRF throttle counters never leak between tests.
+
+**Penetration inspection (owner-requested, re-grabbed task):** challenged and verified —
+validators reject common/weak + accept strong on signup *and* reset-confirm; `/api/token/`
+resolves to the **throttled** `MyTokenObtainPairView` (shop include precedes the base route, so
+the throttle is live — confirmed by 429); global throttle doesn't affect product/AR endpoints;
+suite deterministic (79 passed ×2); `manage.py check` clean. **Finding flagged for Task 6:**
+`backend/urls.py:21` registers a **dead, shadowed, unthrottled** `/api/token/`
+(base `TokenObtainPairView`, duplicate `name="token_obtain_pair"`) — harmless now but a
+throttle-bypass footgun; Task 6 must remove it during route canonicalization.
+
+**Test evidence:** RED 6-fail → GREEN 9 pass; full suite **79 passed** (×2 deterministic).
+
+---
+
+## Phase 3 — Tasks 1, 3, 4: config safety, atomic checkout, quiz scoping
+
+**Date:** 2026-06-22
+**Branch:** `phase-3-hygiene`
+**Requirement refs:** context.md §8 #14, #4, #8, #9 (+ folded qty guard)
+**Commits:** `e41aaa73` (config), `56b47c6a` (checkout atomic/Decimal), `e77a757b` (quiz),
+`2c92c271` (order-item qty ≥ 1)
+
+- **Task 1 (#14, #4):** fixed `settings.py` env load-order (project `.env` now loads **before**
+  `DEBUG`/`SECRET_KEY`); `DEBUG` defaults False; prod **requires** a real `DJANGO_SECRET_KEY`
+  (raises `ImproperlyConfigured` on unset/`dev-only`); defined `MEDIA_URL`/`MEDIA_ROOT`.
+  `settings_test.py` opts into dev mode before importing base so the guard is skipped under tests.
+- **Task 3 (#8):** Order create wrapped in `transaction.atomic` + `select_for_update()` with a
+  fresh re-query + per-product quantity aggregation (also closes the same-product-multi-line
+  oversell), `F()` stock decrement, `Decimal` totals (quantized). Response shape unchanged.
+- **Task 4 (#9 + folded):** quiz scoring filters answers by `question__quiz=<submitted quiz>`
+  (foreign answers can't influence the result); `OrderItemSerializer.quantity` now
+  `IntegerField(min_value=1)` (rejects 0-qty items).
+
+**Deep integration inspection (owner-requested):** full suite **70 passed** (Phase 2 storage +
+Phase 3 together); `manage.py check` (local `.env`) starts clean; fresh sqlite migrate 0001→0032
+clean; `makemigrations --check` = no drift. Penetration notes: price/total read-only
+(no client manipulation), oversell + negative qty blocked, no parallel order path bypasses the
+fix. Non-blocking observation logged: the PDF **receipt** renders the stored Decimal total via
+`float()` for `:.2f` display only (no money-integrity impact).
+
+**Test evidence:** RED→GREEN for each task; full suite 70 passed (`--basetemp=/tmp/elzpt`).
+
+---
+
 ## Phase 3 — Plan Written + Reviewed (approved)
 
 **Date:** 2026-06-22

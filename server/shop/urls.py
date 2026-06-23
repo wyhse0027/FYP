@@ -6,7 +6,6 @@ from .views import (
     ProductViewSet, ReviewViewSet, CartViewSet,
     OrderViewSet, PaymentViewSet, CartItemViewSet,
     UserSignupView, MeView, UpdateMeView,
-    PasswordResetRequestView, PasswordResetConfirmView,
     MyTokenObtainPairView, ReviewMediaViewSet,
     QuizViewSet, QuizSubmitView,
     AdminUserViewSet, AdminProductViewSet,
@@ -59,10 +58,6 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("auth/google/", GoogleLoginView.as_view(), name="google-login"),
 
-    # Password Reset
-    path("password-reset/", PasswordResetRequestView.as_view(), name="password-reset"),
-    path("password-reset/confirm/", PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
-
     # Quiz
     path("quiz-submit/", QuizSubmitView.as_view(), name="quiz-submit"),
 
@@ -75,11 +70,6 @@ urlpatterns = [
 
     # Category dropdown (optional)
     path("admin/categories/", AdminCategoryList, name="admin-category-list"),
-
-    # ✅ Add Social Login (Google)
-    path("dj-rest-auth/", include("dj_rest_auth.urls")),
-    path("dj-rest-auth/registration/", include("dj_rest_auth.registration.urls")),
-    path("accounts/", include("allauth.urls")),  # required for Google OAuth callbacks
 
     # Big file direct upload (GCS presign + finalize)
     path("uploads/presign/", PresignBigFile.as_view(), name="presign-bigfile"),

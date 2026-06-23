@@ -9,6 +9,7 @@ import sys
 from datetime import timedelta
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 # ───────────────────────────────────────────────────────────────
@@ -26,13 +27,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ───────────────────────────────────────────────────────────────
 # Load Environment Variables
 # ───────────────────────────────────────────────────────────────
-load_dotenv()  # OS env first (Koyeb)
+# Load the project-local environment before evaluating any setting. Existing
+# process variables retain precedence because python-dotenv does not override them.
+load_dotenv(BASE_DIR / "backend" / ".env")
 
-DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
-
-# Load local .env ONLY in debug (your local dev)
-if DEBUG:
-    load_dotenv(BASE_DIR / "backend" / ".env")
+DEBUG = os.getenv("DJANGO_DEBUG", "False").strip().lower() == "true"
 
 
 def env_list(name: str, default: str = ""):
@@ -44,6 +43,10 @@ def env_list(name: str, default: str = ""):
 # Security
 # ───────────────────────────────────────────────────────────────
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only")
+if not DEBUG and SECRET_KEY in ("", "dev-only"):
+    raise ImproperlyConfigured(
+        "DJANGO_SECRET_KEY must be set to a non-development value when DEBUG is False."
+    )
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 
@@ -158,7 +161,10 @@ AUTH_USER_MODEL = "shop.User"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8},
+    },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
@@ -183,6 +189,8 @@ USE_TZ = False
 # ───────────────────────────────────────────────────────────────
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 
 GCS_PROJECT_ID = os.getenv("GCS_PROJECT_ID", "")
@@ -209,6 +217,16 @@ STORAGES = {
 # one-time migration to Google Cloud Storage (see progress.md). The boto3/cloudinary
 # packages and `backend/r2_storage.py` are retained only so the historical migration
 # shop/0031 can still be replayed; nothing in the runtime serving path uses them.
+#
+# Migration-compat shim: shop/0031 instantiates cloudinary_storage's MediaCloudinaryStorage,
+# which raises unless CLOUD_NAME/API_KEY/API_SECRET are present. Cloudinary is retired, so
+# provide dummy values (env-overridable) purely so `migrate` can replay 0031 in a clean
+# environment (CI, fresh Cloud Run deploy). Never used at runtime.
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": os.getenv("CLOUDINARY_CLOUD_NAME", "retired-migration-shim"),
+    "API_KEY": os.getenv("CLOUDINARY_API_KEY", "unused"),
+    "API_SECRET": os.getenv("CLOUDINARY_API_SECRET", "unused"),
+}
 
 
 # File upload limits
@@ -227,6 +245,17 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ),
+    # Scoped throttles use the configured cache. With the default LocMemCache this
+    # is per-process/per-instance; shared enforcement is deferred to deployment.
+    "DEFAULT_THROTTLE_CLASSES": (
+        "rest_framework.throttling.ScopedRateThrottle",
+    ),
+    "DEFAULT_THROTTLE_RATES": {
+        "login": "5/min",
+        "signup": "5/min",
+        "password-reset-request": "3/min",
+        "password-reset-confirm": "3/min",
+    },
 }
 
 
@@ -284,6 +313,8 @@ EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND",
     "django.core.mail.backends.console.EmailBackend"
 )
+BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@example.com")
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 

@@ -26,6 +26,7 @@ on, for cost tracking. **Last updated: 2026-06-22 (after Phase 2).**
 | **GCP – IAM / IAM Credentials** | Service account + signed-URL signing | project `eleganza-ar`; SA `eleganza-storage@eleganza-ar.iam.gserviceaccount.com` | — | Free | — |
 | **Neon** | Current Postgres DB | `DATABASE_URL` (Neon) | Free/launch tier (verify) | Free (verify) | ⚠ Confirm the Neon plan; being replaced by Cloud SQL in Phase 4. |
 | **Google OAuth** | Social login | OAuth client from `fyp-login-system` (reused) | Free | Free | — |
+| **Brevo** | Transactional email (password reset) via HTTP API | `BREVO_API_KEY` (in `.env`); sender `yhwoo516@gmail.com` | Free (300 emails/day) | Free | ⚠ Brevo enforces **Authorized IPs** — local IP `60.53.186.250` authorized. **At Cloud Run deploy (Phase 4): authorize the egress IP** or sends 401, or use a static egress IP. |
 | **GitHub** | Source hosting | `github.com:wyhse0027/FYP` | Free | Free | — |
 
 ## Legacy / retained (being decommissioned — do not top up)
@@ -34,7 +35,7 @@ on, for cost tracking. **Last updated: 2026-06-22 (after Phase 2).**
 |---|---|---|---|---|
 | **Cloudflare R2** | Former big-file storage; **source objects kept as Phase 2 rollback net** | `R2_*` (in `.env`) | Free tier (≈0.82 GB ≪ 10 GB free) | Delete objects + revoke keys once GCS is proven stable (owner deferred in Phase 2 Task 10). |
 | **Cloudinary** | Former image storage; **source objects kept as rollback net** | `CLOUDINARY_*` (in `.env`) | Free tier (≈0.03 GB) | Same — delete + revoke after demo is stable. |
-| **SendGrid** | Was password-reset email | `SENDGRID_API_KEY` | **Trial expired** (non-functional) | Replace with free provider in Phase 3; drop the dependency. |
+| **SendGrid** | Former password-reset email | `SENDGRID_API_KEY` | **Retired (Phase 3)** — replaced by Brevo | Dependency dropped + code removed. Delete the dead `SENDGRID_API_KEY` line from local `.env`; revoke the key if the (expired) account is still reachable. |
 | **Vercel** | Old frontend deploy (`gerainchan.vercel.app`) | — | Free tier (verify) | Replaced by Firebase Hosting in Phase 5; retire after. |
 | **Koyeb** | Original backend host | — | **Deleted (payment lapse)** | None — gone. Root cause of the revival. |
 
@@ -46,7 +47,7 @@ on, for cost tracking. **Last updated: 2026-06-22 (after Phase 2).**
 | **GCP – Cloud SQL (Postgres)** | 4 | Primary DB (replaces Neon) | ⚠ Runs ~24/7 → steady credit burn; pick the smallest viable tier. |
 | **Firebase Hosting** | 5 | Frontend (HTTPS, required for web AR) | Free tier generous; egress beyond it bills to the GCP project. |
 | **GCP – Secret Manager** | 4 | Production secrets (replaces `.env`) | Tiny cost (per-secret/version + access ops). |
-| **Brevo or Resend** | 3 | Transactional email (replaces SendGrid) | Free tier (no card needed) — pick one in Phase 3. |
+| ~~Brevo or Resend~~ | 3 | ✅ Done — **Brevo** chosen (HTTP API), now in Active services above | — |
 | **Cloud CDN** | (only if needed) | AR asset delivery | Optional; add only if measured AR egress warrants it. |
 
 ---

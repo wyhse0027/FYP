@@ -1,3 +1,10 @@
+import os
+
+# Test settings opt into development mode before importing the fail-closed base
+# settings, preserving the pre-existing no-HTTPS-redirect test behavior.
+os.environ["DJANGO_DEBUG"] = "True"
+os.environ["DJANGO_SECRET_KEY"] = "test-only-secret-key"
+
 from .settings import *  # noqa: F403,F401
 
 DATABASES = {

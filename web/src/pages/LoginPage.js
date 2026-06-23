@@ -26,7 +26,7 @@ export default function LoginPage() {
       const user = await login({ usernameOrEmail, password });
       await mergeCartToBackend();
 
-      if (user?.role === "admin") navigate("/admin/dashboard", { replace: true });
+      if (user?.is_staff === true) navigate("/admin/dashboard", { replace: true });
       else navigate("/", { replace: true });
     } catch (e2) {
       setErr(e2?.message || "Sign in failed");

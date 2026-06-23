@@ -1,14 +1,17 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.throttling import ScopedRateThrottle
 
-from .email_service import send_via_sendgrid
+from .email_service import send_transactional_email
 
 User = get_user_model()
 
@@ -16,6 +19,8 @@ User = get_user_model()
 class PasswordResetRequestSendGrid(APIView):
     authentication_classes = []
     permission_classes = []
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "password-reset-request"
 
     def post(self, request):
         email = (request.data.get("email") or "").strip()
@@ -44,7 +49,7 @@ class PasswordResetRequestSendGrid(APIView):
                 "If you did not request this, please ignore this email."
             )
 
-            send_via_sendgrid(subject, message, [email])
+            send_transactional_email(subject, message, [email])
 
         return Response(
             {"detail": "If the email exists, a reset link has been sent."},
@@ -55,6 +60,8 @@ class PasswordResetRequestSendGrid(APIView):
 class PasswordResetConfirmSendGrid(APIView):
     authentication_classes = []
     permission_classes = []
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "password-reset-confirm"
 
     def post(self, request):
         uid = request.data.get("uid")
@@ -79,6 +86,14 @@ class PasswordResetConfirmSendGrid(APIView):
         if not default_token_generator.check_token(user, token):
             return Response(
                 {"detail": "Invalid or expired token."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            validate_password(new_password, user=user)
+        except DjangoValidationError as exc:
+            return Response(
+                {"new_password": list(exc.messages)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

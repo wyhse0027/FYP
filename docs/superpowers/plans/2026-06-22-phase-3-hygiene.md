@@ -110,6 +110,11 @@ dep: **Brevo** transactional email (HTTP API or SMTP; decided in Task 7) — rep
 - **Files:** `server/backend/urls.py`, `server/shop/urls.py` (de-duplicate the overlapping
   `dj_rest_auth`/`allauth`/reset prefixes — **do this before Task 7 wires email into them**);
   `server/shop/social_views.py`; tests `test_routes.py`, `test_google_login.py`.
+- **MUST also remove (Task 2 review finding):** the dead, shadowed, **unthrottled**
+  `path("api/token/", TokenObtainPairView…)` at `backend/urls.py:21` (the throttled
+  `MyTokenObtainPairView` from `shop.urls` already serves `/api/token/`; the base route is a
+  throttle-bypass footgun + duplicate `name="token_obtain_pair"`). Verify `/api/token/` stays
+  throttled after removal.
 - **Do:** collapse duplicate auth/reset routes to one canonical set. For Google: require
   `email_verified`; treat email identity as **normalized + case-insensitive**; handle
   username/email collisions and the create race deterministically; never return raw
@@ -128,6 +133,10 @@ dep: **Brevo** transactional email (HTTP API or SMTP; decided in Task 7) — rep
 - **Files:** delete `web/src/config/api.js`; fix `web/src/components/ProtectedRoute.js` (it reads
   `loading` from `useAuth()` — verify the context's real flag name and use it so a valid admin
   isn't redirected mid-load); repair `web/src/App.test.js` into a meaningful passing test.
+- **Also (Task 5 review follow-ups, cosmetic):** switch `web/src/pages/admin/AdminUsersPage.js`
+  (~L144) badge from `role === "admin"` to `is_staff`; and add a reverse backfill so existing
+  `is_staff=True`/`role=user` users get `role="admin"` (display consistency — append to a data
+  migration; the invariant is otherwise enforced by `User.save()`).
 - **Test:** `npm run build` exits 0; the repaired Jest test passes; guard no longer flickers
   (manual).
 
