@@ -174,3 +174,6 @@ sendgrid_test.py
 cloud-sql-proxy.exe
 *.dump
 *.sec.tmp
+
+# Firebase CLI local deploy cache
+.firebase/
