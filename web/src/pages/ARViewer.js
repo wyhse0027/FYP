@@ -8,6 +8,16 @@ const MINDAR_SRC =
 // aframe-extras provides the `animation-mixer` component (plays embedded glTF clips)
 const AFRAME_EXTRAS_SRC =
   "https://cdn.jsdelivr.net/npm/aframe-extras@7.7.0/dist/aframe-extras.min.js";
+
+// Subresource Integrity (SRI) hashes for the pinned CDN scripts above. All three
+// origins serve `Access-Control-Allow-Origin: *`, so integrity + crossorigin works.
+// Regenerate if a version changes: curl -sL <url> | openssl dgst -sha384 -binary | openssl base64 -A
+const AFRAME_SRI =
+  "sha384-Q1xJxUu3g9dfxTQcxLUjh6fUzeztZikm/bryr9+vQ/OT6MIrfMvjxeYlvtA/B5ES";
+const MINDAR_SRI =
+  "sha384-fmOOxs+WkhGGYeX86+mY3Oo1SwnvRSYklUwZSlgN0dSzaLL+FpoorBXHCqBozWTf";
+const AFRAME_EXTRAS_SRI =
+  "sha384-Ns/7ChAYXa4i6m7u1FesV64HTx3U1lCCHZJrhy2eSHjDGXjmZeyVecLJwn8Lcr6i";
 // Draco decoder — the optimized model is Draco-compressed; A-Frame's GLTFLoader needs this
 const DRACO_DECODER_PATH = "https://www.gstatic.com/draco/v1/decoders/";
 
@@ -68,7 +78,7 @@ export default function ARViewer() {
   useEffect(() => {
     let cancelled = false;
 
-    const loadScript = (id, src) =>
+    const loadScript = (id, src, integrity) =>
       new Promise((resolve, reject) => {
         const existing = document.getElementById(id);
         if (existing) {
@@ -79,6 +89,11 @@ export default function ARViewer() {
           return;
         }
         const s = document.createElement("script");
+        // Set integrity + crossorigin BEFORE src so the browser applies SRI to the fetch.
+        if (integrity) {
+          s.integrity = integrity;
+          s.crossOrigin = "anonymous";
+        }
         s.src = src;
         s.id = id;
         s.async = true;
@@ -99,7 +114,7 @@ export default function ARViewer() {
       try {
         console.log("📦 [LOAD] Loading AFRAME + MINDAR...");
 
-        if (!window.AFRAME) await loadScript("aframe", AFRAME_SRC);
+        if (!window.AFRAME) await loadScript("aframe", AFRAME_SRC, AFRAME_SRI);
 
         // wait for AFRAME.THREE
         await new Promise((r) => {
@@ -113,9 +128,9 @@ export default function ARViewer() {
         });
 
         // aframe-extras (animation-mixer) — load after A-Frame, before MindAR
-        await loadScript("aframe-extras", AFRAME_EXTRAS_SRC);
+        await loadScript("aframe-extras", AFRAME_EXTRAS_SRC, AFRAME_EXTRAS_SRI);
 
-        if (!window.MINDAR) await loadScript("mindar", MINDAR_SRC);
+        if (!window.MINDAR) await loadScript("mindar", MINDAR_SRC, MINDAR_SRI);
 
         // Assert the animation-mixer component actually registered
         if (!window.AFRAME?.components?.["animation-mixer"]) {

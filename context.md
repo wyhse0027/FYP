@@ -247,11 +247,15 @@ Tracked so they become requirements/tasks; not yet fixed unless noted.
     enforces an image/video MIME+extension allowlist, per-type size caps (10/50 MiB), and a
     5-file limit before any `ReviewMedia` is created; the validated type (not client MIME) is
     persisted. Covered by automated tests.
-17. **Google login gaps** — no `email_verified` check; username collisions can error; raw
-    verification exception text returned (`server/shop/social_views.py`). → Phase 3
-18. **Token handling** — JWT in `localStorage`; 90-day refresh, not revoked on logout;
-    unversioned CDN scripts (model-viewer, AR libs) without SRI. (Deferred hardening; mitigate
-    by pinning/self-hosting scripts + CSP if cookies stay deferred.)
+17. **Google login gaps — RESOLVED (Phase 3)** ✅ — `social_views.py` requires `email_verified`,
+    normalizes email lowercase + looks up `email__iexact`, handles username collisions
+    deterministically (sha256 suffix) with an atomic create, and returns a generic error.
+18. **Token handling — PARTIALLY RESOLVED (Phase 3)** — CDN scripts (A-Frame 1.5.0, MindAR 1.2.3,
+    aframe-extras 7.7.0, model-viewer 4.3.1) are now **version-pinned with `sha384` SRI +
+    `crossorigin`** (`ARViewer.js` dynamic loads + `index.html`). **Still deferred + tracked as
+    security debt:** JWT in `localStorage` → httpOnly-cookie migration, refresh-token revocation
+    on logout, and a Content-Security-Policy. (The Draco decoder at `gstatic.com/draco/v1/` is a
+    WASM path loaded by GLTFLoader, not a `<script>` — SRI N/A; it's Google-hosted + versioned.)
 20. **Web AR animation curation (DEFERRED)** — the web viewer plays all 36 glTF clips on
     independent loops (`clip: *; loop: repeat`), which desyncs ("scatter"). The APK looks
     coherent because Unity orchestrates via scripts/animator-states/particles (not in the
