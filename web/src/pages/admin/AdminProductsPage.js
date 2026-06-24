@@ -14,7 +14,7 @@ function Toast({ message, type = "success", onClose }) {
   const bg =
     type === "error"
       ? "bg-red-600/90 border-red-400"
-      : "bg-green-600/90 border-green-400";
+      : "bg-luxury-gold/90 border-luxury-gold";
 
   useEffect(() => {
     const timer = setTimeout(onClose, 3000);
@@ -123,7 +123,7 @@ export default function AdminProductsPage() {
         <div className="flex justify-end mb-6">
           <button
             onClick={() => navigate("/admin/products/new")}
-            className="px-4 py-2 bg-green-600 rounded hover:bg-green-700 font-semibold"
+            className="px-4 py-2 bg-luxury-gold rounded hover:bg-luxury-gold font-semibold"
           >
             + Add Product
           </button>
@@ -289,7 +289,7 @@ export default function AdminProductsPage() {
                         ).map((tag, i) => (
                           <span
                             key={i}
-                            className="bg-blue-700/60 text-white px-3 py-1 rounded-full text-sm"
+                            className="bg-luxury-gold/60 text-white px-3 py-1 rounded-full text-sm"
                           >
                             {tag}
                           </span>

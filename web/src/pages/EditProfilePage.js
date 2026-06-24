@@ -64,7 +64,7 @@ export default function EditProfilePage() {
   // Guest view
   if (!isAuthed) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 flex flex-col items-center justify-center text-white px-6">
+      <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-luxury-gold to-slate-900 flex flex-col items-center justify-center text-white px-6">
         <h1 className="text-3xl font-bold mb-4">Not logged in</h1>
         <p className="mb-6 text-white/70">Please log in to edit your profile.</p>
       </div>
@@ -73,7 +73,7 @@ export default function EditProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 text-white p-6">
+      <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-luxury-gold to-slate-900 text-white p-6">
         Loading profile...
       </div>
     );
@@ -92,7 +92,7 @@ export default function EditProfilePage() {
 
   return (
     <div
-      className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900
+      className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-luxury-gold to-slate-900
                  relative overflow-hidden px-4 sm:px-6 md:px-10 lg:px-16"
     >
       {/* Decorative blobs */}

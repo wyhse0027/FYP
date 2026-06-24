@@ -1,7 +1,7 @@
 export default function Chip({ active = false, children, onClick, className = "" }) {
   const cls = active
-    ? "border-luxury-gold/70 bg-luxury-gold/15 text-luxury-champagne"
-    : "border-white/15 text-white/65 hover:border-luxury-gold/50 hover:text-white";
+    ? "border-luxury-gold/70 bg-luxury-gold/20 text-luxury-champagne"
+    : "border-luxury-champagne/25 text-luxury-champagne/90 hover:border-luxury-gold/60 hover:text-white";
   return (
     <button
       type="button"

@@ -6,7 +6,7 @@ function Toast({ message, type = "success", onClose }) {
   return (
     <div
       className={`fixed bottom-6 right-6 px-4 py-2 rounded-lg text-sm shadow-lg z-50 ${
-        type === "error" ? "bg-red-600" : "bg-green-600"
+        type === "error" ? "bg-red-600" : "bg-luxury-gold"
       }`}
     >
       <div className="flex items-center gap-2">
@@ -48,13 +48,13 @@ function ConfirmModal({ title, message, onCancel, onConfirm }) {
 const PAYMENT_STATUS_COLORS = {
   PENDING: "text-luxury-gold2",
   SUCCESS: "text-luxury-gold2",
-  FAILED: "text-rose-300",
-  CANCELLED: "text-rose-300",
+  FAILED: "text-luxury-gold",
+  CANCELLED: "text-luxury-gold",
 };
 
 const PAYMENT_METHOD_COLORS = {
   COD: "bg-slate-700",
-  CARD: "bg-blue-700",
+  CARD: "bg-luxury-gold",
   FPX: "bg-luxury-gold",
   E_WALLET: "bg-luxury-gold",
 };
@@ -216,13 +216,13 @@ export default function AdminOrdersPage() {
                           order.status === "TO_PAY"
                             ? "bg-luxury-gold"
                             : order.status === "TO_SHIP"
-                            ? "bg-blue-600"
+                            ? "bg-luxury-gold"
                             : order.status === "TO_RECEIVE"
                             ? "bg-luxury-gold"
                             : order.status === "TO_RATE"
-                            ? "bg-orange-600"
+                            ? "bg-luxury-gold"
                             : order.status === "COMPLETED"
-                            ? "bg-green-700"
+                            ? "bg-luxury-gold"
                             : "bg-red-700"
                         }`}
                       >

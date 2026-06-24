@@ -15,7 +15,7 @@ function Toast({ message, type = "success", onClose }) {
   const bg =
     type === "error"
       ? "bg-red-600/90 border-red-400"
-      : "bg-green-600/90 border-green-400";
+      : "bg-luxury-gold/90 border-luxury-gold";
 
   useEffect(() => {
     const timer = setTimeout(onClose, 3000);
@@ -141,7 +141,7 @@ export default function AdminUsersPage() {
                   <td className="p-3">
                     <span
                       className={`px-2 py-1 rounded text-xs ${
-                        u.is_staff === true ? "bg-green-600" : "bg-gray-600"
+                        u.is_staff === true ? "bg-luxury-gold" : "bg-gray-600"
                       }`}
                     >
                       {u.role}

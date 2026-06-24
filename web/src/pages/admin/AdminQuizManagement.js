@@ -468,14 +468,14 @@ export default function AdminQuizManagement() {
                 {/* Add Question */}
                 <div className="flex gap-2 mb-4">
                   <input
-                    className="flex-1 px-3 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 text-sm outline-none focus:ring-2 focus:ring-green-400"
+                    className="flex-1 px-3 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 text-sm outline-none focus:ring-2 focus:ring-luxury-gold"
                     placeholder="Enter new question"
                     value={newQuestionText}
                     onChange={(e) => setNewQuestionText(e.target.value)}
                   />
                   <button
                     onClick={addQuestion}
-                    className="bg-green-500 hover:bg-green-600 transition px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm shadow-md shadow-green-900/40"
+                    className="bg-luxury-gold hover:bg-luxury-gold transition px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm shadow-md shadow-luxury-gold/40"
                   >
                     <IoAdd /> Add
                   </button>
@@ -650,7 +650,7 @@ export default function AdminQuizManagement() {
         <div
           className={`fixed bottom-5 right-5 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50 ${
             toast.type === "success"
-              ? "bg-green-500 text-white"
+              ? "bg-luxury-gold text-white"
               : "bg-red-500 text-white"
           }`}
         >

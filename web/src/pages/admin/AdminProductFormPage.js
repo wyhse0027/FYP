@@ -30,7 +30,7 @@ function Modal({
           )}
           <button
             onClick={onConfirm}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded font-semibold"
+            className="px-4 py-2 bg-luxury-gold hover:bg-luxury-gold rounded font-semibold"
           >
             {confirmText}
           </button>
@@ -46,7 +46,7 @@ function Toast({ show, message, success = true, onClose }) {
 
   const base =
     "fixed inset-0 flex items-center justify-center z-50 px-4 py-4";
-  const color = success ? "bg-green-600" : "bg-red-600";
+  const color = success ? "bg-luxury-gold" : "bg-red-600";
 
   return (
     <div className={base}>

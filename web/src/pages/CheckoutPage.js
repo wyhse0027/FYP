@@ -261,10 +261,10 @@ export default function CheckoutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-luxury-gold to-slate-900 relative overflow-hidden">
       {/* Decorative blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-72 h-72 sm:w-96 sm:h-96 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-72 h-72 sm:w-96 sm:h-96 bg-luxury-gold/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-0 w-64 h-64 sm:w-80 sm:h-80 bg-luxury-gold/10 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-0 w-56 h-56 sm:w-64 sm:h-64 bg-white/5 rounded-full blur-2xl" />
       </div>
@@ -414,7 +414,7 @@ export default function CheckoutPage() {
                 </div>
 
                 {!isExistingPayFlow && pm === PAYMENT_METHODS.COD && (
-                  <p className="text-amber-300/80 text-xs sm:text-sm mt-3 sm:mt-4">
+                  <p className="text-luxury-gold/80 text-xs sm:text-sm mt-3 sm:mt-4">
                     COD orders will be paid upon delivery. Online payment is disabled.
                   </p>
                 )}
@@ -468,7 +468,7 @@ export default function CheckoutPage() {
                     className={`w-full py-3 sm:py-4 rounded-xl font-extrabold text-base sm:text-lg transition-all duration-300
                       flex items-center justify-center gap-3 ${
                         isValid && !loading
-                          ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
+                          ? "bg-gradient-to-r from-luxury-gold to-luxury-gold text-white shadow-lg shadow-luxury-gold/25 hover:shadow-luxury-gold/40"
                           : "bg-white/10 text-white/40 cursor-not-allowed"
                       }`}
                   >
@@ -534,8 +534,8 @@ export default function CheckoutPage() {
       {/* Panel: Payment Successful / Method Confirmed */}
       {paidOrderId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 rounded-3xl p-8 w-full max-w-md text-center shadow-2xl border border-white/20">
-            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-luxury-gold to-green-500 rounded-full flex items-center justify-center shadow-lg shadow-luxury-gold/30">
+          <div className="bg-gradient-to-br from-slate-900 via-luxury-gold to-slate-900 rounded-3xl p-8 w-full max-w-md text-center shadow-2xl border border-white/20">
+            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-luxury-gold to-luxury-gold rounded-full flex items-center justify-center shadow-lg shadow-luxury-gold/30">
               <span className="text-white text-3xl font-black">✓</span>
             </div>
             <h2 className="text-2xl font-extrabold mb-2 text-white">Order Updated</h2>
@@ -584,8 +584,8 @@ export default function CheckoutPage() {
       {/* Panel: Pay Later (invoice) */}
       {invoiceOrderId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 rounded-3xl p-8 w-full max-w-md text-center shadow-2xl border border-white/20">
-            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30">
+          <div className="bg-gradient-to-br from-slate-900 via-luxury-gold to-slate-900 rounded-3xl p-8 w-full max-w-md text-center shadow-2xl border border-white/20">
+            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-luxury-gold to-luxury-gold rounded-full flex items-center justify-center shadow-lg shadow-luxury-gold/30">
               <span className="text-white text-3xl font-black">★</span>
             </div>
             <h2 className="text-2xl font-extrabold mb-2 text-white">Order Placed</h2>
@@ -625,7 +625,7 @@ export default function CheckoutPage() {
                   setInvoiceOrderId(null);
                   navigate("/orders?tab=TO_PAY");
                 }}
-                className="flex-1 py-3 rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:opacity-95 transition"
+                className="flex-1 py-3 rounded-xl font-semibold bg-gradient-to-r from-luxury-gold to-luxury-gold text-white hover:opacity-95 transition"
               >
                 OK
               </button>

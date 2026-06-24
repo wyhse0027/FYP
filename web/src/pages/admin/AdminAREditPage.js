@@ -441,7 +441,7 @@ export default function AdminAREditPage() {
               type="submit"
               disabled={loading}
               className={`w-full py-3 rounded-lg font-semibold transition text-white ${
-                loading ? "bg-gray-500 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+                loading ? "bg-gray-500 cursor-not-allowed" : "bg-luxury-gold hover:bg-luxury-gold"
               }`}
             >
               {loading ? "Saving..." : id ? "Update AR" : "Create AR"}

@@ -204,7 +204,7 @@ export default function RateOrderPage() {
           </button>
           <button
             onClick={onSubmit}
-            className="flex-1 bg-amber-500 hover:bg-amber-600 rounded-xl py-3 font-bold"
+            className="flex-1 bg-luxury-gold hover:bg-luxury-gold rounded-xl py-3 font-bold"
           >
             Submit reviews
           </button>

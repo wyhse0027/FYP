@@ -9,10 +9,10 @@ const navItem = ({ isActive }) =>
   `after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-px after:bg-luxury-gold after:transition-all after:duration-300 ` +
   (isActive
     ? "text-luxury-gold2 after:w-full"
-    : "text-luxury-champagne/85 hover:text-white after:w-0 hover:after:w-full");
+    : "text-luxury-champagne hover:text-white after:w-0 hover:after:w-full");
 
 const iconItem =
-  "text-luxury-champagne/85 hover:text-luxury-gold2 transition-colors";
+  "text-luxury-champagne hover:text-luxury-gold2 transition-colors";
 
 export default function TopNav() {
   const { user } = useAuth();

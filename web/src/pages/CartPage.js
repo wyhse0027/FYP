@@ -54,12 +54,12 @@ const CartPage = () => {
 
   return (
     <>
-      <div className="min-h-screen w-full bg-blue-900/95 relative overflow-hidden pb-[calc(80px+260px)] md:pb-[260px]">
+      <div className="min-h-screen w-full bg-luxury-gold/95 relative overflow-hidden pb-[calc(80px+260px)] md:pb-[260px]">
         {/* Decorative elements */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl" />
+          <div className="absolute top-20 left-10 w-96 h-96 bg-luxury-gold/10 rounded-full blur-3xl" />
           <div className="absolute bottom-40 right-10 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-200/5 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-luxury-gold/5 rounded-full blur-3xl" />
         </div>
 
         <div className="relative z-10 px-6 md:px-12 lg:px-16">
@@ -76,7 +76,7 @@ const CartPage = () => {
                   <p className="text-white/70 mb-8">Add something you like, then come back here.</p>
                   <button
                     onClick={() => navigate("/")}
-                    className="px-8 py-3 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-extrabold transition"
+                    className="px-8 py-3 rounded-xl bg-luxury-gold hover:bg-luxury-gold text-white font-extrabold transition"
                   >
                     Explore products
                   </button>
@@ -93,11 +93,11 @@ const CartPage = () => {
                       <span
                         className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition ${
                           allSelected
-                            ? "bg-blue-400/90 border-blue-400/90"
+                            ? "bg-luxury-gold/90 border-luxury-gold/90"
                             : "border-white/30 hover:border-white/60"
                         }`}
                       >
-                        {allSelected ? <CheckCircle2 className="w-4 h-4 text-blue-950" /> : null}
+                        {allSelected ? <CheckCircle2 className="w-4 h-4 text-luxury-gold" /> : null}
                       </span>
                       <span className="text-sm">{allSelected ? "Deselect all" : "Select all items"}</span>
                     </button>
@@ -124,7 +124,7 @@ const CartPage = () => {
                           key={cartItemId}
                           className={`bg-white/10 border border-white/10 rounded-2xl p-5 transition-all duration-300 ${
                             isSelected
-                              ? "ring-2 ring-blue-400/80 shadow-[0_0_30px_rgba(59,130,246,0.18)]"
+                              ? "ring-2 ring-luxury-gold/80 shadow-[0_0_30px_rgba(59,130,246,0.18)]"
                               : "hover:bg-white/15"
                           }`}
                         >
@@ -136,12 +136,12 @@ const CartPage = () => {
                                 onClick={() => toggleSelect(cartItemId)}
                                 className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition ${
                                   isSelected
-                                    ? "bg-blue-400/90 border-blue-400/90"
+                                    ? "bg-luxury-gold/90 border-luxury-gold/90"
                                     : "border-white/30 hover:border-white/60"
                                 }`}
                                 aria-label="Select item"
                               >
-                                {isSelected ? <CheckCircle2 className="w-5 h-5 text-blue-950" /> : null}
+                                {isSelected ? <CheckCircle2 className="w-5 h-5 text-luxury-gold" /> : null}
                               </button>
                             </div>
 
@@ -168,8 +168,8 @@ const CartPage = () => {
 
                                 {/* Desktop/tablet subtotal stays on the right */}
                                 <div className="text-right hidden md:block">
-                                  <p className="text-amber-300/90 text-xs font-semibold">Subtotal</p>
-                                  <p className="font-extrabold text-lg text-amber-200 whitespace-nowrap">
+                                  <p className="text-luxury-gold/90 text-xs font-semibold">Subtotal</p>
+                                  <p className="font-extrabold text-lg text-luxury-gold whitespace-nowrap">
                                     RM {lineTotal.toFixed(2)}
                                   </p>
                                 </div>
@@ -220,8 +220,8 @@ const CartPage = () => {
                               {/* MOBILE ONLY: subtotal + unit price UNDER the quantity row */}
                               <div className="mt-3 md:hidden">
                                 <div className="flex items-baseline justify-between gap-3">
-                                  <span className="text-amber-300/90 text-xs font-semibold">Subtotal</span>
-                                  <span className="font-extrabold text-base text-amber-200 whitespace-nowrap">
+                                  <span className="text-luxury-gold/90 text-xs font-semibold">Subtotal</span>
+                                  <span className="font-extrabold text-base text-luxury-gold whitespace-nowrap">
                                     RM {lineTotal.toFixed(2)}
                                   </span>
                                 </div>
@@ -241,7 +241,7 @@ const CartPage = () => {
         {/* Sticky footer */}
         {itemCount > 0 && (
           <footer className="fixed left-0 right-0 bottom-[calc(80px+env(safe-area-inset-bottom))] md:bottom-[env(safe-area-inset-bottom)] z-50">
-            <div className="bg-gradient-to-t from-blue-950/90 via-blue-950/80 to-transparent pt-5 pb-4 sm:pt-8 sm:pb-6 px-6">
+            <div className="bg-gradient-to-t from-luxury-gold/90 via-luxury-gold/80 to-transparent pt-5 pb-4 sm:pt-8 sm:pb-6 px-6">
               <div className="mx-auto w-full max-w-screen-2xl">
                 <div className="bg-white rounded-2xl p-5 shadow-2xl">
                   <div className="mb-3">
@@ -289,7 +289,7 @@ const CartPage = () => {
                     className={`w-full py-4 rounded-xl font-extrabold text-lg transition ${
                       selectedIds.length === 0
                         ? "bg-gray-400 text-white cursor-not-allowed"
-                        : "bg-blue-800 hover:bg-blue-700 text-white"
+                        : "bg-luxury-gold hover:bg-luxury-gold text-white"
                     }`}
                   >
                     {selectedIds.length === 0 ? "Select items to checkout" : "CHECKOUT SELECTED"}

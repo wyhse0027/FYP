@@ -17,7 +17,7 @@ function Toast({ message, type = "success", onClose }) {
   const color =
     type === "error"
       ? "bg-red-600/90 border-red-400"
-      : "bg-green-600/90 border-green-400";
+      : "bg-luxury-gold/90 border-luxury-gold";
 
   return (
     <div
@@ -128,7 +128,7 @@ export default function AdminARManagement() {
 
         <Link
           to="/admin/ar-management/new"
-          className="px-5 py-2 bg-green-600 hover:bg-green-700 rounded-lg font-semibold transition"
+          className="px-5 py-2 bg-luxury-gold hover:bg-luxury-gold rounded-lg font-semibold transition"
         >
           + Add New AR
         </Link>
@@ -200,7 +200,7 @@ export default function AdminARManagement() {
                         onClick={() => toggleEnabled(exp.id, exp.enabled)}
                         className={`px-3 py-1 rounded-lg font-semibold ${
                           exp.enabled
-                            ? "bg-green-600 hover:bg-green-700"
+                            ? "bg-luxury-gold hover:bg-luxury-gold"
                             : "bg-gray-600 hover:bg-gray-700"
                         }`}
                       >
@@ -212,7 +212,7 @@ export default function AdminARManagement() {
                     <td className="px-4 py-3 text-center flex gap-2 justify-center">
                       <Link
                         to={`/admin/ar-management/${exp.id}/edit`}
-                        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold"
+                        className="px-3 py-1 bg-luxury-gold hover:bg-luxury-gold rounded-lg font-semibold"
                       >
                         Edit
                       </Link>

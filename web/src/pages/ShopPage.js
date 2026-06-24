@@ -222,7 +222,7 @@ const ShopPage = () => {
                 className={`px-4 py-2 md:px-7 md:py-3 rounded-full border-2 transition-all duration-200 shadow-sm
                   ${
                     !hasAnyFilter
-                      ? "bg-white text-blue-900 border-white shadow-white/40"
+                      ? "bg-white text-luxury-gold border-white shadow-white/40"
                       : "bg-transparent text-luxury-gold border-luxury-gold/50 hover:bg-luxury-gold/20 hover:text-white"
                   }`}
               >
@@ -238,7 +238,7 @@ const ShopPage = () => {
                     className={`px-4 py-2 md:px-7 md:py-3 rounded-full border-2 transition-all duration-200 shadow-sm
                       ${
                         active
-                          ? "bg-luxury-gold text-blue-900 border-luxury-gold shadow-luxury-gold/40"
+                          ? "bg-luxury-gold text-luxury-gold border-luxury-gold shadow-luxury-gold/40"
                           : "bg-transparent text-luxury-gold border-luxury-gold/50 hover:bg-luxury-gold/20 hover:text-white"
                       }`}
                   >
@@ -256,7 +256,7 @@ const ShopPage = () => {
                     className={`px-4 py-2 md:px-7 md:py-3 rounded-full border-2 transition-all duration-200 shadow-sm
                       ${
                         active
-                          ? "bg-luxury-gold text-blue-900 border-luxury-gold2 shadow-luxury-gold/40"
+                          ? "bg-luxury-gold text-luxury-gold border-luxury-gold2 shadow-luxury-gold/40"
                           : "bg-transparent text-luxury-champagne border-luxury-gold/50 hover:bg-luxury-gold/20 hover:text-white"
                       }`}
                   >
@@ -272,7 +272,7 @@ const ShopPage = () => {
                       className={`list-none px-4 py-2 md:px-7 md:py-3 rounded-full border-2 cursor-pointer select-none transition-all duration-200 shadow-sm
                         ${
                           overflowHasActive
-                            ? "bg-luxury-gold text-blue-900 border-luxury-gold shadow-luxury-gold/40"
+                            ? "bg-luxury-gold text-luxury-gold border-luxury-gold shadow-luxury-gold/40"
                             : "bg-transparent text-luxury-gold border-luxury-gold/50 group-hover:bg-luxury-gold/20 group-hover:text-white"
                         }`}
                     >
@@ -289,7 +289,7 @@ const ShopPage = () => {
                             className={`w-full text-left px-3 py-2 rounded-xl text-sm mb-1 transition
                               ${
                                 active
-                                  ? "bg-luxury-gold/90 text-blue-950 font-semibold"
+                                  ? "bg-luxury-gold/90 text-luxury-gold font-semibold"
                                   : "bg-transparent text-luxury-gold hover:bg-luxury-gold/20"
                               }`}
                           >
@@ -363,7 +363,7 @@ const ShopPage = () => {
 
                             {/* Target */}
                             {product.target && (
-                              <span className="inline-block px-3 py-1 rounded-full text-[9px] bg-blue-900/70 text-luxury-gold uppercase tracking-wide w-fit">
+                              <span className="inline-block px-3 py-1 rounded-full text-[9px] bg-luxury-gold/70 text-luxury-gold uppercase tracking-wide w-fit">
                                 {String(product.target).toUpperCase() === "MEN"
                                   ? "For Men"
                                   : String(product.target).toUpperCase() === "WOMEN"
@@ -386,7 +386,7 @@ const ShopPage = () => {
                               </p>
 
                               <div className="flex-none w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:border-white transition-all duration-300">
-                                <IoChevronForward className="text-white group-hover:text-blue-900 text-xl transition-colors" />
+                                <IoChevronForward className="text-white group-hover:text-luxury-gold text-xl transition-colors" />
                               </div>
                             </div>
                           </div>

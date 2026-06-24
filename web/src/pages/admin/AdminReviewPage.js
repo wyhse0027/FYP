@@ -26,7 +26,7 @@ function Toast({ message, type = "success", onClose }) {
   const color =
     type === "error"
       ? "bg-red-600/90 border-red-400"
-      : "bg-green-600/90 border-green-400";
+      : "bg-luxury-gold/90 border-luxury-gold";
 
   return (
     <div

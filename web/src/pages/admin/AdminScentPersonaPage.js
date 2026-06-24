@@ -423,7 +423,7 @@ export default function AdminScentPersonaPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-5 py-2 rounded-lg text-sm font-semibold bg-green-500 hover:bg-green-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="px-5 py-2 rounded-lg text-sm font-semibold bg-luxury-gold hover:bg-luxury-gold disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading
                     ? "Saving..."
@@ -470,7 +470,7 @@ export default function AdminScentPersonaPage() {
         <div
           className={`fixed bottom-5 right-5 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50 ${
             toast.type === "success"
-              ? "bg-green-500 text-white"
+              ? "bg-luxury-gold text-white"
               : "bg-red-500 text-white"
           }`}
         >

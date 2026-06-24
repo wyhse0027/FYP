@@ -85,7 +85,7 @@ export default function AddProductPage() {
         <label className="block">Card Image: <input type="file" name="card_image" onChange={handleFileChange} /></label>
         <label className="block">Media Gallery: <input type="file" multiple onChange={handleMediaChange} /></label>
 
-        <button disabled={loading} type="submit" className="px-6 py-2 bg-green-600 rounded hover:bg-green-700 font-semibold">
+        <button disabled={loading} type="submit" className="px-6 py-2 bg-luxury-gold rounded hover:bg-luxury-gold font-semibold">
           {loading ? "Saving..." : "Save Product"}
         </button>
       </form>

@@ -314,13 +314,13 @@ function OrderCard({ order, onAsk, onDownloadPdf }) {
       paymentLabel.includes("PENDING") ||
       paymentLabel.includes("Pay on delivery")
     )
-      return "bg-amber-500/20 text-amber-300 border-amber-500/30";
+      return "bg-luxury-gold/20 text-luxury-gold border-luxury-gold/30";
     if (
       paymentLabel.includes("CANCELLED") ||
       paymentLabel.includes("REFUNDED") ||
       paymentLabel.includes("FAILED")
     )
-      return "bg-rose-500/20 text-rose-300 border-rose-500/30";
+      return "bg-luxury-gold/20 text-luxury-gold border-luxury-gold/30";
     return "bg-white/10 text-white/70 border-white/10";
   })();
 
@@ -340,7 +340,7 @@ function OrderCard({ order, onAsk, onDownloadPdf }) {
       primary:
         "bg-luxury-gold text-slate-900 shadow-lg shadow-luxury-gold/20 hover:bg-luxury-gold/90",
       danger:
-        "bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30",
+        "bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/30 hover:bg-luxury-gold/30",
       success:
         "bg-luxury-gold/20 text-luxury-gold2 border border-luxury-gold/30 hover:bg-luxury-gold/30",
       default:
@@ -481,7 +481,7 @@ function OrderCard({ order, onAsk, onDownloadPdf }) {
           ) : (
             payment &&
             (payment.status === "FAILED" || payment.status === "CANCELLED") && (
-              <div className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium bg-rose-500/20 text-rose-300 border border-rose-500/30">
+              <div className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/30">
                 <IoCloseCircleOutline />
                 Payment Failed — Try Again
               </div>

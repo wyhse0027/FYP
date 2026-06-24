@@ -35,7 +35,7 @@ const BottomNav = () => {
               className={`flex flex-col items-center justify-center gap-1
                 ${
                   isActive
-                    ? "text-blue-600 font-semibold"
+                    ? "text-luxury-gold font-semibold"
                     : "text-gray-500"
                 }
               `}

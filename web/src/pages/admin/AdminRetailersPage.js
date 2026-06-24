@@ -18,7 +18,7 @@ function Toast({ message, type = "success", onClose }) {
   const color =
     type === "error"
       ? "bg-red-600/90 border-red-400"
-      : "bg-green-600/90 border-green-400";
+      : "bg-luxury-gold/90 border-luxury-gold";
 
   useEffect(() => {
     const timer = setTimeout(onClose, 3000);
@@ -222,7 +222,7 @@ export default function AdminRetailersPage() {
         <div className="flex justify-end mb-8">
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 px-5 py-3 rounded-xl font-semibold text-lg"
+            className="flex items-center gap-2 bg-luxury-gold hover:bg-luxury-gold px-5 py-3 rounded-xl font-semibold text-lg"
           >
             <IoAddCircleOutline size={28} />
             Add Retailer
@@ -268,7 +268,7 @@ export default function AdminRetailersPage() {
               <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition">
                 <button
                   onClick={() => openEdit(r)}
-                  className="p-2 bg-blue-600 hover:bg-blue-700 rounded-full"
+                  className="p-2 bg-luxury-gold hover:bg-luxury-gold rounded-full"
                   title="Edit"
                 >
                   <IoCreateOutline size={18} />
@@ -410,7 +410,7 @@ export default function AdminRetailersPage() {
               </button>
               <button
                 type="submit"
-                className="px-5 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 font-semibold"
+                className="px-5 py-3 rounded-xl bg-luxury-gold hover:bg-luxury-gold font-semibold"
               >
                 {editing ? "Update" : "Save"}
               </button>

@@ -59,7 +59,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 relative overflow-hidden px-6 md:px-10 lg:px-16">
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-luxury-gold to-slate-900 relative overflow-hidden px-6 md:px-10 lg:px-16">
       {/* Decorative blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-luxury-gold/10 rounded-full blur-3xl" />
@@ -227,8 +227,8 @@ export default function SettingsPage() {
               <button
                 onClick={() => setConfirm(true)}
                 className="w-full md:w-auto h-12 px-6 rounded-xl
-                           bg-rose-500/15 border border-rose-500/25 text-rose-200
-                           hover:bg-rose-500/20 hover:border-rose-500/35
+                           bg-luxury-gold/15 border border-luxury-gold/25 text-luxury-gold
+                           hover:bg-luxury-gold/20 hover:border-luxury-gold/35
                            transition-all duration-300 flex items-center gap-3"
               >
                 <IoTrashBinOutline className="text-xl" />

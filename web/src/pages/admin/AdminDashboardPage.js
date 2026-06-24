@@ -74,7 +74,7 @@ export default function AdminDashboardPage() {
             <p className="opacity-70">Products</p>
             <Link
               to="/admin/products"
-              className="mt-4 inline-block px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 font-semibold transition"
+              className="mt-4 inline-block px-4 py-2 bg-luxury-gold rounded-lg hover:bg-luxury-gold font-semibold transition"
             >
               Manage Products
             </Link>
@@ -146,7 +146,7 @@ export default function AdminDashboardPage() {
             <p className="opacity-70">User Reviews</p>
             <Link
               to="/admin/reviews"
-              className="mt-4 inline-block px-4 py-2 bg-amber-600 rounded-lg hover:bg-amber-700 font-semibold transition"
+              className="mt-4 inline-block px-4 py-2 bg-luxury-gold rounded-lg hover:bg-luxury-gold font-semibold transition"
             >
               Manage Reviews
             </Link>
@@ -158,7 +158,7 @@ export default function AdminDashboardPage() {
             <p className="opacity-70">Retailers</p>
             <Link
               to="/admin/retailers"
-              className="mt-4 inline-block px-4 py-2 bg-teal-600 rounded-lg hover:bg-teal-700 font-semibold transition"
+              className="mt-4 inline-block px-4 py-2 bg-luxury-gold rounded-lg hover:bg-luxury-gold font-semibold transition"
             >
               Manage Retailers
             </Link>
@@ -170,7 +170,7 @@ export default function AdminDashboardPage() {
             <p className="opacity-70">Site Information</p>
             <Link
               to="/admin/about"
-              className="mt-4 inline-block px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 font-semibold transition"
+              className="mt-4 inline-block px-4 py-2 bg-luxury-gold rounded-lg hover:bg-luxury-gold font-semibold transition"
             >
               Manage About Page
             </Link>

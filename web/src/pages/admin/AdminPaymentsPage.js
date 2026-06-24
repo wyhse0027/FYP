@@ -5,14 +5,14 @@ import PageHeader from "../../components/PageHeader";
 
 const STATUS_COLORS = {
   PENDING: "text-luxury-gold",
-  SUCCESS: "text-green-400",
+  SUCCESS: "text-luxury-gold",
   FAILED: "text-red-400",
   CANCELLED: "text-red-400",
 };
 
 const METHOD_COLORS = {
   COD: "bg-slate-700",
-  CARD: "bg-blue-700",
+  CARD: "bg-luxury-gold",
   FPX: "bg-luxury-gold",
   E_WALLET: "bg-luxury-gold",
 };
@@ -23,7 +23,7 @@ function Toast({ message, type = "success", onClose }) {
   return (
     <div
       className={`fixed bottom-6 right-6 px-4 py-2 rounded-lg text-sm shadow-lg z-50 ${
-        type === "error" ? "bg-red-600" : "bg-green-600"
+        type === "error" ? "bg-red-600" : "bg-luxury-gold"
       }`}
     >
       <div className="flex items-center gap-2">
