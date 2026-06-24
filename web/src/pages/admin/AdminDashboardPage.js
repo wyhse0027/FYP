@@ -98,7 +98,7 @@ export default function AdminDashboardPage() {
             <p className="opacity-70">Payments</p>
             <Link
               to="/admin/payments"
-              className="mt-4 inline-block px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700 font-semibold transition"
+              className="mt-4 inline-block px-4 py-2 bg-luxury-gold rounded-lg hover:bg-luxury-gold font-semibold transition"
             >
               Manage Payments
             </Link>
