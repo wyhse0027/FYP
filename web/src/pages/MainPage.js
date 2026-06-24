@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { IoSearchOutline } from "react-icons/io5";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay, EffectFade } from "swiper/modules";
 import { motion, AnimatePresence } from "framer-motion";
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/effect-fade";
 import http from "../lib/http";
 import { Card, Chip, Input, Badge, Skeleton, SectionLabel } from "../components/ui";
 
@@ -308,68 +303,69 @@ export default function MainPage() {
           )}
         </AnimatePresence>
 
-        {/* ─── Hero Slider ────────────────────────────── */}
+        {/* ─── Hero (editorial split, featured fragrance) ─ */}
         <div className="mb-10 sm:mb-12 md:mb-14">
-          {loading || !showHero ? (
+          {loading || !showHero || !heroProducts[0] ? (
             <HeroSkeleton />
           ) : (
-            <motion.div variants={sectionVariants} initial="hidden" animate="show">
-              <Swiper
-                modules={[Pagination, Autoplay, EffectFade]}
-                effect="fade"
-                spaceBetween={0}
-                slidesPerView={1}
-                autoplay={{ delay: 5000, disableOnInteraction: false }}
-                pagination={{ clickable: true }}
-                className="w-full rounded-3xl overflow-hidden shadow-gold"
-              >
-                {heroProducts.map((product) => {
-                  const heroSrc =
-                    product.promo_image ||
-                    product.card_image ||
-                    product.media_gallery?.[0]?.file;
-
-                  return (
-                    <SwiperSlide key={product.id}>
-                      <Link to={`/product/${product.id}`} className="block group">
-                        <div className="relative w-full bg-luxury-panel2 aspect-[16/9] md:aspect-[21/9] overflow-hidden">
-                          {heroSrc ? (
-                            <img
-                              src={heroSrc}
-                              alt={product.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-luxury-panel2 to-luxury-bg flex items-center justify-center text-white/30 text-lg md:text-xl">
-                              No Promo Image
-                            </div>
-                          )}
-
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-
-                          <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 md:p-12">
-                            <div className="max-w-2xl">
-                              <div className="w-10 md:w-12 h-px bg-luxury-gold mb-3 md:mb-4" />
-
-                              <h3 className="text-white text-2xl sm:text-3xl md:text-5xl font-serif font-medium tracking-wide mb-1.5 md:mb-2 drop-shadow-lg line-clamp-1">
-                                {product.name}
-                              </h3>
-
-                              {product.category && (
-                                <p className="text-luxury-gold/90 text-[10px] sm:text-[11px] md:text-xs tracking-[0.3em] uppercase line-clamp-1">
-                                  {product.category}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    </SwiperSlide>
-                  );
-                })}
-              </Swiper>
-            </motion.div>
+            (() => {
+              const f = heroProducts[0];
+              const img = f.promo_image || f.card_image || f.media_gallery?.[0]?.file;
+              return (
+                <motion.div
+                  variants={sectionVariants}
+                  initial="hidden"
+                  animate="show"
+                  className="relative overflow-hidden rounded-3xl border border-luxury-gold/15 bg-white/[0.04] backdrop-blur-md shadow-gold"
+                >
+                  <div className="grid md:grid-cols-2 items-center">
+                    <div className="p-8 sm:p-12 md:p-14 order-2 md:order-1">
+                      <SectionLabel className="mb-5">
+                        {(f.category || "Signature")}
+                        {f.target ? ` · ${targetLabel(f.target)}` : ""}
+                      </SectionLabel>
+                      <h2 className="font-serif text-4xl sm:text-5xl md:text-6xl leading-[1.05] font-medium text-white mb-5">
+                        {f.name}
+                      </h2>
+                      <div className="w-12 h-px bg-luxury-gold mb-5" />
+                      <p className="font-cormorant text-xl sm:text-2xl text-luxury-champagne/75 max-w-md mb-8 line-clamp-4">
+                        {f.description || "An olfactory signature, composed to be remembered."}
+                      </p>
+                      <div className="flex flex-wrap gap-4">
+                        <Link
+                          to={`/product/${f.id}`}
+                          className="btn-lux px-8 py-3 rounded-full text-sm font-medium uppercase tracking-[0.3em]"
+                        >
+                          Discover
+                        </Link>
+                        <Link
+                          to={`/product/${f.id}`}
+                          className="px-8 py-3 rounded-full text-sm font-medium uppercase tracking-[0.3em] text-luxury-champagne border border-luxury-gold/40 hover:border-luxury-gold hover:bg-luxury-gold/10 transition inline-flex items-center gap-2"
+                        >
+                          View Fragrance
+                        </Link>
+                      </div>
+                    </div>
+                    <div
+                      className="relative h-64 sm:h-80 md:h-[28rem] flex items-center justify-center overflow-hidden order-1 md:order-2"
+                      style={{ background: "radial-gradient(120% 100% at 50% 20%,#16213f,#0a1124 55%,#070B14)" }}
+                    >
+                      <div
+                        className="absolute w-72 h-72 rounded-full"
+                        style={{ background: "radial-gradient(circle,rgba(212,175,55,0.18),transparent 65%)" }}
+                      />
+                      {img ? (
+                        <img
+                          src={img}
+                          alt={f.name}
+                          className="relative max-h-[82%] max-w-[80%] object-contain drop-shadow-2xl"
+                        />
+                      ) : null}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })()
           )}
         </div>
 
