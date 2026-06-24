@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eleganza — Phase 6 Style Guide</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { luxury: {
+      bg:"#070B14", panel:"#0B1222", panel2:"#0E1830",
+      gold:"#D4AF37", gold2:"#F3D37A", champagne:"#F7E7CE" } },
+    fontFamily: {
+      display: ['"Playfair Display"','serif'],
+      serif: ['"Cormorant Garamond"','serif'],
+      sans: ['Inter','system-ui','sans-serif'] },
+    boxShadow: { gold:"0 0 0 1px rgba(212,175,55,0.22), 0 24px 70px rgba(0,0,0,0.55)" },
+  } }
+}
+</script>
+<style>
+  body{background:#070B14}
+  .glass{background:linear-gradient(160deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02));backdrop-filter:blur(14px);border:1px solid rgba(212,175,55,0.16)}
+  .gold-text{background:linear-gradient(90deg,#D4AF37,#F3D37A);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.6),transparent)}
+  .glow{background:radial-gradient(60% 50% at 50% 0%,rgba(212,175,55,0.12),transparent 60%)}
+  .label{letter-spacing:.32em}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body class="font-sans text-luxury-champagne/90 antialiased">
+<div class="glow fixed inset-0 pointer-events-none"></div>
+<div class="relative max-w-5xl mx-auto px-6 sm:px-10 py-16">
+
+  <p class="label uppercase text-[11px] text-luxury-gold/80 mb-4">Eleganza · GERAIN CHAN</p>
+  <h1 class="font-display text-5xl sm:text-6xl font-medium tracking-tight text-white mb-3">Design Language</h1>
+  <p class="font-serif text-2xl text-luxury-champagne/70 max-w-2xl">Dark-opulent luxury with the restraint of a couture house — disciplined gold, couture typography, generous negative space, and slow, intentional motion.</p>
+
+  <div class="rule my-14"></div>
+
+  <!-- Palette -->
+  <section class="mb-16">
+    <h2 class="label uppercase text-xs text-luxury-gold/80 mb-6">01 — Palette</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div><div class="h-24 rounded-xl" style="background:#070B14;border:1px solid rgba(255,255,255,.08)"></div><p class="mt-2 text-sm text-white">Base</p><p class="text-xs text-white/40">#070B14</p></div>
+      <div><div class="h-24 rounded-xl" style="background:#0B1222"></div><p class="mt-2 text-sm text-white">Panel</p><p class="text-xs text-white/40">#0B1222</p></div>
+      <div><div class="h-24 rounded-xl" style="background:#0E1830"></div><p class="mt-2 text-sm text-white">Panel 2</p><p class="text-xs text-white/40">#0E1830</p></div>
+      <div><div class="h-24 rounded-xl" style="background:#D4AF37"></div><p class="mt-2 text-sm text-white">Gold</p><p class="text-xs text-white/40">#D4AF37</p></div>
+      <div><div class="h-24 rounded-xl" style="background:#F3D37A"></div><p class="mt-2 text-sm text-white">Gold 2</p><p class="text-xs text-white/40">#F3D37A</p></div>
+      <div><div class="h-24 rounded-xl" style="background:#F7E7CE"></div><p class="mt-2 text-sm text-white">Champagne</p><p class="text-xs text-white/40">#F7E7CE</p></div>
+    </div>
+    <p class="mt-5 text-sm text-white/50 max-w-2xl">One metallic accent only. Gold is a finishing touch (hairlines, small marks, single CTA) — never a fill. The retired cyan/pink filter accents are replaced by gold/champagne states.</p>
+  </section>
+
+  <!-- Typography -->
+  <section class="mb-16">
+    <h2 class="label uppercase text-xs text-luxury-gold/80 mb-6">02 — Typography</h2>
+    <div class="glass rounded-2xl p-8">
+      <p class="label uppercase text-[11px] text-luxury-gold/70 mb-3">Display · Playfair Display</p>
+      <p class="font-display text-5xl text-white mb-2">Eleganza Noir</p>
+      <p class="font-display text-3xl text-white/80 mb-6">An olfactory signature</p>
+      <p class="label uppercase text-[11px] text-luxury-gold/70 mb-3">Serif accent · Cormorant Garamond</p>
+      <p class="font-serif text-2xl text-luxury-champagne/80 mb-6">Crimson rose, oud, and a whisper of leather.</p>
+      <p class="label uppercase text-[11px] text-luxury-gold/70 mb-3">Body · Inter</p>
+      <p class="text-base leading-relaxed text-white/70 max-w-2xl">A sophisticated, gender-neutral fragrance designed for those who command the room. Sharp bergamot opens to a smoky heart, finishing on amber and leather. Body text stays at a calm 16px with generous line-height for editorial readability.</p>
+    </div>
+  </section>
+
+  <!-- Buttons -->
+  <section class="mb-16">
+    <h2 class="label uppercase text-xs text-luxury-gold/80 mb-6">03 — Buttons &amp; Chips</h2>
+    <div class="glass rounded-2xl p-8 flex flex-wrap items-center gap-4">
+      <button class="px-8 py-3 rounded-full text-sm font-medium label uppercase text-luxury-bg bg-gradient-to-r from-luxury-gold to-luxury-gold2 hover:brightness-110 transition shadow-[0_8px_30px_rgba(212,175,55,0.25)]">Add to Cart</button>
+      <button class="px-8 py-3 rounded-full text-sm font-medium label uppercase text-luxury-champagne border border-luxury-gold/40 hover:border-luxury-gold hover:bg-luxury-gold/10 transition">View in AR</button>
+      <span class="px-5 py-2 rounded-full text-xs label uppercase bg-luxury-gold text-luxury-bg">All</span>
+      <span class="px-5 py-2 rounded-full text-xs label uppercase text-white/70 border border-white/15 hover:border-luxury-gold/50 transition">Oud</span>
+      <span class="px-5 py-2 rounded-full text-xs label uppercase text-white/70 border border-white/15 hover:border-luxury-gold/50 transition">Unisex</span>
+    </div>
+  </section>
+
+  <!-- Surfaces -->
+  <section class="mb-16">
+    <h2 class="label uppercase text-xs text-luxury-gold/80 mb-6">04 — Surfaces &amp; Motion</h2>
+    <div class="grid sm:grid-cols-2 gap-6">
+      <div class="glass rounded-2xl p-8 shadow-gold">
+        <p class="font-display text-2xl text-white mb-2">Glass panel</p>
+        <p class="text-sm text-white/60">Backdrop blur, 1px gold-tint border, deep soft shadow. Panels stay opaque enough for 4.5:1 text contrast.</p>
+      </div>
+      <div class="rounded-2xl p-8 bg-luxury-panel border border-white/5">
+        <p class="font-display text-2xl text-white mb-2">Motion</p>
+        <p class="text-sm text-white/60">Slow ease-out reveals (fade + 12px rise), 700ms image zoom on hover, subtle gold shimmer. Always respects <span class="text-luxury-gold2">prefers-reduced-motion</span>.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule my-12"></div>
+  <p class="text-xs text-white/40">Phase 6 mockup · standalone reference · Eleganza / GERAIN CHAN</p>
+</div>
+</body>
+</html>
