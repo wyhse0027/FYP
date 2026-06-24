@@ -22,6 +22,24 @@ module.exports = {
         "gold-gradient":
           "linear-gradient(90deg, rgba(212,175,55,1), rgba(243,211,122,1))",
       },
+      fontFamily: {
+        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        cormorant: ['"Cormorant Garamond"', 'serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      keyframes: {
+        shimmer: { '100%': { transform: 'translateX(100%)' } },
+        'lux-pan': { '0%': { backgroundPosition: '0 0' }, '100%': { backgroundPosition: '220% 0' } },
+        'lux-sweep': { '0%': { left: '-70%' }, '100%': { left: '130%' } },
+        'spin-gold': { to: { transform: 'rotate(360deg)' } },
+        bar: { '0%': { transform: 'translateX(-130%)' }, '100%': { transform: 'translateX(420%)' } },
+      },
+      animation: {
+        shimmer: 'shimmer 1.6s infinite',
+        'lux-pan': 'lux-pan 7s linear infinite',
+        'spin-gold': 'spin-gold 0.9s linear infinite',
+        bar: 'bar 1.4s ease-in-out infinite',
+      },
     },
   },
   plugins: [],
