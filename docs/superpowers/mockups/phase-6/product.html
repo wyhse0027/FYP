@@ -28,7 +28,15 @@ tailwind.config = { theme: { extend: {
   .bottle::before{content:"";position:absolute;top:-30px;left:50%;transform:translateX(-50%);width:52px;height:34px;border-radius:7px;background:linear-gradient(180deg,#F3D37A,#B8860B);box-shadow:0 5px 14px rgba(0,0,0,0.5)}
   .bottle::after{content:"";position:absolute;top:-50px;left:50%;transform:translateX(-50%);width:28px;height:22px;border-radius:4px 4px 0 0;background:linear-gradient(180deg,#F7E7CE,#D4AF37)}
   .thumb{background:radial-gradient(120% 100% at 50% 20%,#16213f,#0a1124)}
-  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+  .btn-lux{position:relative;overflow:hidden;color:#070B14;background:linear-gradient(110deg,#D4AF37,#F3D37A 45%,#D4AF37);background-size:220% 100%;animation:lux-pan 7s linear infinite;box-shadow:0 12px 36px rgba(212,175,55,0.3)}
+  .btn-lux:hover{filter:brightness(1.06)}
+  .btn-lux::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,0.65),transparent);transform:skewX(-20deg)}
+  .btn-lux:hover::after{animation:lux-sweep .9s ease}
+  @keyframes lux-pan{0%{background-position:0 0}100%{background-position:220% 0}}
+  @keyframes lux-sweep{0%{left:-70%}100%{left:130%}}
+  .spinner{width:16px;height:16px;border-radius:50%;border:2px solid rgba(7,11,20,0.35);border-top-color:#070B14;animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}.btn-lux::after{display:none}}
 </style>
 </head>
 <body class="font-sans text-luxury-champagne/90 antialiased">
@@ -104,7 +112,7 @@ tailwind.config = { theme: { extend: {
       </div>
 
       <div class="flex flex-wrap gap-4 mb-10">
-        <button class="flex-1 min-w-[200px] px-8 py-4 rounded-full text-sm font-medium label uppercase text-luxury-bg bg-gradient-to-r from-luxury-gold to-luxury-gold2 hover:brightness-110 transition shadow-[0_12px_36px_rgba(212,175,55,0.3)]">Add to Cart</button>
+        <button class="btn-lux flex-1 min-w-[200px] px-8 py-4 rounded-full text-sm font-medium label uppercase">Add to Cart</button>
         <button class="px-8 py-4 rounded-full text-sm font-medium label uppercase text-luxury-champagne border border-white/20 hover:border-luxury-gold/60 transition">Add to Wishlist</button>
       </div>
 
