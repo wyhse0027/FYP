@@ -9,7 +9,7 @@ const faqs = [
 
 export default function HelpCenterPage() {
   return (
-    <div className="min-h-screen w-full bg-[#0c1a3a] px-6 md:px-10 lg:px-16">
+    <div className="min-h-screen w-full bg-[#070B14] px-6 md:px-10 lg:px-16">
       <div className="mx-auto w-full max-w-[900px] py-8 text-white">
         <PageHeader title="Help Center" />
         <div className="bg-white/5 rounded-2xl p-6">

@@ -59,7 +59,7 @@ export default function LoginPage() {
 
 
   return (
-    <div className="min-h-screen w-full bg-[#0c1a3a] relative overflow-hidden">
+    <div className="min-h-screen w-full bg-[#070B14] relative overflow-hidden">
       {/* Decorative background (blue/white + tiny gold accents) */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-24 left-1/4 w-[600px] h-[600px] bg-white/10 rounded-full blur-3xl" />
@@ -240,14 +240,14 @@ export default function LoginPage() {
                   type="submit"
                   disabled={busy}
                   className="w-full h-14 rounded-xl font-extrabold text-base md:text-lg
-                             bg-white text-[#0c1a3a]
+                             bg-white text-[#070B14]
                              hover:bg-white/90 transition
                              disabled:opacity-60 disabled:cursor-not-allowed
                              flex items-center justify-center gap-2"
                 >
                   {busy ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-[#0c1a3a]/30 border-t-[#0c1a3a] rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-[#070B14]/30 border-t-[#070B14] rounded-full animate-spin" />
                       Signing in…
                     </>
                   ) : (

@@ -214,7 +214,7 @@ export default function AdminRetailersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 lg:px-16 py-10">
+    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-16 py-10">
       <div className="max-w-7xl mx-auto">
         {/* Unified Top Bar */}
         <PageHeader title="Manage Retailers" />
@@ -259,7 +259,7 @@ export default function AdminRetailersPage() {
                   href={r.map_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sky-400 hover:underline mt-2 inline-block"
+                  className="text-luxury-gold hover:underline mt-2 inline-block"
                 >
                   View on Google Maps →
                 </a>

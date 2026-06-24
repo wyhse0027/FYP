@@ -137,21 +137,21 @@ export default function AboutPage() {
 
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0c1a3a] text-white text-xl">
+      <div className="min-h-screen flex items-center justify-center bg-[#070B14] text-white text-xl">
         Loading About page…
       </div>
     );
 
   if (error)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0c1a3a] text-white text-xl">
+      <div className="min-h-screen flex items-center justify-center bg-[#070B14] text-white text-xl">
         {error}
       </div>
     );
 
   return (
     <div
-      className="min-h-screen bg-[#0c1a3a] text-white"
+      className="min-h-screen bg-[#070B14] text-white"
       style={{ fontFamily: "'Open Sans', sans-serif" }}
     >
       {/* Hero */}

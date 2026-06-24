@@ -309,7 +309,7 @@ function OrderCard({ order, onAsk, onDownloadPdf }) {
 
   const paymentBadgeClass = (() => {
     if (paymentLabel.includes("PAID") || paymentLabel.includes("Collected"))
-      return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
+      return "bg-luxury-gold/20 text-luxury-gold2 border-luxury-gold/30";
     if (
       paymentLabel.includes("PENDING") ||
       paymentLabel.includes("Pay on delivery")
@@ -342,7 +342,7 @@ function OrderCard({ order, onAsk, onDownloadPdf }) {
       danger:
         "bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30",
       success:
-        "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30",
+        "bg-luxury-gold/20 text-luxury-gold2 border border-luxury-gold/30 hover:bg-luxury-gold/30",
       default:
         "bg-white/10 text-white/80 border border-white/10 hover:bg-white/20",
     };

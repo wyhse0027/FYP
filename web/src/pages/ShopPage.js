@@ -120,38 +120,38 @@ const ShopPage = () => {
       to: "/compare",
       icon: IoSwapHorizontalOutline,
       label: "Compare",
-      accent: "border-sky-500/30 hover:border-sky-300/60",
-      iconBg: "bg-sky-400/10",
-      iconBorder: "border-sky-400/25",
+      accent: "border-luxury-gold/30 hover:border-luxury-gold/60",
+      iconBg: "bg-luxury-gold/10",
+      iconBorder: "border-luxury-gold/25",
     },
     {
       to: "/quiz",
       icon: IoSparklesOutline,
       label: "Find Your Scent",
-      accent: "border-pink-500/30 hover:border-pink-300/60",
-      iconBg: "bg-pink-400/10",
-      iconBorder: "border-pink-400/25",
+      accent: "border-luxury-gold/30 hover:border-luxury-gold2/60",
+      iconBg: "bg-luxury-gold/10",
+      iconBorder: "border-luxury-gold/25",
     },
   ];
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0c1a3a] flex items-center justify-center">
+      <div className="min-h-screen bg-[#070B14] flex items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-          className="w-14 h-14 border-2 border-sky-300/80 border-t-transparent rounded-full"
+          className="w-14 h-14 border-2 border-luxury-gold/80 border-t-transparent rounded-full"
         />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0c1a3a]">
+    <div className="min-h-screen bg-[#070B14]">
       {/* Decorative background glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-[620px] h-[620px] bg-sky-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-[520px] h-[520px] bg-pink-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-[620px] h-[620px] bg-luxury-gold/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-[520px] h-[520px] bg-luxury-gold/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
       </div>
 
       <div className="relative z-10 w-full px-4 sm:px-6 md:px-12 lg:px-16">
@@ -178,7 +178,7 @@ const ShopPage = () => {
                       inline-flex items-center justify-center
                       min-w-[22px] h-[22px] px-1.5
                       md:min-w-[28px] md:h-[28px] md:px-2
-                      rounded-full bg-luxury-gold text-[#0c1a3a]
+                      rounded-full bg-luxury-gold text-[#070B14]
                       text-[12px] md:text-[13px] font-extrabold leading-none
                       shadow
                     "
@@ -194,7 +194,7 @@ const ShopPage = () => {
           <div className="flex items-center justify-between mb-3 mt-4">
             <p className="text-white/60 text-sm">
               Showing{" "}
-              <span className="text-sky-200 font-semibold">{filteredProducts.length}</span>{" "}
+              <span className="text-luxury-gold font-semibold">{filteredProducts.length}</span>{" "}
               fragrances
             </p>
 
@@ -212,7 +212,7 @@ const ShopPage = () => {
           {/* Filters */}
           <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="mb-5">
             <div className="flex items-center gap-3 mb-3">
-              <IoFilterOutline className="text-sky-200 text-xl" />
+              <IoFilterOutline className="text-luxury-gold text-xl" />
               <h2 className="text-white font-semibold tracking-wide">Filters</h2>
             </div>
 
@@ -223,7 +223,7 @@ const ShopPage = () => {
                   ${
                     !hasAnyFilter
                       ? "bg-white text-blue-900 border-white shadow-white/40"
-                      : "bg-transparent text-sky-200 border-sky-500/50 hover:bg-sky-500/20 hover:text-white"
+                      : "bg-transparent text-luxury-gold border-luxury-gold/50 hover:bg-luxury-gold/20 hover:text-white"
                   }`}
               >
                 All
@@ -238,8 +238,8 @@ const ShopPage = () => {
                     className={`px-4 py-2 md:px-7 md:py-3 rounded-full border-2 transition-all duration-200 shadow-sm
                       ${
                         active
-                          ? "bg-sky-400 text-blue-900 border-sky-300 shadow-sky-400/40"
-                          : "bg-transparent text-sky-200 border-sky-500/50 hover:bg-sky-500/20 hover:text-white"
+                          ? "bg-luxury-gold text-blue-900 border-luxury-gold shadow-luxury-gold/40"
+                          : "bg-transparent text-luxury-gold border-luxury-gold/50 hover:bg-luxury-gold/20 hover:text-white"
                       }`}
                   >
                     {cat}
@@ -256,8 +256,8 @@ const ShopPage = () => {
                     className={`px-4 py-2 md:px-7 md:py-3 rounded-full border-2 transition-all duration-200 shadow-sm
                       ${
                         active
-                          ? "bg-pink-400 text-blue-900 border-pink-300 shadow-pink-400/40"
-                          : "bg-transparent text-pink-200 border-pink-500/50 hover:bg-pink-500/20 hover:text-white"
+                          ? "bg-luxury-gold text-blue-900 border-luxury-gold2 shadow-luxury-gold/40"
+                          : "bg-transparent text-luxury-champagne border-luxury-gold/50 hover:bg-luxury-gold/20 hover:text-white"
                       }`}
                   >
                     {g.label}
@@ -272,14 +272,14 @@ const ShopPage = () => {
                       className={`list-none px-4 py-2 md:px-7 md:py-3 rounded-full border-2 cursor-pointer select-none transition-all duration-200 shadow-sm
                         ${
                           overflowHasActive
-                            ? "bg-sky-400 text-blue-900 border-sky-300 shadow-sky-400/40"
-                            : "bg-transparent text-sky-200 border-sky-500/50 group-hover:bg-sky-500/20 group-hover:text-white"
+                            ? "bg-luxury-gold text-blue-900 border-luxury-gold shadow-luxury-gold/40"
+                            : "bg-transparent text-luxury-gold border-luxury-gold/50 group-hover:bg-luxury-gold/20 group-hover:text-white"
                         }`}
                     >
                       More
                     </summary>
 
-                    <div className="absolute mt-2 right-0 min-w-[200px] bg-[#071426] border border-sky-500/40 rounded-2xl p-2 z-30 shadow-2xl">
+                    <div className="absolute mt-2 right-0 min-w-[200px] bg-[#071426] border border-luxury-gold/40 rounded-2xl p-2 z-30 shadow-2xl">
                       {categories.slice(MAX_PRIMARY_CATEGORIES).map((cat) => {
                         const active = selectedCategories.includes(cat);
                         return (
@@ -289,8 +289,8 @@ const ShopPage = () => {
                             className={`w-full text-left px-3 py-2 rounded-xl text-sm mb-1 transition
                               ${
                                 active
-                                  ? "bg-sky-500/90 text-blue-950 font-semibold"
-                                  : "bg-transparent text-sky-100 hover:bg-sky-500/20"
+                                  ? "bg-luxury-gold/90 text-blue-950 font-semibold"
+                                  : "bg-transparent text-luxury-gold hover:bg-luxury-gold/20"
                               }`}
                           >
                             {cat}
@@ -328,7 +328,7 @@ const ShopPage = () => {
                       transition={{ delay: idx * 0.02 }}
                     >
                       <Link to={`/product/${product.id}`} className="block h-full group">
-                        <div className="relative h-full rounded-2xl border border-white/10 overflow-hidden bg-gradient-to-br from-white/10 to-white/5 hover:border-sky-300/40 transition-all duration-500">
+                        <div className="relative h-full rounded-2xl border border-white/10 overflow-hidden bg-gradient-to-br from-white/10 to-white/5 hover:border-luxury-gold/40 transition-all duration-500">
                           {/* Image */}
                           <div className="aspect-[4/5] p-2 sm:p-3 md:p-4 flex items-center justify-center bg-gradient-to-b from-transparent to-black/20">
                             <motion.img
@@ -357,13 +357,13 @@ const ShopPage = () => {
                               </span>
                             )}
 
-                            <h3 className="text-white font-bold text-[13px] sm:text-[14px] md:text-base leading-snug line-clamp-2 group-hover:text-sky-200 transition-colors">
+                            <h3 className="text-white font-bold text-[13px] sm:text-[14px] md:text-base leading-snug line-clamp-2 group-hover:text-luxury-gold transition-colors">
                               {product.name}
                             </h3>
 
                             {/* Target */}
                             {product.target && (
-                              <span className="inline-block px-3 py-1 rounded-full text-[9px] bg-blue-900/70 text-sky-300 uppercase tracking-wide w-fit">
+                              <span className="inline-block px-3 py-1 rounded-full text-[9px] bg-blue-900/70 text-luxury-gold uppercase tracking-wide w-fit">
                                 {String(product.target).toUpperCase() === "MEN"
                                   ? "For Men"
                                   : String(product.target).toUpperCase() === "WOMEN"

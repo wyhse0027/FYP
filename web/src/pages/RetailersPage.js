@@ -85,7 +85,7 @@ export default function RetailersPage() {
                   <div className="flex items-start gap-3 sm:gap-4 max-w-lg text-white/80">
                     <IoLocationOutline
                       size={24}
-                      className="sm:text-[32px] md:text-[40px] text-cyan-300 flex-shrink-0 mt-0.5"
+                      className="sm:text-[32px] md:text-[40px] text-luxury-gold2 flex-shrink-0 mt-0.5"
                     />
                     <div className="min-w-0">
                       <p className="text-sm sm:text-base md:text-lg leading-relaxed break-words">
@@ -96,7 +96,7 @@ export default function RetailersPage() {
                           href={r.map_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-cyan-400 hover:underline mt-1.5 inline-block text-sm sm:text-base"
+                          className="text-luxury-gold hover:underline mt-1.5 inline-block text-sm sm:text-base"
                           onClick={(e) => e.stopPropagation()} // prevent collapsing when tapping link
                         >
                           View on Google Maps →
@@ -109,7 +109,7 @@ export default function RetailersPage() {
                   <div className="flex items-start gap-3 sm:gap-4 text-white/80 max-w-lg">
                     <IoTimeOutline
                       size={24}
-                      className="sm:text-[32px] md:text-[40px] text-cyan-300 flex-shrink-0 mt-0.5"
+                      className="sm:text-[32px] md:text-[40px] text-luxury-gold2 flex-shrink-0 mt-0.5"
                     />
                     {r.is_open_24h ? (
                       <p className="text-sm sm:text-base md:text-lg leading-relaxed">
@@ -127,7 +127,7 @@ export default function RetailersPage() {
                   <div className="flex items-start gap-3 sm:gap-4 text-white/80 max-w-lg">
                     <IoCallOutline
                       size={24}
-                      className="sm:text-[32px] md:text-[40px] text-cyan-300 flex-shrink-0 mt-0.5"
+                      className="sm:text-[32px] md:text-[40px] text-luxury-gold2 flex-shrink-0 mt-0.5"
                     />
                     {/* make phone tappable on mobile */}
                     {r.phone ? (

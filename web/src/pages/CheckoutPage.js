@@ -265,7 +265,7 @@ export default function CheckoutPage() {
       {/* Decorative blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-72 h-72 sm:w-96 sm:h-96 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-0 w-64 h-64 sm:w-80 sm:h-80 bg-cyan-400/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-0 w-64 h-64 sm:w-80 sm:h-80 bg-luxury-gold/10 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-0 w-56 h-56 sm:w-64 sm:h-64 bg-white/5 rounded-full blur-2xl" />
       </div>
 
@@ -293,7 +293,7 @@ export default function CheckoutPage() {
                 <div className="grid md:grid-cols-2 gap-3 text-white text-sm sm:text-base">
                   <input
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
+                               focus:outline-none focus:border-luxury-gold/60 focus:ring-2 focus:ring-luxury-gold/20 transition disabled:opacity-50"
                     placeholder="Full name"
                     value={addr.fullname}
                     disabled={isExistingPayFlow}
@@ -301,7 +301,7 @@ export default function CheckoutPage() {
                   />
                   <input
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
+                               focus:outline-none focus:border-luxury-gold/60 focus:ring-2 focus:ring-luxury-gold/20 transition disabled:opacity-50"
                     placeholder="Phone"
                     value={addr.phone}
                     disabled={isExistingPayFlow}
@@ -311,7 +311,7 @@ export default function CheckoutPage() {
                   <div className="md:col-span-2">
                     <input
                       className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                                 focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
+                                 focus:outline-none focus:border-luxury-gold/60 focus:ring-2 focus:ring-luxury-gold/20 transition disabled:opacity-50"
                       placeholder="Address line 1"
                       value={addr.line1}
                       disabled={isExistingPayFlow}
@@ -322,7 +322,7 @@ export default function CheckoutPage() {
                   <div className="md:col-span-2">
                     <input
                       className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                                 focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
+                                 focus:outline-none focus:border-luxury-gold/60 focus:ring-2 focus:ring-luxury-gold/20 transition disabled:opacity-50"
                       placeholder="Address line 2 (optional)"
                       value={addr.line2}
                       disabled={isExistingPayFlow}
@@ -332,7 +332,7 @@ export default function CheckoutPage() {
 
                   <input
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
+                               focus:outline-none focus:border-luxury-gold/60 focus:ring-2 focus:ring-luxury-gold/20 transition disabled:opacity-50"
                     placeholder="Postcode"
                     value={addr.postcode}
                     disabled={isExistingPayFlow}
@@ -340,7 +340,7 @@ export default function CheckoutPage() {
                   />
                   <input
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
+                               focus:outline-none focus:border-luxury-gold/60 focus:ring-2 focus:ring-luxury-gold/20 transition disabled:opacity-50"
                     placeholder="City"
                     value={addr.city}
                     disabled={isExistingPayFlow}
@@ -348,7 +348,7 @@ export default function CheckoutPage() {
                   />
                   <input
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
+                               focus:outline-none focus:border-luxury-gold/60 focus:ring-2 focus:ring-luxury-gold/20 transition disabled:opacity-50"
                     placeholder="State"
                     value={addr.state}
                     disabled={isExistingPayFlow}
@@ -356,7 +356,7 @@ export default function CheckoutPage() {
                   />
                   <input
                     className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
+                               focus:outline-none focus:border-luxury-gold/60 focus:ring-2 focus:ring-luxury-gold/20 transition disabled:opacity-50"
                     placeholder="Country"
                     value={addr.country}
                     disabled={isExistingPayFlow}
@@ -381,7 +381,7 @@ export default function CheckoutPage() {
                         onClick={() => setPm(opt.key)}
                         className={`text-left p-3 sm:p-4 rounded-xl border transition-all duration-300 ${
                           selected
-                            ? "bg-sky-500/20 border-sky-400/50 shadow-lg shadow-sky-500/10"
+                            ? "bg-luxury-gold/20 border-luxury-gold/50 shadow-lg shadow-luxury-gold/10"
                             : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
                         }`}
                       >
@@ -400,7 +400,7 @@ export default function CheckoutPage() {
                           </div>
                           <div
                             className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                              selected ? "border-sky-300 bg-sky-300" : "border-white/30"
+                              selected ? "border-luxury-gold bg-luxury-gold" : "border-white/30"
                             }`}
                           >
                             {selected && (
@@ -442,7 +442,7 @@ export default function CheckoutPage() {
 
               <div className="flex justify-between text-lg sm:text-xl font-extrabold text-white pt-3 sm:pt-4 mt-3 sm:mt-4 border-t border-white/10">
                 <span>Total</span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-cyan-300">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-luxury-gold to-luxury-gold2">
                   {formatMYR(total)}
                 </span>
               </div>
@@ -493,7 +493,7 @@ export default function CheckoutPage() {
                   className={`w-full py-3 sm:py-4 rounded-xl font-extrabold text-base sm:text-lg transition-all duration-300
                     flex items-center justify-center gap-3 ${
                       payNowEnabled
-                        ? "bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40"
+                        ? "bg-gradient-to-r from-luxury-gold to-luxury-gold text-white shadow-lg shadow-luxury-gold/25 hover:shadow-luxury-gold/40"
                         : "bg-white/10 text-white/40 cursor-not-allowed"
                     }`}
                 >
@@ -535,7 +535,7 @@ export default function CheckoutPage() {
       {paidOrderId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 rounded-3xl p-8 w-full max-w-md text-center shadow-2xl border border-white/20">
-            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30">
+            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-luxury-gold to-green-500 rounded-full flex items-center justify-center shadow-lg shadow-luxury-gold/30">
               <span className="text-white text-3xl font-black">✓</span>
             </div>
             <h2 className="text-2xl font-extrabold mb-2 text-white">Order Updated</h2>
@@ -572,7 +572,7 @@ export default function CheckoutPage() {
                   setPaidOrderId(null);
                   navigate("/orders?tab=TO_SHIP");
                 }}
-                className="flex-1 py-3 rounded-xl font-semibold bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:opacity-95 transition"
+                className="flex-1 py-3 rounded-xl font-semibold bg-gradient-to-r from-luxury-gold to-luxury-gold text-white hover:opacity-95 transition"
               >
                 OK
               </button>

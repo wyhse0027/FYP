@@ -240,14 +240,14 @@ export default function AdminAREditPage() {
   /* -------------------- Loading UI -------------------- */
   if (fetching)
     return (
-      <div className="min-h-screen bg-[#0c1a3a] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#070B14] text-white flex items-center justify-center">
         <p>Loading AR experience data…</p>
       </div>
     );
 
   /* -------------------- UI -------------------- */
   return (
-    <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 lg:px-16">
+    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-16">
       <div className="max-w-6xl mx-auto py-6">
         <PageHeader
           title={id ? "Edit AR Experience" : "Create AR Experience"}
@@ -264,7 +264,7 @@ export default function AdminAREditPage() {
                 value={form.product}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 rounded-lg bg-[#16244a] text-white border border-white/20 focus:ring-2 focus:ring-sky-500 outline-none appearance-none"
+                className="w-full px-4 py-2 rounded-lg bg-[#16244a] text-white border border-white/20 focus:ring-2 focus:ring-luxury-gold outline-none appearance-none"
               >
                 <option className="bg-[#16244a] text-white" value="">
                   Select a product
@@ -284,7 +284,7 @@ export default function AdminAREditPage() {
                 name="type"
                 value={form.type}
                 onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg bg-[#16244a] text-white border border-white/20 focus:ring-2 focus:ring-sky-500 outline-none appearance-none"
+                className="w-full px-4 py-2 rounded-lg bg-[#16244a] text-white border border-white/20 focus:ring-2 focus:ring-luxury-gold outline-none appearance-none"
               >
                 <option value="MARKER">Marker-based</option>
                 <option value="MARKERLESS">Markerless</option>
@@ -301,7 +301,7 @@ export default function AdminAREditPage() {
                     href={form.app_download_file}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sky-400 underline"
+                    className="text-luxury-gold underline"
                   >
                     Download current APK
                   </a>
@@ -320,7 +320,7 @@ export default function AdminAREditPage() {
                 name="app_download_file"
                 accept=".apk"
                 onChange={handleChange}
-                className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-700"
+                className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-luxury-gold file:text-white hover:file:bg-luxury-gold"
               />
               <p className="text-xs opacity-70 mt-2">
                 Note: APK uploads go directly to cloud storage (faster, avoids backend timeouts).
@@ -352,7 +352,7 @@ export default function AdminAREditPage() {
                 name="marker_image"
                 accept="image/*"
                 onChange={handleChange}
-                className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-700"
+                className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-luxury-gold file:text-white hover:file:bg-luxury-gold"
               />
             </div>
 
@@ -365,7 +365,7 @@ export default function AdminAREditPage() {
                     href={form.model_glb}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sky-400 underline"
+                    className="text-luxury-gold underline"
                   >
                     View current model
                   </a>
@@ -383,7 +383,7 @@ export default function AdminAREditPage() {
                 name="model_glb"
                 accept=".glb"
                 onChange={handleChange}
-                className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-700"
+                className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-luxury-gold file:text-white hover:file:bg-luxury-gold"
               />
               <p className="text-xs opacity-70 mt-2">
                 Note: GLB uploads go directly to cloud storage (faster, avoids backend timeouts).
@@ -399,7 +399,7 @@ export default function AdminAREditPage() {
                     href={form.marker_mind}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sky-400 underline"
+                    className="text-luxury-gold underline"
                   >
                     Download current file
                   </a>
@@ -417,7 +417,7 @@ export default function AdminAREditPage() {
                 name="marker_mind"
                 accept=".mind"
                 onChange={handleChange}
-                className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-sky-600 file:text-white hover:file:bg-sky-700"
+                className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-luxury-gold file:text-white hover:file:bg-luxury-gold"
               />
             </div>
 
@@ -429,7 +429,7 @@ export default function AdminAREditPage() {
                 name="enabled"
                 checked={form.enabled}
                 onChange={handleChange}
-                className="w-5 h-5 accent-sky-500"
+                className="w-5 h-5 accent-luxury-gold"
               />
               <label htmlFor="enabled" className="font-semibold">
                 Enabled

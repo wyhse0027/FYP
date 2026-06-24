@@ -109,20 +109,20 @@ export default function AdminARManagement() {
   // ─── UI Rendering ───────────────────────────────────
   if (loading)
     return (
-      <div className="min-h-screen bg-[#0c1a3a] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#070B14] text-white flex items-center justify-center">
         <p>Loading AR experiences…</p>
       </div>
     );
 
   if (error)
     return (
-      <div className="min-h-screen bg-[#0c1a3a] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#070B14] text-white flex items-center justify-center">
         <p>{error}</p>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 lg:px-16">
+    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-16">
       <div className="max-w-6xl mx-auto py-8">
         <PageHeader title="AR Experience Management" />
 
@@ -185,7 +185,7 @@ export default function AdminARManagement() {
                           href={exp.app_download_file_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sky-400 hover:underline"
+                          className="text-luxury-gold hover:underline"
                         >
                           Download
                         </a>

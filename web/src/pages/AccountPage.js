@@ -22,7 +22,7 @@ function Toast({ message, type = "success", onClose }) {
       className={`fixed bottom-6 right-6 z-[60] px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm ${
         type === "error"
           ? "bg-red-500/90 border-red-400/30"
-          : "bg-emerald-500/90 border-emerald-400/30"
+          : "bg-luxury-gold/90 border-luxury-gold/30"
       } text-white`}
     >
       <div className="flex items-center gap-3">

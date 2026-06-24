@@ -215,7 +215,7 @@ export default function AdminAboutPage() {
   // MAIN UI
   // ─────────────────────────────
   return (
-    <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 lg:px-24 py-10">
+    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-24 py-10">
       <div className="max-w-[1200px] mx-auto">
         <PageHeader title="Edit About Page" />
 

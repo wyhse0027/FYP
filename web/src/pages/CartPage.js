@@ -103,7 +103,7 @@ const CartPage = () => {
                     </button>
 
                     <div className="flex items-center gap-2 text-white/80">
-                      <Crown className="w-5 h-5 text-yellow-300/90" />
+                      <Crown className="w-5 h-5 text-luxury-gold2/90" />
                       <span className="font-semibold">
                         {selectedItemCount} item{selectedItemCount !== 1 ? "s" : ""} selected
                       </span>

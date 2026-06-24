@@ -30,7 +30,7 @@ export default function ReleasesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full bg-[#0c1a3a] flex items-center justify-center">
+      <div className="min-h-screen w-full bg-[#070B14] flex items-center justify-center">
         <p className="text-white text-center">Loading releases...</p>
       </div>
     );
@@ -38,16 +38,16 @@ export default function ReleasesPage() {
 
   if (!products.length) {
     return (
-      <div className="min-h-screen w-full bg-[#0c1a3a] flex items-center justify-center">
+      <div className="min-h-screen w-full bg-[#070B14] flex items-center justify-center">
         <p className="text-white text-center">No releases found.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0c1a3a] text-white flex flex-col items-center">
+    <div className="min-h-screen w-full bg-[#070B14] text-white flex flex-col items-center">
       {/* Top Header (no overlap + allow 2 lines, no "...") */}
-      <div className="w-full border-b border-white/10 bg-[#0c1a3a]">
+      <div className="w-full border-b border-white/10 bg-[#070B14]">
         <div className="mx-auto w-full max-w-[1600px] px-4 md:px-10 py-4 md:py-6">
           <div className="grid grid-cols-[44px_1fr_44px] items-center">
             <Link

@@ -63,7 +63,7 @@ export default function AddProductPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 lg:px-16 py-8">
+    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-16 py-8">
       <button
         onClick={() => navigate(-1)}
         className="mb-6 p-2 rounded-full hover:bg-white/10"

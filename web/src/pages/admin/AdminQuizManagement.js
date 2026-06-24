@@ -226,20 +226,20 @@ export default function AdminQuizManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0c1a3a] text-white px-4 md:px-8 lg:px-12 py-8 relative">
+    <div className="min-h-screen bg-[#070B14] text-white px-4 md:px-8 lg:px-12 py-8 relative">
       <div className="max-w-6xl mx-auto">
         <PageHeader title="Quiz Management" />
 
         {/* Top bar: Add quiz + refresh */}
         <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl mb-6 grid md:grid-cols-[2fr,1.5fr,1fr,auto,auto] gap-3 items-center shadow-md shadow-black/40 border border-white/10">
           <input
-            className="px-3 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 outline-none focus:ring-2 focus:ring-pink-400"
+            className="px-3 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 outline-none focus:ring-2 focus:ring-luxury-gold"
             placeholder="Quiz title"
             value={newQuizTitle}
             onChange={(e) => setNewQuizTitle(e.target.value)}
           />
           <input
-            className="px-3 py-2 rounded-lg bg-white/10 text-white placeholder-gray-300 outline-none focus:ring-2 focus:ring-sky-400"
+            className="px-3 py-2 rounded-lg bg-white/10 text-white placeholder-gray-300 outline-none focus:ring-2 focus:ring-luxury-gold"
             placeholder="Label (optional, e.g. For Women)"
             value={newQuizLabel}
             onChange={(e) => setNewQuizLabel(e.target.value)}
@@ -258,13 +258,13 @@ export default function AdminQuizManagement() {
           <button
             onClick={addQuiz}
             disabled={!newQuizTitle.trim()}
-            className="bg-pink-500 hover:bg-pink-600 transition px-4 py-2 rounded-lg font-semibold flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shadow-md shadow-pink-900/40"
+            className="bg-luxury-gold hover:bg-luxury-gold transition px-4 py-2 rounded-lg font-semibold flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shadow-md shadow-luxury-gold/40"
           >
             <IoAdd /> Add
           </button>
           <button
             onClick={fetchAll}
-            className="bg-sky-600 hover:bg-sky-700 transition px-4 py-2 rounded-lg font-semibold flex items-center gap-2 shadow-md shadow-sky-900/40"
+            className="bg-luxury-gold hover:bg-luxury-gold transition px-4 py-2 rounded-lg font-semibold flex items-center gap-2 shadow-md shadow-luxury-gold/40"
           >
             <IoRefresh /> Refresh
           </button>
@@ -295,7 +295,7 @@ export default function AdminQuizManagement() {
                     key={quiz.id}
                     className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer border text-xs transition-transform ${
                       active
-                        ? "bg-pink-500/25 border-pink-400 shadow-sm shadow-pink-900/60 scale-[1.01]"
+                        ? "bg-luxury-gold/25 border-luxury-gold shadow-sm shadow-luxury-gold/60 scale-[1.01]"
                         : "bg-white/5 border-white/10 hover:bg-white/10 hover:shadow-sm"
                     }`}
                     onClick={() => {
@@ -312,7 +312,7 @@ export default function AdminQuizManagement() {
                           {quiz.label || "No label"}
                         </span>
                         <span>•</span>
-                        <span className="px-1.5 py-0.5 rounded-full text-[9px] bg-sky-500/20 border border-sky-400/60 uppercase tracking-wide">
+                        <span className="px-1.5 py-0.5 rounded-full text-[9px] bg-luxury-gold/20 border border-luxury-gold/60 uppercase tracking-wide">
                           {formatAudienceLabel(quiz.audience)}
                         </span>
                         <span>•</span>
@@ -356,7 +356,7 @@ export default function AdminQuizManagement() {
                 <div className="space-y-2">
                   <label className="text-xs text-gray-300">Title</label>
                   <input
-                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-sky-400"
+                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-luxury-gold"
                     defaultValue={selectedQuiz.title}
                     onBlur={(e) =>
                       e.target.value !== selectedQuiz.title &&
@@ -367,7 +367,7 @@ export default function AdminQuizManagement() {
                   />
                   <label className="text-xs text-gray-300">Label</label>
                   <input
-                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-sky-400"
+                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-luxury-gold"
                     placeholder="e.g. For Women, For Beginners"
                     defaultValue={selectedQuiz.label || ""}
                     onBlur={(e) =>
@@ -395,7 +395,7 @@ export default function AdminQuizManagement() {
                   </select>
                   <div className="flex items-center justify-between mt-2 text-[11px] text-gray-300">
                     <span>Assigned audience</span>
-                    <span className="px-2 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/60 uppercase tracking-wide">
+                    <span className="px-2 py-0.5 rounded-full bg-luxury-gold/20 border border-luxury-gold/60 uppercase tracking-wide">
                       {formatAudienceLabel(selectedQuiz.audience)}
                     </span>
                   </div>
@@ -421,7 +421,7 @@ export default function AdminQuizManagement() {
                         <label
                           key={p.id}
                           className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
-                            active ? "bg-sky-500/30" : "hover:bg-white/5"
+                            active ? "bg-luxury-gold/30" : "hover:bg-white/5"
                           }`}
                         >
                           <input
@@ -503,7 +503,7 @@ export default function AdminQuizManagement() {
                               key={q.id}
                               className={`px-3 py-2 rounded-lg text-xs cursor-pointer flex items-start justify-between gap-2 transition-transform ${
                                 active
-                                  ? "bg-sky-500/40 border border-sky-400 shadow-sm shadow-sky-900/60 scale-[1.01]"
+                                  ? "bg-luxury-gold/40 border border-luxury-gold shadow-sm shadow-luxury-gold/60 scale-[1.01]"
                                   : "bg-white/5 border border-white/10 hover:bg-white/10"
                               }`}
                               onClick={() => setSelectedQuestionId(q.id)}
@@ -572,7 +572,7 @@ export default function AdminQuizManagement() {
 
                               <button
                                 onClick={addAnswer}
-                                className="bg-sky-600 hover:bg-sky-700 transition px-3 py-2 rounded-lg font-semibold flex items-center gap-1 text-xs shadow-md shadow-sky-900/40"
+                                className="bg-luxury-gold hover:bg-luxury-gold transition px-3 py-2 rounded-lg font-semibold flex items-center gap-1 text-xs shadow-md shadow-luxury-gold/40"
                               >
                                 <IoAdd /> Add
                               </button>

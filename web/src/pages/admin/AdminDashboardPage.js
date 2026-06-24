@@ -45,7 +45,7 @@ export default function AdminDashboardPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 lg:px-16">
+    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-16">
       <div className="max-w-6xl mx-auto py-6">
         <h1 className="text-3xl font-bold mb-8 text-center">ADMIN DASHBOARD</h1>
 
@@ -62,7 +62,7 @@ export default function AdminDashboardPage() {
             <p className="opacity-70">Users</p>
             <Link
               to="/admin/users"
-              className="mt-4 inline-block px-4 py-2 bg-sky-600 rounded-lg hover:bg-sky-700 font-semibold transition"
+              className="mt-4 inline-block px-4 py-2 bg-luxury-gold rounded-lg hover:bg-luxury-gold font-semibold transition"
             >
               Manage Users
             </Link>
@@ -86,7 +86,7 @@ export default function AdminDashboardPage() {
             <p className="opacity-70">Orders</p>
             <Link
               to="/admin/orders"
-              className="mt-4 inline-block px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 font-semibold transition"
+              className="mt-4 inline-block px-4 py-2 bg-luxury-gold rounded-lg hover:bg-luxury-gold font-semibold transition"
             >
               Manage Orders
             </Link>
@@ -110,7 +110,7 @@ export default function AdminDashboardPage() {
             <p className="opacity-70">Quizzes</p>
             <Link
               to="/admin/quiz-management"
-              className="mt-4 inline-block px-4 py-2 bg-yellow-600 rounded-lg hover:bg-yellow-700 font-semibold transition"
+              className="mt-4 inline-block px-4 py-2 bg-luxury-gold rounded-lg hover:bg-luxury-gold font-semibold transition"
             >
               Manage Quizzes
             </Link>
@@ -122,7 +122,7 @@ export default function AdminDashboardPage() {
             <p className="opacity-70">Scent Personas</p>
             <Link
               to="/admin/scent-personas"
-              className="mt-4 inline-block px-4 py-2 bg-pink-600 rounded-lg hover:bg-pink-700 font-semibold transition"
+              className="mt-4 inline-block px-4 py-2 bg-luxury-gold rounded-lg hover:bg-luxury-gold font-semibold transition"
             >
               Manage Scent Personas
             </Link>
@@ -134,7 +134,7 @@ export default function AdminDashboardPage() {
             <p className="opacity-70">AR Experiences</p>
             <Link
               to="/admin/ar-management"
-              className="mt-4 inline-block px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-700 font-semibold transition"
+              className="mt-4 inline-block px-4 py-2 bg-luxury-gold rounded-lg hover:bg-luxury-gold font-semibold transition"
             >
               Manage AR
             </Link>

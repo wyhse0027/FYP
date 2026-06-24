@@ -188,8 +188,8 @@ const QuizPage = () => {
     <div className="min-h-screen w-full bg-[#020617] relative overflow-hidden">
       {/* subtle background glows */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(234,179,8,0.18),_transparent)] pointer-events-none" />
-      <div className="absolute -right-32 top-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -left-32 bottom-1/4 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -right-32 top-1/4 w-80 h-80 bg-luxury-gold/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -left-32 bottom-1/4 w-80 h-80 bg-luxury-gold/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10 px-6 md:px-12 lg:px-16 py-8">
         <div className="mx-auto w-full max-w-6xl">
@@ -204,7 +204,7 @@ const QuizPage = () => {
               to={SHOP_ROUTE}
               className="flex items-center justify-start text-slate-300 hover:text-white transition-colors"
             >
-              <div className="w-10 h-10 rounded-full border border-yellow-500/30 flex items-center justify-center hover:border-yellow-400 transition-colors">
+              <div className="w-10 h-10 rounded-full border border-luxury-gold/30 flex items-center justify-center hover:border-luxury-gold transition-colors">
                 <IoArrowBack className="w-5 h-5" />
               </div>
             </Link>
@@ -212,7 +212,7 @@ const QuizPage = () => {
             {/* Center title */}
             <div className="flex justify-center">
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-wide text-center">
-                Fragrance <span className="text-yellow-400">Quiz</span>
+                Fragrance <span className="text-luxury-gold">Quiz</span>
               </h1>
             </div>
 
@@ -247,9 +247,9 @@ const QuizPage = () => {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.2, type: "spring" }}
-                    className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400/25 to-yellow-500/10 border border-yellow-400/40 mb-5"
+                    className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-luxury-gold/25 to-luxury-gold/10 border border-luxury-gold/40 mb-5"
                   >
-                    <IoSparkles className="w-9 h-9 text-yellow-300" />
+                    <IoSparkles className="w-9 h-9 text-luxury-gold2" />
                   </motion.div>
                   <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
                     Discover Your Signature Scent
@@ -268,23 +268,23 @@ const QuizPage = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.05 * index }}
                       onClick={() => startQuiz(q)}
-                      className="group relative p-6 rounded-3xl border border-slate-700/60 bg-gradient-to-br from-slate-900/80 to-slate-900/40 backdrop-blur-sm hover:border-yellow-400/50 hover:shadow-[0_0_30px_rgba(250,204,21,0.18)] transition-all duration-300 text-left overflow-hidden"
+                      className="group relative p-6 rounded-3xl border border-slate-700/60 bg-gradient-to-br from-slate-900/80 to-slate-900/40 backdrop-blur-sm hover:border-luxury-gold/50 hover:shadow-[0_0_30px_rgba(250,204,21,0.18)] transition-all duration-300 text-left overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <div className="relative z-10 flex flex-col gap-2">
-                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-white/5 text-yellow-300 mb-2">
+                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-white/5 text-luxury-gold2 mb-2">
                           <IoSparkles className="w-6 h-6" />
                         </div>
                         <h3 className="text-lg font-bold text-white">
                           {q.title}
                         </h3>
                         {q.label && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-[11px] bg-pink-500/15 text-pink-200 border border-pink-400/40">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-[11px] bg-luxury-gold/15 text-luxury-champagne border border-luxury-gold/40">
                             {q.label}
                           </span>
                         )}
                         {q.audience && q.audience !== "ANY" && (
-                          <span className="text-[10px] uppercase tracking-wide text-sky-300/80">
+                          <span className="text-[10px] uppercase tracking-wide text-luxury-gold/80">
                             Target: {q.audience}
                           </span>
                         )}
@@ -333,15 +333,15 @@ const QuizPage = () => {
                       exit={{ opacity: 0, x: -40 }}
                       className="relative"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-purple-500/5 to-transparent rounded-3xl blur-xl" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-luxury-gold/10 via-luxury-gold/5 to-transparent rounded-3xl blur-xl" />
                       <div className="relative p-7 md:p-9 rounded-3xl border border-slate-700/70 bg-gradient-to-br from-slate-900/80 to-slate-900/40 backdrop-blur-sm">
                         <div className="flex items-center gap-3 mb-5">
-                          <div className="w-9 h-9 rounded-full bg-yellow-500/25 flex items-center justify-center">
-                            <span className="text-yellow-300 text-sm font-bold">
+                          <div className="w-9 h-9 rounded-full bg-luxury-gold/25 flex items-center justify-center">
+                            <span className="text-luxury-gold2 text-sm font-bold">
                               {currentQuestion + 1}
                             </span>
                           </div>
-                          <div className="flex-1 h-px bg-gradient-to-r from-yellow-400/40 to-transparent" />
+                          <div className="flex-1 h-px bg-gradient-to-r from-luxury-gold/40 to-transparent" />
                         </div>
 
                         <h3 className="text-xl md:text-2xl font-bold text-white mb-6 leading-relaxed">
@@ -356,13 +356,13 @@ const QuizPage = () => {
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: 0.05 * index }}
                               onClick={() => handleAnswer(opt.id)}
-                              className="w-full group p-4 rounded-2xl border border-slate-700/70 bg-slate-900/60 hover:bg-slate-800/80 hover:border-yellow-400/50 transition-all duration-200 text-left"
+                              className="w-full group p-4 rounded-2xl border border-slate-700/70 bg-slate-900/60 hover:bg-slate-800/80 hover:border-luxury-gold/50 transition-all duration-200 text-left"
                             >
                               <div className="flex items-center gap-3">
-                                <span className="w-8 h-8 rounded-full bg-yellow-500/20 text-yellow-300 flex items-center justify-center text-xs font-semibold group-hover:bg-yellow-400 group-hover:text-slate-900 transition-colors">
+                                <span className="w-8 h-8 rounded-full bg-luxury-gold/20 text-luxury-gold2 flex items-center justify-center text-xs font-semibold group-hover:bg-luxury-gold group-hover:text-slate-900 transition-colors">
                                   {String.fromCharCode(65 + index)}
                                 </span>
-                                <span className="text-sm md:text-base text-slate-100 group-hover:text-yellow-100 transition-colors">
+                                <span className="text-sm md:text-base text-slate-100 group-hover:text-luxury-champagne transition-colors">
                                   {opt.answer_text}
                                 </span>
                               </div>
@@ -413,9 +413,9 @@ const QuizPage = () => {
                 {effectivePersona && (
                   <div className="relative mb-10">
                     {/* Outer glow */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/25 via-purple-500/25 to-transparent rounded-3xl blur-2xl opacity-70" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-luxury-gold/25 via-luxury-gold/25 to-transparent rounded-3xl blur-2xl opacity-70" />
 
-                    <div className="relative p-6 md:p-8 lg:p-10 rounded-3xl border border-yellow-400/40 bg-transparent backdrop-blur-sm overflow-hidden">
+                    <div className="relative p-6 md:p-8 lg:p-10 rounded-3xl border border-luxury-gold/40 bg-transparent backdrop-blur-sm overflow-hidden">
                       {/* 🔥 Cover image as card background */}
                       {personaCoverImage && (
                         <div className="absolute inset-0 -z-10">
@@ -431,7 +431,7 @@ const QuizPage = () => {
                       <div className="relative z-10 grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-6 md:gap-4 items-center">
                         {/* LEFT: text */}
                         <div className="flex-1 text-center md:text-left">
-                          <span className="inline-block px-4 py-1 rounded-full bg-yellow-500/20 text-yellow-200 text-[11px] md:text-xs font-medium mb-4">
+                          <span className="inline-block px-4 py-1 rounded-full bg-luxury-gold/20 text-luxury-champagne text-[11px] md:text-xs font-medium mb-4">
                             Your Fragrance Personality
                           </span>
 
@@ -443,7 +443,7 @@ const QuizPage = () => {
                           </div>
 
                           {category && (
-                            <p className="text-[11px] sm:text-xs md:text-sm uppercase tracking-[0.2em] md:tracking-[0.35em] text-yellow-300 mb-4">
+                            <p className="text-[11px] sm:text-xs md:text-sm uppercase tracking-[0.2em] md:tracking-[0.35em] text-luxury-gold2 mb-4">
                               Category: {category}
                             </p>
                           )}
@@ -486,7 +486,7 @@ const QuizPage = () => {
                         {/* RIGHT: main persona portrait */}
                         {personaMainImage && (
                           <div className="flex justify-center md:justify-end mt-4 md:mt-0">
-                            <div className="relative aspect-[3/4] w-full max-w-xs md:max-w-sm rounded-3xl overflow-hidden border border-yellow-400/40 bg-slate-950/60 shadow-[0_0_35px_rgba(250,204,21,0.25)]">
+                            <div className="relative aspect-[3/4] w-full max-w-xs md:max-w-sm rounded-3xl overflow-hidden border border-luxury-gold/40 bg-slate-950/60 shadow-[0_0_35px_rgba(250,204,21,0.25)]">
                               <img
                                 src={personaMainImage}
                                 alt={effectivePersona.persona_name}
@@ -503,7 +503,7 @@ const QuizPage = () => {
                 {/* Recommended products */}
                 <div className="mb-8">
                   <h3 className="text-2xl md:text-3xl font-bold text-white mb-6 text-center">
-                    Recommended <span className="text-yellow-400">For You</span>
+                    Recommended <span className="text-luxury-gold">For You</span>
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -515,7 +515,7 @@ const QuizPage = () => {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.05 * index }}
                           onClick={() => navigate(`/product/${product.id}`)}
-                          className="group cursor-pointer p-4 rounded-2xl border border-slate-700/70 bg-gradient-to-br from-slate-900/80 to-slate-900/50 hover:border-yellow-400/60 hover:shadow-[0_0_25px_rgba(250,204,21,0.18)] transition-all duration-200"
+                          className="group cursor-pointer p-4 rounded-2xl border border-slate-700/70 bg-gradient-to-br from-slate-900/80 to-slate-900/50 hover:border-luxury-gold/60 hover:shadow-[0_0_25px_rgba(250,204,21,0.18)] transition-all duration-200"
                         >
                           <div className="aspect-[4/5] rounded-xl overflow-hidden bg-black/30 mb-3 flex items-center justify-center">
                             <img
@@ -528,13 +528,13 @@ const QuizPage = () => {
                               className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                             />
                           </div>
-                          <h4 className="text-white font-semibold text-sm md:text-base group-hover:text-yellow-200 transition-colors">
+                          <h4 className="text-white font-semibold text-sm md:text-base group-hover:text-luxury-champagne transition-colors">
                             {product.name}
                           </h4>
-                          <div className="mt-1 text-[10px] uppercase tracking-wide text-sky-300/80">
+                          <div className="mt-1 text-[10px] uppercase tracking-wide text-luxury-gold/80">
                             {product.target}
                           </div>
-                          <div className="mt-1 text-sm text-yellow-300 font-semibold">
+                          <div className="mt-1 text-sm text-luxury-gold2 font-semibold">
                             RM {Number(product.price).toFixed(2)}
                           </div>
                         </motion.div>
@@ -559,7 +559,7 @@ const QuizPage = () => {
                   {/* ✅ stays inside quiz: go back to select quiz */}
                   <button
                     onClick={resetQuizCompletely}
-                    className="px-6 py-3 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-900 font-semibold text-sm md:text-base hover:shadow-lg hover:shadow-yellow-400/30 transition-all"
+                    className="px-6 py-3 rounded-full bg-gradient-to-r from-luxury-gold to-luxury-gold text-slate-900 font-semibold text-sm md:text-base hover:shadow-lg hover:shadow-luxury-gold/30 transition-all"
                   >
                     Choose Another Quiz
                   </button>

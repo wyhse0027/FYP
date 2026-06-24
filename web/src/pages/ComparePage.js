@@ -191,7 +191,7 @@ export default function ComparePage() {
   const bothSelected = !!left && !!right;
 
   return (
-    <div className="min-h-screen w-full text-white bg-[#0c1a3a] relative overflow-hidden">
+    <div className="min-h-screen w-full text-white bg-[#070B14] relative overflow-hidden">
       {/* blue/white ambience + small gold accent glow */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 left-1/3 w-[520px] h-[520px] rounded-full bg-white/10 blur-3xl" />
@@ -209,7 +209,7 @@ export default function ComparePage() {
               flex items-center justify-center
               w-12 h-12 rounded-full
               border border-[rgba(212,175,55,0.5)]
-              bg-[#0c1a3a]
+              bg-[#070B14]
               hover:bg:white/10
               transition-all duration-300
             "

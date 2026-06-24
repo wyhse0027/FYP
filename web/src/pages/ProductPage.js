@@ -82,7 +82,7 @@ function Toast({ message, type = "success", onClose }) {
           ${
             type === "error"
               ? "bg-red-500/90 border-red-400/30"
-              : "bg-emerald-500/90 border-emerald-400/30"
+              : "bg-luxury-gold/90 border-luxury-gold/30"
           }
           text-white
         `}
