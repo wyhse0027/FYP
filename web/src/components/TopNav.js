@@ -1,21 +1,18 @@
 // src/components/TopNav.js
 import React from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import {
-  IoHomeOutline,
-  IoRocketOutline,
-  IoCartOutline,
-  IoPersonOutline,
-  IoSettingsOutline,
-} from "react-icons/io5";
+import { IoCartOutline, IoPersonCircleOutline } from "react-icons/io5";
 import { useAuth } from "../context/AuthContext";
 
-const linkBase =
-  "flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-colors " +
-  "text-white/90 hover:text-white hover:bg-white/15 ring-1 ring-transparent text-lg md:text-xl";
+const navItem = ({ isActive }) =>
+  `relative px-0.5 py-1 text-xs uppercase tracking-[0.3em] transition-colors ` +
+  `after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-px after:bg-luxury-gold after:transition-all after:duration-300 ` +
+  (isActive
+    ? "text-luxury-gold2 after:w-full"
+    : "text-white/65 hover:text-white after:w-0 hover:after:w-full");
 
-const active = "text-sky-100 bg-white/20 ring-white/20";
-const navClass = ({ isActive }) => `${linkBase} ${isActive ? active : ""}`;
+const iconItem =
+  "text-white/65 hover:text-luxury-gold2 transition-colors";
 
 export default function TopNav() {
   const { user } = useAuth();
@@ -27,48 +24,35 @@ export default function TopNav() {
   }
 
   return (
-    <header className="hidden md:block sticky top-0 z-40 w-full
-      bg-gradient-to-b from-[#06122e] to-[#0b1f4a]
-      border-b border-white/15 shadow-lg backdrop-blur">
-      
-      <div className="mx-auto max-w-screen-2xl h-20 px-10 flex items-center justify-between">
-        
-        {/* Brand */}
+    <header className="hidden md:block sticky top-0 z-40 w-full bg-luxury-bg/80 backdrop-blur-xl border-b border-luxury-gold/15">
+      <div className="mx-auto max-w-screen-2xl h-20 px-10 grid grid-cols-3 items-center">
+        {/* Left nav */}
+        <nav className="flex items-center gap-9 justify-start">
+          <NavLink to="/" end className={navItem}>Home</NavLink>
+          <NavLink to="/shop" className={navItem}>Shop</NavLink>
+          <NavLink to="/releases" className={navItem}>Releases</NavLink>
+          <NavLink to="/quiz" className={navItem}>Scent Quiz</NavLink>
+        </nav>
+
+        {/* Center brand */}
         <Link
           to="/"
-          className="text-white font-extrabold tracking-wide text-3xl lg:text-4xl"
+          className="text-center font-serif text-2xl lg:text-3xl font-medium tracking-[0.35em] text-white hover:text-luxury-champagne transition-colors"
         >
-          GERAIN CHAN
+          GERAIN&nbsp;CHAN
         </Link>
 
-        {/* Desktop Nav */}
-        <nav className="flex items-center gap-6">
-          <NavLink to="/" end className={navClass}>
-            <IoHomeOutline className="text-3xl" />
-            <span>Home</span>
-          </NavLink>
-
-          <NavLink to="/releases" className={navClass}>
-            <IoRocketOutline className="text-3xl" />
-            <span>Releases</span>
-          </NavLink>
-
-          <NavLink to="/shop" className={navClass}>
-            <IoCartOutline className="text-3xl" />
-            <span>Shop</span>
-          </NavLink>
-
-          <NavLink to="/account" className={navClass}>
-            <IoPersonOutline className="text-3xl" />
-            <span>Account</span>
-          </NavLink>
-
+        {/* Right */}
+        <nav className="flex items-center gap-8 justify-end">
           {user?.is_staff === true && (
-            <NavLink to="/admin/dashboard" className={navClass}>
-              <IoSettingsOutline className="text-3xl" />
-              <span>Admin</span>
-            </NavLink>
+            <NavLink to="/admin/dashboard" className={navItem}>Admin</NavLink>
           )}
+          <NavLink to="/cart" className={iconItem} aria-label="Cart">
+            <IoCartOutline className="text-2xl" />
+          </NavLink>
+          <NavLink to="/account" className={iconItem} aria-label="Account">
+            <IoPersonCircleOutline className="text-2xl" />
+          </NavLink>
         </nav>
       </div>
     </header>

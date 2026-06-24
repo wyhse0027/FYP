@@ -42,7 +42,7 @@ const Footer = () => {
   return (
     <footer
       className="
-        mt-12 border-t border-sky-500/20 bg-[#050b1f] text-sky-100
+        mt-12 border-t border-luxury-gold/20 bg-[#070B14] text-luxury-champagne
         pb-20 md:pb-10  /* keep copyright above BottomNav on small screens */
       "
     >
@@ -53,7 +53,7 @@ const Footer = () => {
           <h2 className="text-xl font-extrabold tracking-[0.2em] text-white uppercase">
             {siteAbout?.title || "GERAIN CHAN"}
           </h2>
-          <p className="text-sm text-sky-200/80 leading-relaxed">
+          <p className="text-sm text-luxury-gold/80 leading-relaxed">
             {siteAbout?.intro_text ||
               "Immersive perfume experiences, online and in-store."}
           </p>
@@ -61,7 +61,7 @@ const Footer = () => {
 
         {/* CONTACT */}
         <div className="space-y-3">
-          <h3 className="text-xs font-semibold tracking-[0.2em] text-sky-300 uppercase">
+          <h3 className="text-xs font-semibold tracking-[0.2em] text-luxury-gold uppercase">
             Contact
           </h3>
 
@@ -94,7 +94,7 @@ const Footer = () => {
 
         {/* EXPLORE */}
         <div className="space-y-3">
-          <h3 className="text-xs font-semibold tracking-[0.2em] text-sky-300 uppercase">
+          <h3 className="text-xs font-semibold tracking-[0.2em] text-luxury-gold uppercase">
             Explore
           </h3>
           <ul className="space-y-1 text-sm">
@@ -123,7 +123,7 @@ const Footer = () => {
 
         {/* FOLLOW */}
         <div className="space-y-3">
-          <h3 className="text-xs font-semibold tracking-[0.2em] text-sky-300 uppercase">
+          <h3 className="text-xs font-semibold tracking-[0.2em] text-luxury-gold uppercase">
             Follow
           </h3>
           <div className="flex flex-wrap gap-3">
@@ -133,7 +133,7 @@ const Footer = () => {
                 href={url}
                 target="_blank"
                 rel="noreferrer"
-                className="w-9 h-9 rounded-full border border-sky-500/40 flex items-center justify-center text-sky-200 hover:text-[#0c1a3a] hover:bg-sky-300 hover:border-sky-300 transition"
+                className="w-9 h-9 rounded-full border border-luxury-gold/40 flex items-center justify-center text-luxury-gold hover:text-[#070B14] hover:bg-luxury-gold hover:border-luxury-gold transition"
               >
                 {renderSocialIcon(platform)}
               </a>
@@ -149,7 +149,7 @@ const Footer = () => {
           flex flex-col md:flex-row
           items-center
           justify-center md:justify-between
-          text-[11px] text-sky-300/80
+          text-[11px] text-luxury-gold/80
           text-center md:text-left
           gap-1
         "

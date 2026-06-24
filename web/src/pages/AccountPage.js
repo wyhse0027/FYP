@@ -40,9 +40,9 @@ export default function AccountPage() {
   const { user, isAuthed, logout, fetchProfile } = useAuth();
   const navigate = useNavigate();
 
-  // If authed but user not loaded yet, fetch it
+  // If authed but the profile isn't loaded yet, fetch it once.
   useEffect(() => {
-    if (isAuthed) fetchProfile?.();   // ✅ always refresh
+    if (isAuthed && !user) fetchProfile?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthed]);
 

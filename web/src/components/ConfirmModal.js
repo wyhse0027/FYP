@@ -58,7 +58,7 @@ export default function ConfirmModal({
             exit={{ opacity: 0, scale: 0.92, y: 18 }}
             transition={{ type: "spring", duration: 0.5 }}
             className="relative w-full max-w-md rounded-2xl overflow-hidden
-                       bg-gradient-to-br from-[#0c1a3a] via-[#0b1733] to-[#0c1a3a]
+                       bg-gradient-to-br from-[#070B14] via-[#0b1733] to-[#070B14]
                        border border-luxury-gold/20 shadow-2xl"
           >
             {/* Corner accents */}
