@@ -10,6 +10,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+@layer base {
+  /* Couture headings app-wide (Playfair). Per-element font-sans utility still overrides. */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: -0.01em;
+  }
+}
+
 @layer components {
   /* Signature CTA: panning gold + sheen that sweeps and disappears on hover */
   .btn-lux {
