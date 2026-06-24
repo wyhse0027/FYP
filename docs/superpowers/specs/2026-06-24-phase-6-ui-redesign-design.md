@@ -38,6 +38,11 @@ luxury through restraint, not more gold.
   accent, never a fill.
 - **Motion:** refined, slow easing — fade/rise reveals, ~700ms image zooms, subtle gold shimmer
   on hover. Reuse the existing framer-motion patterns (staged reveal, skeletons), calmed down.
+- **Primary CTA (signature):** a gold gradient that slowly pans (alive) with a white sheen that
+  sweeps across and fades on hover; inline spinner + "Adding…" while the action submits.
+- **Loading system:** gold-tinted **shimmer skeleton** (replaces the grey `animate-pulse`),
+  a **gold ring spinner** for page/section loads, and an **indeterminate gold bar** for async
+  actions. All gated behind `prefers-reduced-motion`.
 
 ## System structure (reusable, not per-page hacks)
 
