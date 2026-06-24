@@ -50,6 +50,11 @@ luxury through restraint, not more gold.
   shadows, gradients.
 - A small set of shared primitives pages compose: `Section`, `Button` (primary/ghost),
   `Card`, `Input`, `Pill`/filter chip, `Badge`, `Divider`/hairline rule.
+- **Filter / sort chips — persistent selected state:** a selected chip stays visibly "on" as an
+  indicator, not just on hover. Single-select ("All") = solid gold fill with base-color text;
+  multi-select (category/gender/sort) = gold-tinted glass (gold/15 bg, gold border, champagne
+  text) plus a small gold dot/underline mark so several active selections read clearly. One gold
+  accent only — the retired cyan/pink states do not return.
 - Apply across the core-flow pages. Markup structure and data flow stay as-is; only presentation
   (class names, wrapper components, motion) changes.
 
