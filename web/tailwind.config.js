@@ -8,9 +8,12 @@ module.exports = {
           bg: "#070B14",          // deep black-blue
           panel: "#0B1222",       // card background
           panel2: "#0E1830",      // hover / modal
+          navy: "#0B1222",        // legacy alias → dark surface
           gold: "#D4AF37",
           gold2: "#F3D37A",
+          accent: "#F3D37A",      // legacy alias → gold accent
           champagne: "#F7E7CE",
+          silver: "#C2C7D0",      // secondary text on dark
         },
       },
       boxShadow: {

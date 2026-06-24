@@ -718,7 +718,7 @@ export default function ProductPage() {
               >
                 {/* Title & Rating */}
                 <div>
-                  <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-luxury-gold via-luxury-gold to-luxury-accent bg-clip-text text-transparent">
+                  <h1 className="text-4xl md:text-6xl font-serif font-medium text-white tracking-tight">
                     {product.name}
                   </h1>
 
@@ -752,11 +752,7 @@ export default function ProductPage() {
                         key={ar.id}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 ${
-                          ar.type === "MARKER"
-                            ? "bg-purple-500/20 border border-purple-400/30 text-purple-300"
-                            : "bg-pink-500/20 border border-pink-400/30 text-pink-300"
-                        }`}
+                        className="px-4 py-2 rounded-full text-xs uppercase tracking-[0.25em] font-medium flex items-center gap-2 bg-luxury-gold/12 border border-luxury-gold/30 text-luxury-gold2"
                       >
                         <IoSparkles />
                         {ar.type === "MARKER" ? "Marker AR" : "Markerless AR"}
@@ -804,31 +800,23 @@ export default function ProductPage() {
 
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.98 }}
+                  <button
                     onClick={() => setCartOpen(true)}
-                    className="flex-1 py-4 px-6 bg-gradient-to-r from-luxury-gold to-luxury-gold/80 text-luxury-navy font-bold rounded-2xl shadow-lg shadow-luxury-gold/20 flex items-center justify-center gap-3 transition-all duration-300"
+                    className="btn-lux flex-1 py-4 px-6 rounded-full inline-flex items-center justify-center gap-3 text-sm font-medium uppercase tracking-[0.3em]"
                   >
-                    <IoCartOutline className="text-2xl sm:text-xl" />
+                    <IoCartOutline className="text-xl" />
                     Add to Cart
-                  </motion.button>
+                  </button>
 
                   {arList.map((ar) => (
-                    <motion.button
+                    <button
                       key={ar.id}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.98 }}
                       onClick={() => navigate(ar.type === "MARKER" ? markerViewerLink : "#")}
-                      className={`flex-1 py-4 px-6 font-bold rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 ${
-                        ar.type === "MARKER"
-                          ? "bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg shadow-purple-500/20"
-                          : "bg-gradient-to-r from-pink-500 to-pink-600 shadow-lg shadow-pink-500/20"
-                      }`}
+                      className="flex-1 py-4 px-6 rounded-full inline-flex items-center justify-center gap-3 text-sm font-medium uppercase tracking-[0.3em] text-luxury-champagne border border-luxury-gold/40 hover:border-luxury-gold hover:bg-luxury-gold/10 transition"
                     >
                       <IoSparkles className="text-xl" />
                       {ar.type === "MARKER" ? "Try AR" : "AR (Coming Soon)"}
-                    </motion.button>
+                    </button>
                   ))}
                 </div>
 
@@ -838,8 +826,7 @@ export default function ProductPage() {
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="
-                      bg-gradient-to-r from-purple-600/30 via-pink-500/30 to-purple-600/30
-                      border border-purple-400/20 rounded-3xl p-6
+                      bg-luxury-panel2 border border-luxury-gold/20 rounded-3xl p-6
                       flex flex-col sm:flex-row
                       sm:items-center
                       gap-4 sm:gap-5
@@ -867,9 +854,8 @@ export default function ProductPage() {
                           w-full sm:w-auto
                           shrink-0 whitespace-nowrap
                           px-6 py-3
-                          bg-gradient-to-r from-emerald-500 to-emerald-600
-                          text-white font-semibold rounded-xl
-                          shadow-lg shadow-emerald-500/20
+                          btn-lux rounded-full
+                          text-sm font-medium uppercase tracking-[0.3em]
                           text-center
                         "
                       >
