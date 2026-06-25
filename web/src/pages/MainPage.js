@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import http from "../lib/http";
@@ -37,8 +37,17 @@ export default function MainPage() {
     };
   }, []);
 
-  const hero = products[0] || null;
-  const collection = products.slice(0, 4);
+  // Featured "suggested" fragrance — a random available product, re-rolled each
+  // time the catalogue loads (i.e. every visit / login).
+  const hero = useMemo(
+    () => (products.length ? products[Math.floor(Math.random() * products.length)] : null),
+    [products]
+  );
+  // Collection grid excludes the featured one so it never duplicates the hero.
+  const collection = useMemo(
+    () => products.filter((p) => p.id !== hero?.id).slice(0, 4),
+    [products, hero]
+  );
 
   return (
     <div className="relative">
