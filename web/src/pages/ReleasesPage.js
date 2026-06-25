@@ -1,25 +1,23 @@
 // src/pages/ReleasesPage.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import http from "../lib/http";
-
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination, EffectCoverflow } from "swiper/modules";
-
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/effect-coverflow";
 
 const targetLabel = (t) =>
   t === "MEN" ? "Men" : t === "WOMEN" ? "Women" : t === "UNISEX" ? "Unisex" : "";
 
-const heroImg = (p) => p?.promo_image || p?.card_image || p?.media_gallery?.[0]?.file;
 const slideImg = (p) => p?.card_image || p?.promo_image || p?.media_gallery?.[0]?.file;
+
+const fmtDate = (s) => {
+  if (!s) return null;
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+};
 
 export default function ReleasesPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     http
@@ -32,6 +30,17 @@ export default function ReleasesPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Newest first — this is the "release journal" order.
+  const drops = useMemo(
+    () =>
+      [...products].sort(
+        (a, b) =>
+          new Date(b.created_at || 0) - new Date(a.created_at || 0) ||
+          (b.id || 0) - (a.id || 0)
+      ),
+    [products]
+  );
+
   if (loading) {
     return (
       <div className="relative min-h-[70vh] flex items-center justify-center">
@@ -40,7 +49,7 @@ export default function ReleasesPage() {
     );
   }
 
-  if (!products.length) {
+  if (!drops.length) {
     return (
       <div className="relative min-h-[60vh] flex items-center justify-center">
         <p className="font-cormorant italic text-2xl text-luxury-champagne/70">No releases found.</p>
@@ -48,181 +57,110 @@ export default function ReleasesPage() {
     );
   }
 
-  const featured = products[0]; // fixed on the newest release
-  const total = products.length;
-  const eyebrow = [featured.category && String(featured.category).trim(), targetLabel(String(featured.target || "").toUpperCase())]
-    .filter(Boolean)
-    .join(" · ");
-
   return (
     <div className="relative">
       <div
         className="fixed inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(55% 45% at 70% 0%,rgba(212,175,55,0.16),transparent 60%)" }}
+        style={{ background: "radial-gradient(55% 40% at 50% 0%,rgba(212,175,55,0.14),transparent 60%)" }}
       />
 
-      <main className="relative z-10 max-w-screen-2xl mx-auto px-6 sm:px-8 py-12">
+      <main className="relative z-10 max-w-6xl mx-auto px-6 sm:px-8 py-14">
         {/* Header */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-14 md:mb-16">
           <p className="label uppercase text-[11px] text-luxury-gold2 mb-4">New &amp; Limited</p>
-          <h1 className="font-serif text-5xl sm:text-6xl text-white mb-3">Releases</h1>
+          <h1 className="font-serif text-5xl sm:text-6xl text-white mb-3">The Release Journal</h1>
           <p className="font-cormorant italic text-xl sm:text-2xl text-luxury-champagne">
-            The newest chapters of the house.
+            Every drop, in the order it arrived.
           </p>
         </div>
 
-        {/* Featured (fixed on newest) */}
-        <section className="grid lg:grid-cols-2 gap-10 items-center mb-16 md:mb-20">
-          <div>
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] label uppercase border border-luxury-gold/40 text-luxury-gold2 mb-5">
-              Just Landed
-            </span>
-            {eyebrow && (
-              <p className="label uppercase text-[11px] text-luxury-gold2 mb-3">{eyebrow}</p>
-            )}
-            <h2 className="font-serif text-5xl sm:text-6xl text-white leading-[0.95] mb-5">
-              {featured.name}
-            </h2>
-            {featured.description && (
-              <p className="font-cormorant italic text-2xl text-luxury-champagne leading-relaxed max-w-md mb-8 line-clamp-3">
-                {featured.description}
-              </p>
-            )}
-            <div className="flex items-center gap-6">
-              <Link
-                to={`/product/${featured.id}`}
-                className="btn-lux px-9 py-4 rounded-full text-[12px] font-medium label uppercase"
-              >
-                Discover
-              </Link>
-              <span className="text-[12px] label uppercase tracking-[0.25em]">
-                <span className="text-luxury-gold2">01</span>
-                <span className="text-luxury-mut"> / {String(total).padStart(2, "0")}</span>
-              </span>
-            </div>
-          </div>
-
+        {/* Timeline */}
+        <div className="relative pl-14 sm:pl-20">
+          {/* vertical rail */}
           <div
-            className="relative rounded-3xl aspect-[4/3] glass overflow-hidden flex items-center justify-center"
-            style={{ background: "radial-gradient(120% 100% at 50% 25%,#16213f,#0a1124 55%,#070B14)" }}
-          >
-            <div
-              className="absolute w-80 h-80 rounded-full"
-              style={{ background: "radial-gradient(circle,rgba(212,175,55,0.22),transparent 62%)" }}
-            />
-            {heroImg(featured) && (
-              <img
-                src={heroImg(featured)}
-                alt={featured.name}
-                className="relative max-h-[80%] max-w-[88%] object-contain drop-shadow-[0_30px_50px_rgba(0,0,0,0.7)]"
-              />
-            )}
-          </div>
-        </section>
+            className="absolute left-5 sm:left-7 top-2 bottom-24 w-px"
+            style={{ background: "linear-gradient(180deg,rgba(212,175,55,0.5),rgba(212,175,55,0.12))" }}
+          />
 
-        {/* All releases — coverflow (desktop) */}
-        <section className="hidden md:block">
-          <div className="flex items-center gap-6 mb-8">
-            <span className="font-serif text-3xl text-white">All Releases</span>
-            <div className="flex-1 rule" />
-          </div>
+          {drops.map((p, i) => {
+            const odd = i % 2 === 1;
+            const date = fmtDate(p.created_at);
+            const eyebrow = [p.category && String(p.category).trim(), targetLabel(String(p.target || "").toUpperCase())]
+              .filter(Boolean)
+              .join(" · ");
+            return (
+              <article key={p.id} className="relative mb-14 md:mb-16">
+                <span className="absolute -left-[2.15rem] sm:-left-[3.05rem] top-1 w-9 h-9 rounded-full bg-luxury-panel2 border border-luxury-gold/50 text-luxury-gold2 flex items-center justify-center text-[11px] label">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
 
-          <div className="relative">
-            <div
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[34rem] h-[34rem] rounded-full pointer-events-none"
-              style={{ background: "radial-gradient(circle,rgba(212,175,55,0.16),transparent 60%)" }}
-            />
-            <Swiper
-              modules={[Autoplay, Pagination, EffectCoverflow]}
-              effect="coverflow"
-              grabCursor
-              centeredSlides
-              loop={products.length > 2}
-              slidesPerView="auto"
-              spaceBetween={24}
-              coverflowEffect={{ rotate: 24, stretch: 0, depth: 200, modifier: 1, slideShadows: false }}
-              autoplay={{ delay: 5000, disableOnInteraction: false }}
-              pagination={{ clickable: true }}
-              onSlideChange={(sw) => setActiveIndex(sw.realIndex)}
-              className="releases-swiper w-full !py-4"
-            >
-              {products.map((p) => (
-                <SwiperSlide key={p.id} className="!w-72 lg:!w-80">
-                  <Link to={`/product/${p.id}`}>
-                    <div
-                      className="rel-card relative rounded-3xl overflow-hidden border h-[26rem] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.85)]"
-                      style={{ background: "radial-gradient(120% 100% at 50% 25%,#16213f,#0a1124 55%,#070B14)" }}
-                    >
-                      {slideImg(p) ? (
-                        <img src={slideImg(p)} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-luxury-mut">{p.name}</div>
-                      )}
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-5">
-                        {p.category && (
-                          <p className="label uppercase text-[10px] text-luxury-gold2 mb-1">
-                            {String(p.category).trim()}
-                          </p>
-                        )}
-                        <h3 className="font-serif text-2xl text-white line-clamp-1">{p.name}</h3>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-3">
+                  {date || "Latest"}
+                  {i === 0 ? " · Just Landed" : ""}
+                </p>
+
+                <div className="glass rounded-3xl overflow-hidden grid sm:grid-cols-2">
+                  <div
+                    className={`aspect-[4/3] sm:aspect-auto sm:min-h-[20rem] overflow-hidden bg-luxury-panel2 ${
+                      odd ? "sm:order-2" : ""
+                    }`}
+                  >
+                    {slideImg(p) ? (
+                      <img src={slideImg(p)} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-luxury-mut">{p.name}</div>
+                    )}
+                  </div>
+
+                  <div className={`p-8 flex flex-col justify-center ${odd ? "sm:order-1" : ""}`}>
+                    {i === 0 && (
+                      <div className="mb-3">
+                        <span className="px-3 py-1 rounded-full text-[9px] label uppercase border border-luxury-gold/40 text-luxury-gold2">
+                          New
+                        </span>
                       </div>
-                    </div>
-                  </Link>
-                </SwiperSlide>
-              ))}
-            </Swiper>
-
-            {/* counter + progress */}
-            <div className="max-w-sm mx-auto mt-6 flex items-center gap-4">
-              <span className="text-[11px] label uppercase text-luxury-mut whitespace-nowrap">
-                <span className="text-luxury-gold2">{String(activeIndex + 1).padStart(2, "0")}</span> /{" "}
-                {String(total).padStart(2, "0")}
-              </span>
-              <div className="flex-1 h-1 rounded-full bg-white/8 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-luxury-gold to-luxury-gold2 transition-all duration-500"
-                  style={{ width: `${((activeIndex + 1) / total) * 100}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Mobile list */}
-        <section className="md:hidden">
-          <div className="flex items-center gap-4 mb-6">
-            <span className="font-serif text-2xl text-white">All Releases</span>
-            <div className="flex-1 rule" />
-          </div>
-          <div className="flex flex-col gap-5">
-            {products.map((p, i) => (
-              <Link
-                key={p.id}
-                to={`/product/${p.id}`}
-                className="card relative block rounded-2xl overflow-hidden glass"
-              >
-                <div className="relative aspect-[4/3] bg-luxury-panel2">
-                  {slideImg(p) ? (
-                    <img src={slideImg(p)} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
-                  ) : null}
-                  {i === 0 && (
-                    <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-[9px] label uppercase bg-luxury-bg/80 border border-luxury-gold/40 text-luxury-gold2">
-                      New
-                    </span>
-                  )}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                    {p.category && (
-                      <p className="label uppercase text-[10px] text-luxury-gold2 mb-0.5">
-                        {String(p.category).trim()}
+                    )}
+                    {eyebrow && (
+                      <p className="label uppercase text-[10px] text-luxury-gold2 mb-2">{eyebrow}</p>
+                    )}
+                    <h2 className="font-serif text-4xl text-white mb-3">{p.name}</h2>
+                    {p.description && (
+                      <p className="font-cormorant italic text-xl text-luxury-champagne leading-relaxed mb-6 line-clamp-3">
+                        {p.description}
                       </p>
                     )}
-                    <h2 className="font-serif text-xl text-white line-clamp-1">{p.name}</h2>
+                    <Link
+                      to={`/product/${p.id}`}
+                      className="ghost self-start px-7 py-3 rounded-full text-[11px] label uppercase"
+                    >
+                      Discover
+                    </Link>
                   </div>
                 </div>
-              </Link>
-            ))}
+              </article>
+            );
+          })}
+
+          {/* Next drop */}
+          <div className="relative">
+            <span className="absolute -left-[2.15rem] sm:-left-[3.05rem] top-1 w-9 h-9 rounded-full bg-luxury-panel2 border border-dashed border-luxury-gold/40 text-luxury-gold2 flex items-center justify-center">
+              ✦
+            </span>
+            <div className="glass rounded-3xl p-10 text-center border-dashed">
+              <p className="label uppercase text-[11px] text-luxury-gold2 mb-3">Coming Soon</p>
+              <h3 className="font-serif text-3xl text-white mb-3">The next chapter is in composition</h3>
+              <p className="text-luxury-mut mb-7 max-w-md mx-auto">
+                Be the first to know when the next fragrance is released.
+              </p>
+              <a
+                href="mailto:hello@gerainchan.com?subject=Notify%20me%20about%20the%20next%20release"
+                className="btn-lux inline-block px-9 py-4 rounded-full text-[12px] font-medium label uppercase"
+              >
+                Notify Me
+              </a>
+            </div>
           </div>
-        </section>
+        </div>
       </main>
     </div>
   );
