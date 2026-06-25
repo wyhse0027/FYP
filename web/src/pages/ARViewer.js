@@ -441,7 +441,7 @@ export default function ARViewer() {
           backdropFilter: "blur(6px)",
         }}
       >
-        ←
+        ‹
       </button>
 
       {/* START button (required for camera permission on many browsers) */}

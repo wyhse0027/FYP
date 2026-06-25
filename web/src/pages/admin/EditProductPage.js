@@ -109,7 +109,7 @@ export default function EditProductPage() {
 
   return (
     <div className="min-h-screen bg-[#070B14] text-white px-6 py-8">
-      <button onClick={() => navigate(-1)} className="mb-6">←</button>
+      <button onClick={() => navigate(-1)} className="mb-6 text-2xl leading-none text-luxury-gold2 font-serif" aria-label="Back">‹</button>
       <h1 className="text-2xl font-bold mb-6">Edit Product</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
