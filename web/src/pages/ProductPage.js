@@ -1,21 +1,17 @@
 // src/pages/ProductPage.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import http from "../lib/http";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import PageHeader from "../components/PageHeader";
 import {
-  IoChevronBack,
-  IoChevronForward,
   IoStar,
   IoStarOutline,
-  IoCartOutline,
-  IoSparkles,
   IoClose,
   IoTrash,
   IoCloudUpload,
+  IoSparkles,
 } from "react-icons/io5";
 
 /* ----------------------------- Utils ----------------------------- */
@@ -26,33 +22,66 @@ const formatTags = (tags) => {
   return [];
 };
 
-/* ----------------------------- UI Components (Lovable layout, keep your luxury palette) ----------------------------- */
+const targetLabel = (t) =>
+  t === "MEN" ? "Men" : t === "WOMEN" ? "Women" : "Unisex";
+
+const STAGE = {
+  background:
+    "radial-gradient(120% 100% at 50% 20%,#16213f,#0a1124 55%,#070B14)",
+};
+
+/* ----------------------------- Overlays ----------------------------- */
+function Toast({ message, type = "success", onClose }) {
+  return (
+    <div className="fixed inset-x-0 bottom-24 sm:bottom-6 z-[60] flex justify-center px-4 pointer-events-none">
+      <motion.div
+        initial={{ opacity: 0, y: 30, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 30, scale: 0.96 }}
+        className={`pointer-events-auto w-full sm:w-auto max-w-md px-5 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm ${
+          type === "error"
+            ? "bg-red-500/90 border-red-400/30 text-white"
+            : "btn-lux border-luxury-gold/30"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <IoSparkles className="text-xl shrink-0" />
+          <span className="font-medium flex-1 text-center">{message}</span>
+          <button onClick={onClose} className="text-current/70 hover:opacity-100 ml-2">
+            <IoClose className="text-xl" />
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function ConfirmModal({ title, message, onCancel, onConfirm }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
     >
       <motion.div
         initial={{ scale: 0.92, opacity: 0, y: 10 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.92, opacity: 0, y: 10 }}
-        className="bg-gradient-to-br from-luxury-navy via-luxury-navy/95 to-luxury-navy/90 border border-luxury-gold/20 text-white rounded-3xl shadow-2xl max-w-sm w-full p-6"
+        className="glass rounded-3xl shadow-2xl max-w-sm w-full p-7 text-luxury-text"
       >
-        <h2 className="text-xl font-bold mb-3 text-luxury-gold">{title}</h2>
-        <p className="text-luxury-silver mb-6">{message}</p>
+        <h2 className="font-serif text-2xl mb-3 text-white">{title}</h2>
+        <p className="text-luxury-mut mb-6">{message}</p>
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all duration-300"
+            className="px-5 py-2.5 rounded-full border border-white/15 text-luxury-text hover:border-luxury-gold/40 transition"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="px-5 py-2.5 bg-red-500/80 hover:bg-red-500 rounded-xl font-semibold transition-all duration-300"
+            className="px-5 py-2.5 rounded-full bg-red-500/80 hover:bg-red-500 text-white font-semibold transition"
           >
             Confirm
           </button>
@@ -62,67 +91,22 @@ function ConfirmModal({ title, message, onCancel, onConfirm }) {
   );
 }
 
-function Toast({ message, type = "success", onClose }) {
-  return (
-    <div
-      className="
-        fixed inset-x-0 bottom-24 sm:bottom-6 z-[60]
-        flex justify-center px-4
-        pointer-events-none
-      "
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 30, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 30, scale: 0.96 }}
-        className={`
-          pointer-events-auto
-          w-full sm:w-auto max-w-md
-          px-5 py-4 rounded-2xl shadow-2xl border backdrop-blur-sm
-          ${
-            type === "error"
-              ? "bg-red-500/90 border-red-400/30"
-              : "bg-luxury-gold/90 border-luxury-gold/30"
-          }
-          text-white
-        `}
-      >
-        <div className="flex items-center gap-3">
-          <IoSparkles className="text-xl shrink-0" />
-          <span className="font-medium flex-1 text-center">{message}</span>
-          <button
-            onClick={onClose}
-            className="text-white/70 hover:text-white ml-2"
-          >
-            <IoClose className="text-xl" />
-          </button>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
 function ReviewLightbox({ item, onClose }) {
   if (!item) return null;
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[70] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[90] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4"
     >
-      {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20
-                   flex items-center justify-center text-white z-10"
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white z-10"
         aria-label="Close"
       >
         <IoClose className="text-2xl" />
       </button>
-
-      {/* Media */}
       <motion.div
         initial={{ scale: 0.92, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -130,120 +114,10 @@ function ReviewLightbox({ item, onClose }) {
         className="max-w-5xl w-full max-h-[85vh] flex items-center justify-center"
       >
         {item.type === "IMAGE" ? (
-          <img
-            src={item.src}
-            alt="Review media"
-            className="max-w-full max-h-[85vh] object-contain rounded-xl"
-          />
+          <img src={item.src} alt="Review media" className="max-w-full max-h-[85vh] object-contain rounded-xl" />
         ) : (
-          <video
-            src={item.src}
-            controls
-            autoPlay
-            className="max-w-full max-h-[85vh] rounded-xl bg-black"
-          />
+          <video src={item.src} controls autoPlay className="max-w-full max-h-[85vh] rounded-xl bg-black" />
         )}
-      </motion.div>
-    </motion.div>
-  );
-}
-
-function AddToCartModal({ product, qty, setQty, onClose, onConfirm }) {
-  const dec = () => qty > 1 && setQty(qty - 1);
-  const inc = () => setQty(qty + 1);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-    >
-      <motion.div
-        initial={{ scale: 0.92, opacity: 0, y: 16 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.92, opacity: 0, y: 16 }}
-        className="bg-gradient-to-br from-luxury-navy via-luxury-navy/95 to-luxury-navy/90 border border-luxury-gold/20 text-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8"
-      >
-        <div className="text-center mb-8">
-          <IoSparkles className="text-luxury-gold text-4xl mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-luxury-gold">{product?.name}</h2>
-          <p className="text-luxury-silver mt-2">Select quantity</p>
-        </div>
-
-        <div className="flex items-center justify-center gap-6 mb-8">
-          <motion.button
-            whileHover={{ scale: 1.06 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={dec}
-            className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-2xl bg-white/10 hover:bg-white/20 border border-luxury-gold/20 text-2xl font-bold transition-all duration-300"
-          >
-            −
-          </motion.button>
-
-          <div className="w-20 sm:w-24 text-center py-3 border border-luxury-gold/30 rounded-2xl text-2xl font-bold bg-white/5">
-            {qty}
-          </div>
-
-          <motion.button
-            whileHover={{ scale: 1.06 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={inc}
-            className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center rounded-2xl bg-white/10 hover:bg-white/20 border border-luxury-gold/20 text-2xl font-bold transition-all duration-300"
-          >
-            +
-          </motion.button>
-        </div>
-
-        <div className="text-center mb-8">
-          <span className="text-luxury-silver">Total: </span>
-          <span className="text-2xl font-bold text-luxury-gold">
-            RM {(parseFloat(product?.price || 0) * qty).toFixed(2)}
-          </span>
-        </div>
-
-        <div className="flex gap-3 sm:gap-4">
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onClose}
-            className="
-              flex-1
-              px-4 py-3 sm:px-6 sm:py-4
-              bg-white/10 hover:bg-white/20
-              border border-white/20
-              rounded-xl sm:rounded-2xl
-              font-semibold
-              transition-all duration-300
-              text-base sm:text-lg
-            "
-          >
-            Cancel
-          </motion.button>
-
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onConfirm}
-            className="
-              flex-1
-              px-4 py-3 sm:px-6 sm:py-4
-              bg-gradient-to-r from-luxury-gold to-luxury-gold/80
-              hover:from-luxury-gold/90 hover:to-luxury-gold/70
-              text-luxury-navy
-              rounded-xl sm:rounded-2xl
-              font-bold
-              transition-all duration-300
-              shadow-lg shadow-luxury-gold/20
-              text-base sm:text-lg
-            "
-          >
-            <span className="inline-flex items-center justify-center gap-2">
-              <IoCartOutline className="text-2xl sm:text-xl" />
-              <span className="leading-none whitespace-nowrap">Add to Cart</span>
-            </span>
-          </motion.button>
-        </div>
       </motion.div>
     </motion.div>
   );
@@ -251,99 +125,61 @@ function AddToCartModal({ product, qty, setQty, onClose, onConfirm }) {
 
 function ReviewCard({ review, currentUserId, onEdit, onDelete, onOpenMedia }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-all duration-300"
-    >
-      {/* Header row */}
-      <div className="flex flex-wrap items-center gap-3 mb-3">
-        {/* Avatar + name + stars */}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-luxury-gold/30 to-luxury-accent/30 flex items-center justify-center overflow-hidden">
+    <div className="glass rounded-2xl p-7">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-11 h-11 rounded-full overflow-hidden border border-luxury-gold/30 shrink-0">
             <img
-              src={review.user?.avatar || "https://i.pravatar.cc/50"}
+              src={review.user?.avatar || "https://i.pravatar.cc/80"}
               alt={review.user?.username || "User"}
               className="w-full h-full object-cover"
             />
           </div>
-
-          <div className="min-w-0">
-            <div className="font-semibold text-white truncate">
-              {review.user?.username}
-            </div>
-            <div className="flex gap-0.5 text-luxury-gold">
-              {[...Array(5)].map((_, i) =>
-                i < review.rating ? (
-                  <IoStar key={i} />
-                ) : (
-                  <IoStarOutline key={i} className="text-white/30" />
-                )
-              )}
-            </div>
-          </div>
+          <span className="font-serif text-xl text-white truncate">{review.user?.username}</span>
         </div>
-
-        {/* Actions – can fall to next line on mobile */}
-        {review.user?.id === currentUserId && (
-          <div className="flex gap-3 text-sm mt-1 sm:mt-0">
-            <button
-              onClick={() => onEdit(review)}
-              className="text-luxury-accent hover:text-luxury-gold transition-colors"
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => onDelete(review)}
-              className="text-red-400 hover:text-red-300 transition-colors"
-            >
-              Delete
-            </button>
-          </div>
-        )}
+        <div className="flex gap-0.5 text-luxury-gold2 text-sm">
+          {[...Array(5)].map((_, i) =>
+            i < review.rating ? <IoStar key={i} /> : <IoStarOutline key={i} className="text-white/20" />
+          )}
+        </div>
       </div>
 
-      {/* Body */}
-      <p className="text-luxury-silver leading-relaxed mb-3">
-        {review.comment}
-      </p>
+      <p className="text-sm leading-relaxed text-luxury-mut mb-2">{review.comment}</p>
 
       {review.media_gallery?.length > 0 && (
         <div className="mt-3 grid grid-cols-2 gap-3">
           {review.media_gallery.map((m) => (
             <button
               key={m.id}
-              onClick={() =>
-                onOpenMedia({
-                  type: m.type,
-                  src: m.file,
-                })
-              }
-              className="aspect-video rounded-xl overflow-hidden border border-white/10
-                        hover:ring-2 hover:ring-luxury-gold/40 transition"
+              onClick={() => onOpenMedia({ type: m.type, src: m.file })}
+              className="aspect-video rounded-xl overflow-hidden border border-white/10 hover:ring-2 hover:ring-luxury-gold/40 transition"
             >
               {m.type === "IMAGE" ? (
-                <img
-                  src={m.file}
-                  alt="Review media"
-                  className="w-full h-full object-cover"
-                />
+                <img src={m.file} alt="Review media" className="w-full h-full object-cover" />
               ) : (
-                <video
-                  src={m.file}
-                  controls
-                  className="w-full h-full object-cover bg-black"
-                />
+                <video src={m.file} controls className="w-full h-full object-cover bg-black" />
               )}
             </button>
           ))}
         </div>
       )}
 
-      <div className="text-xs text-luxury-silver/50 mt-3">
-        {new Date(review.created_at).toLocaleString()}
+      <div className="flex items-center justify-between mt-3">
+        <span className="text-xs text-luxury-mut/60">
+          {review.created_at ? new Date(review.created_at).toLocaleDateString() : ""}
+        </span>
+        {review.user?.id === currentUserId && (
+          <div className="flex gap-4 text-[11px] label uppercase">
+            <button onClick={() => onEdit(review)} className="text-luxury-gold2 hover:text-white transition">
+              Edit
+            </button>
+            <button onClick={() => onDelete(review)} className="text-red-400 hover:text-red-300 transition">
+              Delete
+            </button>
+          </div>
+        )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -359,8 +195,6 @@ export default function ProductPage() {
   const [reviews, setReviews] = useState([]);
 
   const [qty, setQty] = useState(1);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [reviewsOpen, setReviewsOpen] = useState(false);
 
   const [toast, setToast] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
@@ -387,11 +221,9 @@ export default function ProductPage() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-
       try {
         const prodRes = await http.get(`products/${id}/`);
         setProduct(prodRes.data);
-
         const arRes = await http.get(`/ar/?product=${id}`);
         const list = Array.isArray(arRes.data) ? arRes.data : arRes.data.results || [];
         setArList(list.filter((ar) => ar.enabled));
@@ -399,7 +231,6 @@ export default function ProductPage() {
         console.error("Failed to load product or AR experience:", err);
         setProduct(null);
       }
-
       try {
         const res = await http.get(`reviews/?product=${id}`);
         const data = Array.isArray(res.data) ? res.data : res.data.results || [];
@@ -410,7 +241,6 @@ export default function ProductPage() {
         setLoading(false);
       }
     }
-
     fetchData();
   }, [id]);
 
@@ -418,21 +248,13 @@ export default function ProductPage() {
 
   const allTags = useMemo(() => {
     if (!product) return [];
-    const baseTags = formatTags(product.tags);
-    let genderTag = null;
-
-    if (product.target === "MEN") genderTag = "For Men";
-    else if (product.target === "WOMEN") genderTag = "For Women";
-    else if (product.target === "UNISEX") genderTag = "Unisex";
-
-    return genderTag ? [genderTag, ...baseTags] : baseTags;
+    return formatTags(product.tags);
   }, [product]);
 
   useEffect(() => {
     setActiveIndex(0);
   }, [product?.id]);
 
-  // Ratings (prefer server aggregates)
   const ratingAvg = useMemo(() => {
     const s = product?.rating_avg;
     if (s !== null && s !== undefined) return Number(s) || 0;
@@ -445,11 +267,9 @@ export default function ProductPage() {
     return reviews.length || 0;
   }, [product?.rating_count, reviews]);
 
-  const confirmAdd = async () => {
+  const handleAddToCart = async () => {
     try {
-      // keep your existing CartContext API: addToCart(product, qty)
       await addToCart(product, qty);
-      setCartOpen(false);
       showToast(`${product.name} added to cart!`);
     } catch {
       showToast("Failed to add item to cart", "error");
@@ -470,48 +290,36 @@ export default function ProductPage() {
   useEffect(() => {
     if (touchStart === null || touchEnd === null) return;
     const distance = touchStart - touchEnd;
-    const threshold = 50;
-
-    if (Math.abs(distance) > threshold) {
+    if (Math.abs(distance) > 50) {
       if (distance > 0) setActiveIndex((p) => (p + 1) % media.length);
       else setActiveIndex((p) => (p > 0 ? p - 1 : media.length - 1));
     }
-
     setTouchStart(null);
     setTouchEnd(null);
   }, [touchEnd, touchStart, media.length]);
 
   const hasAnyDownload = arList.some((ar) => ar.app_download_file_url || ar.app_download_url);
-
   const firstDownloadHref =
     arList.find((ar) => ar.app_download_file_url || ar.app_download_url)?.app_download_file_url ||
     arList.find((ar) => ar.app_download_file_url || ar.app_download_url)?.app_download_url ||
     null;
-
   const markerViewerLink = `/arview/${product?.name?.toLowerCase().replace(/\s+/g, "-")}`;
 
   /* -------- Edit helpers -------- */
-  const handleEditFilesChange = (e) => {
-    const files = Array.from(e.target.files || []);
-    setEditFiles(files);
-  };
+  const handleEditFilesChange = (e) => setEditFiles(Array.from(e.target.files || []));
 
   const handleUpdateReview = async () => {
     if (!editingReview) return;
-
     try {
       const formData = new FormData();
       formData.append("rating", String(editRating));
       formData.append("comment", editComment || "");
       editFiles.forEach((file) => formData.append("files", file));
-
       const res = await http.patch(`reviews/${editingReview.id}/`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
       const updated = res.data || { ...editingReview, rating: editRating, comment: editComment };
       setReviews((prev) => prev.map((r) => (r.id === editingReview.id ? updated : r)));
-
       setEditingReview(null);
       setEditFiles([]);
       showToast("Review updated!");
@@ -529,18 +337,14 @@ export default function ProductPage() {
         try {
           await http.delete(`review-media/${mid}/`);
           showToast("Media deleted!");
-
           setReviews((prev) =>
             prev.map((rev) => ({
               ...rev,
               media_gallery: (rev.media_gallery || []).filter((m) => m.id !== mid),
             }))
           );
-
           setEditingReview((prev) =>
-            prev
-              ? { ...prev, media_gallery: (prev.media_gallery || []).filter((m) => m.id !== mid) }
-              : prev
+            prev ? { ...prev, media_gallery: (prev.media_gallery || []).filter((m) => m.id !== mid) } : prev
           );
         } catch (err) {
           console.error("Delete media error:", err?.response || err);
@@ -555,432 +359,348 @@ export default function ProductPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-luxury-navy flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-          className="w-16 h-16 border-2 border-luxury-gold border-t-transparent rounded-full"
-        />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-14 h-14 border-2 border-luxury-gold/80 border-t-transparent rounded-full animate-spin-gold" />
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-luxury-navy flex items-center justify-center">
-        <p className="text-luxury-silver text-xl">Product not found</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="font-cormorant italic text-2xl text-luxury-champagne/70">Product not found</p>
       </div>
     );
   }
 
+  const activeMedia = media[activeIndex];
+  const isImage = (m) => String(m?.type || "").toLowerCase() === "image";
+
   return (
-    <div className="min-h-screen bg-luxury-navy text-white relative overflow-hidden">
-      {/* Background Effects (Lovable glow layout, keep your colors) */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[640px] h-[640px] bg-luxury-gold/5 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3" />
-        <div className="absolute bottom-0 left-0 w-[520px] h-[520px] bg-luxury-accent/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
-      </div>
+    <div className="relative">
+      {/* Glow */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(60% 40% at 70% 0%,rgba(212,175,55,0.12),transparent 60%)" }}
+      />
 
-      <div className="relative z-10">
-        {/* Header */}
-        <div className="px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24">
-          <div className="max-w-screen-2xl mx-auto py-6">
-            <PageHeader title={product.name} backTo="/shop" />
-          </div>
-        </div>
+      <main className="relative z-10 max-w-screen-2xl mx-auto px-6 sm:px-8 py-8 md:py-10">
+        {/* Breadcrumb */}
+        <p className="label uppercase text-[11px] text-luxury-mut mb-8">
+          <Link to="/shop" className="hover:text-white transition">
+            Shop
+          </Link>
+          {product.category ? ` / ${String(product.category).trim()}` : ""} /{" "}
+          <span className="text-luxury-gold/80">{product.name}</span>
+        </p>
 
-        {/* Content */}
-        <div className="px-4 sm:px-6 lg:px-10 xl:px-16 2xl:px-24 pb-16">
-          <div className="max-w-screen-2xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
-              {/* Gallery (Lovable card style) */}
-              <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.55 }}
-              >
-                <div className="bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-sm">
-                  <div
-                    className="relative aspect-square bg-gradient-to-br from-black/20 to-black/10 rounded-2xl overflow-hidden group touch-pan-y"
-                    onMouseEnter={() => setPaused(true)}
-                    onMouseLeave={() => setPaused(false)}
-                    onTouchStart={(e) => setTouchStart(e.touches[0].clientX)}
-                    onTouchMove={(e) => setTouchEnd(e.touches[0].clientX)}
-                  >
-                    <AnimatePresence mode="wait">
-                      {media.length > 0 ? (
-                        <motion.div
-                          key={activeIndex}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.45 }}
-                          className="w-full h-full"
-                        >
-                          {String(media[activeIndex]?.type || "").toUpperCase() === "IMAGE" ||
-                          String(media[activeIndex]?.type || "").toLowerCase() === "image" ? (
-                            <img
-                              src={media[activeIndex].file}
-                              alt={`${product.name} ${activeIndex + 1}`}
-                              className="w-full h-full object-contain"
-                            />
-                          ) : (
-                            <video
-                              src={media[activeIndex].file}
-                              controls
-                              className="w-full h-full object-contain bg-black"
-                            />
-                          )}
-                        </motion.div>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-luxury-silver">
-                          No media available
-                        </div>
-                      )}
-                    </AnimatePresence>
-
-                    {media.length > 1 && (
-                      <>
-                        <motion.button
-                          whileHover={{ scale: 1.08 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setActiveIndex((p) => (p > 0 ? p - 1 : media.length - 1))}
-                          className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-luxury-gold/80 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
-                          aria-label="Previous"
-                        >
-                          <IoChevronBack className="text-2xl" />
-                        </motion.button>
-
-                        <motion.button
-                          whileHover={{ scale: 1.08 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setActiveIndex((p) => (p + 1) % media.length)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-luxury-gold/80 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
-                          aria-label="Next"
-                        >
-                          <IoChevronForward className="text-2xl" />
-                        </motion.button>
-
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                          {media.map((_, i) => (
-                            <button
-                              key={i}
-                              onClick={() => setActiveIndex(i)}
-                              className={`h-2.5 rounded-full transition-all duration-300 ${
-                                i === activeIndex
-                                  ? "bg-luxury-gold w-8"
-                                  : "bg-white/40 hover:bg-white/70 w-2.5"
-                              }`}
-                              aria-label={`Go to image ${i + 1}`}
-                            />
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Thumbnails (Lovable strip) */}
-                  {media.length > 1 && (
-                    <div className="mt-6 flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-luxury-gold/30">
-                      {media.map((m, i) => (
-                        <motion.button
-                          key={i}
-                          whileHover={{ scale: 1.04 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => setActiveIndex(i)}
-                          className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all duration-300 ${
-                            i === activeIndex
-                              ? "border-luxury-gold shadow-lg shadow-luxury-gold/20"
-                              : "border-white/10 hover:border-white/30"
-                          }`}
-                        >
-                          {String(m?.type || "").toUpperCase() === "IMAGE" ||
-                          String(m?.type || "").toLowerCase() === "image" ? (
-                            <img src={m.file} alt={`Thumb ${i + 1}`} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full bg-black/50 flex items-center justify-center text-xs text-luxury-silver">
-                              Video
-                            </div>
-                          )}
-                        </motion.button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-
-              {/* Details (Lovable sections) */}
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.55, delay: 0.05 }}
-                className="flex flex-col gap-6"
-              >
-                {/* Title & Rating */}
-                <div>
-                  <h1 className="text-4xl md:text-6xl font-serif font-medium text-white tracking-tight">
-                    {product.name}
-                  </h1>
-
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    onClick={() => setReviewsOpen(true)}
-                    className="mt-4 inline-flex items-center gap-3 group"
-                  >
-                    <div className="flex gap-0.5 text-luxury-gold text-xl">
-                      {[...Array(5)].map((_, i) =>
-                        i < Math.round(ratingAvg) ? (
-                          <IoStar key={i} />
-                        ) : (
-                          <IoStarOutline key={i} className="text-white/30" />
-                        )
-                      )}
-                    </div>
-                    <span className="text-luxury-silver group-hover:text-luxury-gold transition-colors">
-                      {ratingCount > 0
-                        ? `${ratingAvg.toFixed(1)} · ${ratingCount} review${ratingCount > 1 ? "s" : ""}`
-                        : "No reviews yet"}
-                    </span>
-                  </motion.button>
-                </div>
-
-                {/* AR Badges */}
-                {arList.length > 0 && (
-                  <div className="flex flex-wrap gap-3">
-                    {arList.map((ar) => (
-                      <motion.span
-                        key={ar.id}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="px-4 py-2 rounded-full text-xs uppercase tracking-[0.25em] font-medium flex items-center gap-2 bg-luxury-gold/12 border border-luxury-gold/30 text-luxury-gold2"
-                      >
-                        <IoSparkles />
-                        {ar.type === "MARKER" ? "Marker AR" : "Markerless AR"}
-                      </motion.span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Price & Stock */}
-                <div className="flex items-center gap-6 flex-wrap">
-                  <span className="text-4xl font-bold text-luxury-gold">
-                    RM {parseFloat(product.price).toFixed(2)}
-                  </span>
-                  <span className="px-4 py-2 bg-white/10 rounded-full text-luxury-silver text-sm border border-white/10">
-                    {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
-                  </span>
-                </div>
-
-                {/* Tags */}
-                {allTags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {allTags.map((tag, i) => (
-                      <motion.span
-                        key={`${tag}-${i}`}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.03 }}
-                        className="px-4 py-1.5 bg-luxury-accent/20 border border-luxury-accent/30 text-luxury-accent rounded-full text-sm"
-                      >
-                        {tag}
-                      </motion.span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Description */}
-                <div className="bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-2xl p-6">
-                  <h3 className="text-luxury-gold font-semibold mb-3 flex items-center gap-2">
-                    <IoSparkles /> Description
-                  </h3>
-                  <p className="text-luxury-silver leading-relaxed">
-                    {product.description || "No description available."}
-                  </p>
-                </div>
-
-                {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <button
-                    onClick={() => setCartOpen(true)}
-                    className="btn-lux flex-1 py-4 px-6 rounded-full inline-flex items-center justify-center gap-3 text-sm font-medium uppercase tracking-[0.3em]"
-                  >
-                    <IoCartOutline className="text-xl" />
-                    Add to Cart
-                  </button>
-
-                  {arList.map((ar) => (
-                    <button
-                      key={ar.id}
-                      onClick={() => navigate(ar.type === "MARKER" ? markerViewerLink : "#")}
-                      className="flex-1 py-4 px-6 rounded-full inline-flex items-center justify-center gap-3 text-sm font-medium uppercase tracking-[0.3em] text-luxury-champagne border border-luxury-gold/40 hover:border-luxury-gold hover:bg-luxury-gold/10 transition"
-                    >
-                      <IoSparkles className="text-xl" />
-                      {ar.type === "MARKER" ? "Try AR" : "AR (Coming Soon)"}
-                    </button>
-                  ))}
-                </div>
-
-                {/* AR Download Card */}
-                {hasAnyDownload && (
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
+          {/* Gallery */}
+          <div>
+            <div
+              className="relative rounded-3xl aspect-square glass overflow-hidden flex items-center justify-center group touch-pan-y"
+              style={STAGE}
+              onMouseEnter={() => setPaused(true)}
+              onMouseLeave={() => setPaused(false)}
+              onTouchStart={(e) => setTouchStart(e.touches[0].clientX)}
+              onTouchMove={(e) => setTouchEnd(e.touches[0].clientX)}
+            >
+              <div
+                className="absolute w-80 h-80 rounded-full"
+                style={{ background: "radial-gradient(circle,rgba(212,175,55,0.2),transparent 62%)" }}
+              />
+              <AnimatePresence mode="wait">
+                {media.length > 0 ? (
                   <motion.div
-                    initial={{ opacity: 0, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="
-                      bg-luxury-panel2 border border-luxury-gold/20 rounded-3xl p-6
-                      flex flex-col sm:flex-row
-                      sm:items-center
-                      gap-4 sm:gap-5
-                    "
+                    key={activeIndex}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.45 }}
+                    className="relative w-full h-full flex items-center justify-center"
                   >
-                    <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-3xl shrink-0">
-                      📱
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold text-white">Download AR App</h3>
-                      <p className="text-luxury-silver text-sm break-words">
-                        Experience fragrance in augmented reality
-                      </p>
-                    </div>
-
-                    {firstDownloadHref && (
-                      <motion.a
-                        whileHover={{ scale: 1.04 }}
-                        whileTap={{ scale: 0.96 }}
-                        href={firstDownloadHref}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="
-                          w-full sm:w-auto
-                          shrink-0 whitespace-nowrap
-                          px-6 py-3
-                          btn-lux rounded-full
-                          text-sm font-medium uppercase tracking-[0.3em]
-                          text-center
-                        "
-                      >
-                        Download
-                      </motion.a>
+                    {isImage(activeMedia) ? (
+                      <img
+                        src={activeMedia.file}
+                        alt={`${product.name} ${activeIndex + 1}`}
+                        className="relative max-h-[78%] object-contain drop-shadow-[0_30px_50px_rgba(0,0,0,0.7)]"
+                      />
+                    ) : (
+                      <video src={activeMedia.file} controls className="relative max-h-[80%] object-contain bg-black rounded-xl" />
                     )}
                   </motion.div>
+                ) : (
+                  <div className="relative text-luxury-mut">No media available</div>
                 )}
-              </motion.div>
-            </div>
-          </div>
-        </div>
-      </div>
+              </AnimatePresence>
 
-      {/* AddToCartModal */}
-      <AnimatePresence>
-        {cartOpen && (
-          <AddToCartModal
-            product={product}
-            qty={qty}
-            setQty={setQty}
-            onClose={() => setCartOpen(false)}
-            onConfirm={confirmAdd}
-          />
-        )}
-      </AnimatePresence>
+              {media.length > 1 && (
+                <>
+                  {/* Invisible tap zones for prev / next */}
+                  <button
+                    onClick={() => setActiveIndex((p) => (p > 0 ? p - 1 : media.length - 1))}
+                    className="absolute left-0 top-0 h-full w-1/3 z-10 cursor-w-resize"
+                    aria-label="Previous image"
+                  />
+                  <button
+                    onClick={() => setActiveIndex((p) => (p + 1) % media.length)}
+                    className="absolute right-0 top-0 h-full w-1/3 z-10 cursor-e-resize"
+                    aria-label="Next image"
+                  />
+                  {/* Counter */}
+                  <div className="absolute bottom-5 left-5 z-10 text-[12px] label uppercase tracking-[0.25em]">
+                    <span className="text-luxury-gold2">{String(activeIndex + 1).padStart(2, "0")}</span>
+                    <span className="text-luxury-mut"> / {String(media.length).padStart(2, "0")}</span>
+                  </div>
+                </>
+              )}
 
-      {/* Reviews Overlay (Lovable modal style) */}
-      <AnimatePresence>
-        {reviewsOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.92, opacity: 0, y: 14 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.92, opacity: 0, y: 14 }}
-              className="bg-gradient-to-br from-luxury-navy via-luxury-navy/98 to-luxury-navy/95 border border-luxury-gold/20 max-w-2xl w-full rounded-3xl overflow-hidden max-h-[85vh] flex flex-col"
-            >
-              <div className="p-6 border-b border-white/10 flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-luxury-gold flex items-center gap-3">
-                  <IoStar /> Reviews
-                </h2>
+              {arList.some((ar) => ar.type === "MARKER") && (
                 <button
-                  onClick={() => setReviewsOpen(false)}
-                  className="text-white/70 hover:text-white"
-                  aria-label="Close reviews"
+                  onClick={() => navigate(markerViewerLink)}
+                  className="ghost absolute bottom-5 right-5 z-20 px-5 py-2.5 rounded-full text-[11px] label uppercase inline-flex items-center gap-2 backdrop-blur"
                 >
-                  <IoClose className="text-2xl" />
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M12 2 4 6v6c0 5 3.4 7.7 8 10 4.6-2.3 8-5 8-10V6z" />
+                  </svg>
+                  View in AR
+                </button>
+              )}
+            </div>
+
+            {/* Thumbnails */}
+            {media.length > 1 && (
+              <div className="grid grid-cols-4 gap-4 mt-4">
+                {media.slice(0, 8).map((m, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveIndex(i)}
+                    className={`rounded-xl aspect-square overflow-hidden border transition ${
+                      i === activeIndex ? "border-luxury-gold/60" : "border-white/8 hover:border-white/25"
+                    }`}
+                    style={STAGE}
+                  >
+                    {isImage(m) ? (
+                      <img src={m.file} alt={`Thumb ${i + 1}`} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[10px] text-luxury-mut">Video</div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Details */}
+          <div>
+            <div className="flex items-center gap-3 mb-5">
+              {product.target && (
+                <span className="px-3 py-1 rounded-full text-[10px] label uppercase border border-luxury-gold/40 text-luxury-gold2">
+                  {targetLabel(String(product.target).toUpperCase())}
+                </span>
+              )}
+              <span className="label uppercase text-[11px] text-luxury-mut">
+                {product.category ? `${String(product.category).trim()} · ` : ""}Eau de Parfum
+              </span>
+            </div>
+
+            <h1 className="font-serif text-5xl sm:text-7xl font-medium text-white leading-[0.95] mb-5">
+              {product.name}
+            </h1>
+
+            <button onClick={() => {
+              const el = document.getElementById("reviews");
+              if (el) el.scrollIntoView({ behavior: "smooth" });
+            }} className="flex items-center gap-3 mb-7 group">
+              <div className="flex text-luxury-gold2 text-lg">
+                {[...Array(5)].map((_, i) =>
+                  i < Math.round(ratingAvg) ? <IoStar key={i} /> : <IoStarOutline key={i} className="text-white/20" />
+                )}
+              </div>
+              <span className="text-sm text-luxury-mut group-hover:text-luxury-gold2 transition">
+                {ratingCount > 0
+                  ? `${ratingAvg.toFixed(1)} · ${ratingCount} review${ratingCount > 1 ? "s" : ""}`
+                  : "No reviews yet"}
+              </span>
+            </button>
+
+            {product.description && (
+              <p className="font-cormorant text-2xl text-luxury-champagne leading-relaxed max-w-xl mb-8">
+                {product.description}
+              </p>
+            )}
+
+            {/* AR badges */}
+            {arList.length > 0 && (
+              <div className="flex flex-wrap gap-3 mb-8">
+                {arList.map((ar) => (
+                  <span
+                    key={ar.id}
+                    className="px-4 py-2 rounded-full text-[10px] label uppercase flex items-center gap-2 bg-luxury-gold/12 border border-luxury-gold/30 text-luxury-gold2"
+                  >
+                    <IoSparkles />
+                    {ar.type === "MARKER" ? "Marker AR" : "Markerless AR"}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            <div className="rule mb-8" />
+
+            {/* Price + qty */}
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">
+                  {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
+                </p>
+                <p className="font-serif text-4xl text-white">RM {parseFloat(product.price).toFixed(2)}</p>
+              </div>
+              <div className="flex items-center border border-white/15 rounded-full">
+                <button
+                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  className="w-11 h-11 text-luxury-mut hover:text-luxury-gold2 transition"
+                  aria-label="Decrease quantity"
+                >
+                  –
+                </button>
+                <span className="w-8 text-center text-white">{qty}</span>
+                <button
+                  onClick={() => setQty((q) => q + 1)}
+                  className="w-11 h-11 text-luxury-mut hover:text-luxury-gold2 transition"
+                  aria-label="Increase quantity"
+                >
+                  +
                 </button>
               </div>
+            </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                {reviews.length ? (
-                  reviews.map((r) => (
-                    <ReviewCard
-                      key={r.id}
-                      review={r}
-                      currentUserId={user?.id}
-                      onEdit={(rev) => {
-                        setEditingReview(rev);
-                        setEditRating(rev.rating);
-                        setEditComment(rev.comment || "");
-                        setEditFiles([]);
-                      }}
-                      onDelete={(rev) =>
-                        setConfirmAction({
-                          title: "Delete Review",
-                          message: "Are you sure you want to delete this review?",
-                          onConfirm: async () => {
-                            try {
-                              await http.delete(`reviews/${rev.id}/`);
-                              showToast("Review deleted!");
-                              setReviews((prev) => prev.filter((x) => x.id !== rev.id));
-                            } catch {
-                              showToast("Failed to delete review", "error");
-                            } finally {
-                              setConfirmAction(null);
-                            }
-                          },
-                        })
-                      }
-                      onOpenMedia={setLightbox}
-                    />
-                  ))
-                ) : (
-                  <p className="text-center text-luxury-silver py-8">No reviews yet</p>
-                )}
-              </div>
-
-              <div className="p-6 border-t border-white/10">
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setReviewsOpen(false)}
-                  className="w-full py-4 bg-gradient-to-r from-luxury-gold to-luxury-gold/80 text-luxury-navy font-bold rounded-2xl"
+            {/* Actions */}
+            <div className="flex flex-wrap gap-4 mb-10">
+              <button
+                onClick={handleAddToCart}
+                disabled={product.stock <= 0}
+                className="btn-lux flex-1 min-w-[220px] px-8 py-4 rounded-full text-[12px] font-medium label uppercase disabled:opacity-50"
+              >
+                Add to Cart
+              </button>
+              {arList.map((ar) => (
+                <button
+                  key={ar.id}
+                  onClick={() => navigate(ar.type === "MARKER" ? markerViewerLink : "#")}
+                  className="ghost px-8 py-4 rounded-full text-[12px] font-medium label uppercase inline-flex items-center gap-2"
                 >
-                  Close
-                </motion.button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M12 2 4 6v6c0 5 3.4 7.7 8 10 4.6-2.3 8-5 8-10V6z" />
+                  </svg>
+                  {ar.type === "MARKER" ? "Try AR" : "AR Soon"}
+                </button>
+              ))}
+            </div>
 
-      {/* Edit Review Modal (Lovable luxury style) */}
+            {/* AR download */}
+            {hasAnyDownload && firstDownloadHref && (
+              <div className="glass rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-2xl bg-luxury-gold/10 border border-luxury-gold/25 flex items-center justify-center text-2xl shrink-0">
+                  📱
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-serif text-xl text-white">Download AR App</h3>
+                  <p className="text-sm text-luxury-mut">Experience this fragrance in augmented reality.</p>
+                </div>
+                <a
+                  href={firstDownloadHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-lux px-6 py-3 rounded-full text-[11px] font-medium label uppercase text-center whitespace-nowrap"
+                >
+                  Download
+                </a>
+              </div>
+            )}
+
+            {/* Tags */}
+            {allTags.length > 0 && (
+              <div className="flex flex-wrap gap-2.5">
+                {allTags.map((tag, i) => (
+                  <span
+                    key={`${tag}-${i}`}
+                    className="px-4 py-1.5 rounded-full text-[10px] label uppercase text-luxury-mut border border-white/12"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Reviews */}
+        <section id="reviews" className="mt-20 scroll-mt-24">
+          <div className="flex items-center gap-5 mb-8">
+            <h2 className="font-serif text-3xl text-white">Reviews</h2>
+            <div className="flex-1 rule" />
+          </div>
+          {reviews.length ? (
+            <div className="flex flex-wrap justify-center gap-6">
+              {reviews.map((r) => (
+                <div key={r.id} className="w-full md:w-[calc(50%-0.75rem)]">
+                <ReviewCard
+                  review={r}
+                  currentUserId={user?.id}
+                  onEdit={(rev) => {
+                    setEditingReview(rev);
+                    setEditRating(rev.rating);
+                    setEditComment(rev.comment || "");
+                    setEditFiles([]);
+                  }}
+                  onDelete={(rev) =>
+                    setConfirmAction({
+                      title: "Delete Review",
+                      message: "Are you sure you want to delete this review?",
+                      onConfirm: async () => {
+                        try {
+                          await http.delete(`reviews/${rev.id}/`);
+                          showToast("Review deleted!");
+                          setReviews((prev) => prev.filter((x) => x.id !== rev.id));
+                        } catch {
+                          showToast("Failed to delete review", "error");
+                        } finally {
+                          setConfirmAction(null);
+                        }
+                      },
+                      onCancel: () => setConfirmAction(null),
+                    })
+                  }
+                  onOpenMedia={setLightbox}
+                />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="font-cormorant italic text-xl text-luxury-champagne/70">
+              No reviews yet — be the first to share your impression.
+            </p>
+          )}
+        </section>
+      </main>
+
+      {/* Edit Review Modal */}
       <AnimatePresence>
         {editingReview && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
           >
             <motion.div
               initial={{ scale: 0.92, opacity: 0, y: 14 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.92, opacity: 0, y: 14 }}
-              className="bg-gradient-to-br from-luxury-navy via-luxury-navy/98 to-luxury-navy/95 border border-luxury-gold/20 text-white rounded-3xl p-6 w-full max-w-md"
+              className="glass rounded-3xl p-7 w-full max-w-md text-luxury-text"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-luxury-gold">Edit Review</h2>
+                <h2 className="font-serif text-2xl text-white">Edit Review</h2>
                 <button
                   onClick={() => {
                     setEditingReview(null);
@@ -999,29 +719,26 @@ export default function ProductPage() {
                     key={n}
                     type="button"
                     onClick={() => setEditRating(n)}
-                    className={`text-3xl transition-colors ${
-                      n <= editRating ? "text-luxury-gold" : "text-white/20"
-                    }`}
+                    className={`text-3xl transition-colors ${n <= editRating ? "text-luxury-gold2" : "text-white/20"}`}
                     aria-label={`Rate ${n}`}
                   >
                     ★
                   </button>
                 ))}
-                <span className="ml-3 text-luxury-silver">{editRating}/5</span>
+                <span className="ml-3 text-luxury-mut">{editRating}/5</span>
               </div>
 
               <textarea
                 rows={4}
-                className="w-full bg-white/10 border border-white/20 rounded-2xl p-4 outline-none focus:border-luxury-gold/50 transition-colors mb-4"
+                className="w-full bg-white/5 border border-white/15 rounded-2xl p-4 outline-none focus:border-luxury-gold/50 transition-colors mb-4 text-luxury-text"
                 value={editComment}
                 onChange={(e) => setEditComment(e.target.value)}
                 placeholder="Write your review..."
               />
 
-              {/* Existing media */}
               {editingReview.media_gallery?.length > 0 && (
                 <div className="mb-4">
-                  <p className="text-xs text-luxury-silver mb-2">Existing media</p>
+                  <p className="text-xs text-luxury-mut mb-2">Existing media</p>
                   <div className="grid grid-cols-3 gap-2">
                     {editingReview.media_gallery.map((m) => (
                       <div key={m.id} className="relative group aspect-square rounded-xl overflow-hidden">
@@ -1044,56 +761,43 @@ export default function ProductPage() {
                 </div>
               )}
 
-              {/* New files */}
               <div className="mb-6">
-                <label className="flex items-center gap-3 px-4 py-3 bg-white/10 border border-dashed border-white/20 rounded-xl cursor-pointer hover:border-luxury-gold/50 transition-colors">
-                  <IoCloudUpload className="text-2xl text-luxury-gold" />
-                  <span className="text-luxury-silver text-sm">Add more photos/videos</span>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*,video/*"
-                    onChange={handleEditFilesChange}
-                    className="hidden"
-                  />
+                <label className="flex items-center gap-3 px-4 py-3 bg-white/5 border border-dashed border-white/20 rounded-xl cursor-pointer hover:border-luxury-gold/50 transition-colors">
+                  <IoCloudUpload className="text-2xl text-luxury-gold2" />
+                  <span className="text-luxury-mut text-sm">Add more photos/videos</span>
+                  <input type="file" multiple accept="image/*,video/*" onChange={handleEditFilesChange} className="hidden" />
                 </label>
                 {editFiles.length > 0 && (
-                  <p className="mt-2 text-xs text-luxury-gold">{editFiles.length} file(s) selected</p>
+                  <p className="mt-2 text-xs text-luxury-gold2">{editFiles.length} file(s) selected</p>
                 )}
               </div>
 
               <div className="flex gap-4">
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
+                <button
                   onClick={() => {
                     setEditingReview(null);
                     setEditFiles([]);
                   }}
-                  className="flex-1 py-3 bg-white/10 border border-white/20 rounded-xl font-semibold"
+                  className="flex-1 py-3 rounded-full border border-white/15 text-luxury-text hover:border-luxury-gold/40 transition"
                 >
                   Cancel
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
+                </button>
+                <button
                   onClick={handleUpdateReview}
-                  className="flex-1 py-3 bg-gradient-to-r from-luxury-gold to-luxury-gold/80 text-luxury-navy rounded-xl font-bold"
+                  className="btn-lux flex-1 py-3 rounded-full text-[12px] font-medium label uppercase"
                 >
                   Save
-                </motion.button>
+                </button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Toast */}
       <AnimatePresence>
         {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
       </AnimatePresence>
 
-      {/* Confirm */}
       <AnimatePresence>
         {confirmAction && (
           <ConfirmModal
@@ -1105,14 +809,8 @@ export default function ProductPage() {
         )}
       </AnimatePresence>
 
-      {/* Review Media Lightbox */}
       <AnimatePresence>
-        {lightbox && (
-          <ReviewLightbox
-            item={lightbox}
-            onClose={() => setLightbox(null)}
-          />
-        )}
+        {lightbox && <ReviewLightbox item={lightbox} onClose={() => setLightbox(null)} />}
       </AnimatePresence>
     </div>
   );

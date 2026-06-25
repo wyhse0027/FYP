@@ -1,14 +1,14 @@
 // src/pages/CartPage.jsx
 import React, { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
-import { useNavigate } from "react-router-dom";
-import PageHeader from "../components/PageHeader";
-import { IoTrashOutline } from "react-icons/io5";
-import { CheckCircle2, Crown, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { IoTrashOutline, IoCheckmark, IoBagOutline } from "react-icons/io5";
+
+const targetLabel = (t) =>
+  t === "MEN" ? "Men" : t === "WOMEN" ? "Women" : t === "UNISEX" ? "Unisex" : "";
 
 const CartPage = () => {
   const { cartItems, updateQuantity, removeFromCart, itemCount, subtotal } = useCart();
-
   const navigate = useNavigate();
   const [itemToDelete, setItemToDelete] = useState(null);
 
@@ -20,22 +20,17 @@ const CartPage = () => {
     setSelectedIds((prev) => prev.filter((id) => cartItems.some((item) => item.id === id)));
   }, [cartItems]);
 
-  const toggleSelect = (cartItemId) => {
+  const toggleSelect = (cartItemId) =>
     setSelectedIds((prev) =>
       prev.includes(cartItemId) ? prev.filter((id) => id !== cartItemId) : [...prev, cartItemId]
     );
-  };
 
   const selectAll = () => setSelectedIds(cartItems.map((item) => item.id));
   const clearSelection = () => setSelectedIds([]);
-
   const allSelected = cartItems.length > 0 && selectedIds.length === cartItems.length;
 
   const selectedItems = cartItems.filter((item) => selectedIds.includes(item.id));
-
-  // quantity-based count for selected items
   const selectedItemCount = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
-
   const selectedSubtotal = selectedItems.reduce(
     (sum, item) => sum + parseFloat(item.product?.price || 0) * item.quantity,
     0
@@ -43,307 +38,221 @@ const CartPage = () => {
 
   const handleCheckout = () => {
     if (selectedIds.length === 0) return;
-
-    // ✅ block checkout if any selected item exceeds stock
     const bad = selectedItems.find((i) => i.quantity > (i.product?.stock ?? Infinity));
-    if (bad) return; // (you can show toast here if you have one)
-
-    const query = `items=${selectedIds.join(",")}`;
-    navigate(`/checkout?${query}`);
+    if (bad) return;
+    navigate(`/checkout?items=${selectedIds.join(",")}`);
   };
 
   return (
-    <>
-      <div className="min-h-screen w-full bg-luxury-gold/95 relative overflow-hidden pb-[calc(80px+260px)] md:pb-[260px]">
-        {/* Decorative elements */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-luxury-gold/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-40 right-10 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-luxury-gold/5 rounded-full blur-3xl" />
-        </div>
+    <div className="relative">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(60% 40% at 50% 0%,rgba(212,175,55,0.1),transparent 60%)" }}
+      />
 
-        <div className="relative z-10 px-6 md:px-12 lg:px-16">
-          <div className="mx-auto w-full max-w-screen-2xl py-8 text-[18px] md:text-[19px] lg:text-[20px]">
-            <div className="bg-gray-800/70 backdrop-blur-sm rounded-2xl p-6 border border-white/10 shadow-2xl">
-              <PageHeader title="YOUR COLLECTION" />
+      <main className="relative z-10 max-w-screen-2xl mx-auto px-6 sm:px-8 py-10 md:py-12">
+        <h1 className="font-serif text-4xl sm:text-5xl text-white mb-2">Your Bag</h1>
+        <p className="font-cormorant italic text-xl text-luxury-champagne/70 mb-9 md:mb-10">
+          {itemCount === 0
+            ? "Your bag awaits its first fragrance."
+            : `${itemCount} fragrance${itemCount !== 1 ? "s" : ""}, awaiting you.`}
+        </p>
 
-              {itemCount === 0 ? (
-                <div className="mt-10 p-14 text-center">
-                  <div className="mx-auto w-16 h-16 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center mb-6">
-                    <ShoppingBag className="w-8 h-8 text-white/60" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-white mb-2">Your bag is empty</h2>
-                  <p className="text-white/70 mb-8">Add something you like, then come back here.</p>
-                  <button
-                    onClick={() => navigate("/")}
-                    className="px-8 py-3 rounded-xl bg-luxury-gold hover:bg-luxury-gold text-white font-extrabold transition"
+        {itemCount === 0 ? (
+          <div className="glass rounded-3xl p-14 text-center max-w-xl mx-auto">
+            <div className="mx-auto w-16 h-16 rounded-full border border-luxury-gold/40 flex items-center justify-center mb-6 text-luxury-gold2">
+              <IoBagOutline className="text-2xl" />
+            </div>
+            <h2 className="font-serif text-2xl text-white mb-2">Your bag is empty</h2>
+            <p className="text-luxury-mut mb-8">Discover something to remember, then return here.</p>
+            <Link
+              to="/shop"
+              className="btn-lux inline-block px-9 py-4 rounded-full text-[12px] font-medium label uppercase"
+            >
+              Explore Fragrances
+            </Link>
+          </div>
+        ) : (
+          <div className="grid lg:grid-cols-3 gap-10">
+            {/* Items */}
+            <div className="lg:col-span-2 space-y-5">
+              <div className="flex items-center justify-between text-[11px] label uppercase text-luxury-mut">
+                <button
+                  onClick={() => (allSelected ? clearSelection() : selectAll())}
+                  className="inline-flex items-center gap-2 hover:text-white transition"
+                >
+                  <span
+                    className={`w-5 h-5 rounded-md border flex items-center justify-center transition ${
+                      allSelected
+                        ? "bg-luxury-gold border-luxury-gold text-luxury-bg"
+                        : "border-white/30"
+                    }`}
                   >
-                    Explore products
-                  </button>
-                </div>
-              ) : (
-                <>
-                  {/* Select all */}
-                  <div className="mt-6 mb-6 bg-white/10 border border-white/10 rounded-2xl px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    {allSelected && <IoCheckmark className="text-sm" />}
+                  </span>
+                  {allSelected ? "Deselect all" : "Select all"}
+                </button>
+                <span>
+                  {selectedItemCount} selected
+                </span>
+              </div>
+
+              {cartItems.map((item) => {
+                const product = item.product || {};
+                const unitPrice = parseFloat(product.price || 0);
+                const lineTotal = unitPrice * item.quantity;
+                const isSelected = selectedIds.includes(item.id);
+                const eyebrow = [product.category && String(product.category).trim(), targetLabel(String(product.target || "").toUpperCase())]
+                  .filter(Boolean)
+                  .join(" · ");
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`glass rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-5 transition ${
+                      isSelected ? "border-luxury-gold/50" : ""
+                    }`}
+                  >
                     <button
-                      type="button"
-                      onClick={() => (allSelected ? clearSelection() : selectAll())}
-                      className="inline-flex items-center gap-3 text-white transition"
+                      onClick={() => toggleSelect(item.id)}
+                      className={`w-6 h-6 shrink-0 rounded-md border flex items-center justify-center transition ${
+                        isSelected ? "bg-luxury-gold border-luxury-gold text-luxury-bg" : "border-white/30"
+                      }`}
+                      aria-label="Select item"
                     >
-                      <span
-                        className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition ${
-                          allSelected
-                            ? "bg-luxury-gold/90 border-luxury-gold/90"
-                            : "border-white/30 hover:border-white/60"
-                        }`}
-                      >
-                        {allSelected ? <CheckCircle2 className="w-4 h-4 text-luxury-gold" /> : null}
-                      </span>
-                      <span className="text-sm">{allSelected ? "Deselect all" : "Select all items"}</span>
+                      {isSelected && <IoCheckmark className="text-base" />}
                     </button>
 
-                    <div className="flex items-center gap-2 text-white/80">
-                      <Crown className="w-5 h-5 text-luxury-gold2/90" />
-                      <span className="font-semibold">
-                        {selectedItemCount} item{selectedItemCount !== 1 ? "s" : ""} selected
-                      </span>
+                    <div className="w-24 h-28 rounded-xl overflow-hidden bg-luxury-panel2 shrink-0">
+                      <img
+                        src={product.card_image || product.promo_image || "/placeholder.png"}
+                        alt={product.name || "Product"}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
+
+                    <div className="flex-1 min-w-0">
+                      {eyebrow && (
+                        <p className="label uppercase text-[10px] text-luxury-gold/90 mb-1">{eyebrow}</p>
+                      )}
+                      <h3 className="font-serif text-2xl text-white line-clamp-1">
+                        {product.name || "Unnamed Product"}
+                      </h3>
+                      <p className="text-sm text-luxury-mut mt-1">RM {unitPrice.toFixed(2)} each</p>
+                    </div>
+
+                    <div className="flex items-center border border-white/15 rounded-full shrink-0">
+                      <button
+                        onClick={() => updateQuantity(product.id, item.quantity - 1, item.id)}
+                        disabled={item.quantity <= 1}
+                        className="w-9 h-9 text-luxury-mut hover:text-luxury-gold2 transition disabled:opacity-30"
+                        aria-label="Decrease quantity"
+                      >
+                        –
+                      </button>
+                      <span className="w-8 text-center text-white text-sm">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(product.id, item.quantity + 1, item.id)}
+                        disabled={item.quantity >= (product.stock ?? Infinity)}
+                        className="w-9 h-9 text-luxury-mut hover:text-luxury-gold2 transition disabled:opacity-30"
+                        aria-label="Increase quantity"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <span className="font-cormorant text-2xl text-luxury-champagne sm:w-28 sm:text-right shrink-0">
+                      RM {lineTotal.toFixed(2)}
+                    </span>
+
+                    <button
+                      onClick={() =>
+                        setItemToDelete({ productId: product.id, cartItemId: item.id, name: product.name })
+                      }
+                      className="shrink-0 p-2.5 rounded-full border border-white/10 text-luxury-mut hover:border-red-400/40 hover:text-red-300 transition"
+                      aria-label="Remove item"
+                    >
+                      <IoTrashOutline className="text-xl" />
+                    </button>
                   </div>
+                );
+              })}
+            </div>
 
-                  {/* Cart items */}
-                  <div className="space-y-5">
-                    {cartItems.map((item) => {
-                      const cartItemId = item.id;
-                      const product = item.product || {};
-                      const unitPrice = parseFloat(product.price || 0);
-                      const lineTotal = unitPrice * item.quantity;
-                      const isSelected = selectedIds.includes(cartItemId);
+            {/* Summary */}
+            <div className="glass rounded-3xl p-8 h-fit lg:sticky lg:top-28">
+              <h3 className="font-serif text-2xl text-white mb-6">Order Summary</h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between text-luxury-mut">
+                  <span>Selected ({selectedItemCount})</span>
+                  <span className="text-luxury-text">RM {selectedSubtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-luxury-mut">
+                  <span>Cart subtotal</span>
+                  <span className="text-luxury-text">RM {subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-luxury-mut">
+                  <span>Shipping</span>
+                  <span className="text-luxury-gold2">Complimentary</span>
+                </div>
+                <div className="flex justify-between text-luxury-mut">
+                  <span>Engraving</span>
+                  <span className="text-luxury-gold2">Included</span>
+                </div>
+              </div>
+              <div className="rule my-6" />
+              <div className="flex justify-between items-baseline mb-8">
+                <span className="label uppercase text-[11px] text-luxury-mut">Total</span>
+                <span className="font-serif text-3xl text-white">RM {selectedSubtotal.toFixed(2)}</span>
+              </div>
+              <button
+                onClick={handleCheckout}
+                disabled={selectedIds.length === 0}
+                className="btn-lux w-full py-4 rounded-full text-[12px] font-medium label uppercase disabled:opacity-40"
+              >
+                {selectedIds.length === 0 ? "Select items to checkout" : "Proceed to Checkout"}
+              </button>
+              <p className="text-center text-[11px] text-luxury-mut mt-4">
+                Secure checkout · 256-bit encryption
+              </p>
+            </div>
+          </div>
+        )}
+      </main>
 
-                      return (
-                        <div
-                          key={cartItemId}
-                          className={`bg-white/10 border border-white/10 rounded-2xl p-5 transition-all duration-300 ${
-                            isSelected
-                              ? "ring-2 ring-luxury-gold/80 shadow-[0_0_30px_rgba(59,130,246,0.18)]"
-                              : "hover:bg-white/15"
-                          }`}
-                        >
-                          <div className="flex flex-col md:flex-row md:items-center gap-5">
-                            {/* Select */}
-                            <div className="flex items-start md:items-center">
-                              <button
-                                type="button"
-                                onClick={() => toggleSelect(cartItemId)}
-                                className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center transition ${
-                                  isSelected
-                                    ? "bg-luxury-gold/90 border-luxury-gold/90"
-                                    : "border-white/30 hover:border-white/60"
-                                }`}
-                                aria-label="Select item"
-                              >
-                                {isSelected ? <CheckCircle2 className="w-5 h-5 text-luxury-gold" /> : null}
-                              </button>
-                            </div>
-
-                            {/* Image */}
-                            <div className="relative w-28 h-28 md:w-32 md:h-32 rounded-xl overflow-hidden bg-black/10 border border-white/10 flex-shrink-0 group">
-                              <img
-                                src={product.card_image || product.promo_image || "/placeholder.png"}
-                                alt={product.name || "Product"}
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
-                            </div>
-
-                            {/* Details */}
-                            <div className="flex-1 min-w-0 text-white">
-                              {/* Title row + desktop subtotal column */}
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="min-w-0">
-                                  <h2 className="font-bold text-xl line-clamp-2">
-                                    {product.name || "Unnamed Product"}
-                                  </h2>
-                                  <p className="text-white/70 text-sm mt-1">RM {unitPrice.toFixed(2)} each</p>
-                                </div>
-
-                                {/* Desktop/tablet subtotal stays on the right */}
-                                <div className="text-right hidden md:block">
-                                  <p className="text-luxury-gold/90 text-xs font-semibold">Subtotal</p>
-                                  <p className="font-extrabold text-lg text-luxury-gold whitespace-nowrap">
-                                    RM {lineTotal.toFixed(2)}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Qty + Trash
-                                  PC fix: NO flex-1 stretch bar. We use justify-between; qty is w-fit, trash on the right.
-                              */}
-                              <div className="mt-4 flex items-center justify-between gap-3">
-                                <div className="inline-flex items-center gap-1 bg-white/10 border border-white/10 rounded-xl p-1 w-fit">
-                                  <button
-                                    type="button"
-                                    onClick={() => updateQuantity(product.id, item.quantity - 1, cartItemId)}
-                                    disabled={item.quantity <= 1}
-                                    className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/15 flex items-center justify-center transition disabled:opacity-40 disabled:cursor-not-allowed"
-                                    aria-label="Decrease quantity"
-                                  >
-                                    <Minus className="w-4 h-4 text-white" />
-                                  </button>
-
-                                  <span className="w-10 sm:w-12 text-center font-extrabold">{item.quantity}</span>
-                                      <button
-                                        type="button"
-                                        onClick={() => updateQuantity(product.id, item.quantity + 1, cartItemId)}
-                                        disabled={item.quantity >= (product.stock ?? Infinity)}
-                                        className="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/15 flex items-center justify-center transition disabled:opacity-40 disabled:cursor-not-allowed"
-                                        aria-label="Increase quantity"
-                                      >
-                                    <Plus className="w-4 h-4 text-white" />
-                                  </button>
-                                </div>
-
-                                <button
-                                  onClick={() =>
-                                    setItemToDelete({
-                                      productId: product.id,
-                                      cartItemId,
-                                      name: product.name,
-                                    })
-                                  }
-                                  className="flex-none p-3 rounded-xl bg-white/10 hover:bg-red-500/20 border border-white/10 hover:border-red-400/30 transition group"
-                                  aria-label="Remove item"
-                                >
-                                  <IoTrashOutline className="text-2xl text-white/80 group-hover:text-red-200 transition" />
-                                </button>
-                              </div>
-
-                              {/* MOBILE ONLY: subtotal + unit price UNDER the quantity row */}
-                              <div className="mt-3 md:hidden">
-                                <div className="flex items-baseline justify-between gap-3">
-                                  <span className="text-luxury-gold/90 text-xs font-semibold">Subtotal</span>
-                                  <span className="font-extrabold text-base text-luxury-gold whitespace-nowrap">
-                                    RM {lineTotal.toFixed(2)}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
+      {/* Confirm remove */}
+      {itemToDelete && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+          <div className="glass rounded-3xl p-8 w-full max-w-sm text-center">
+            <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-400/30 flex items-center justify-center mx-auto mb-5 text-red-300">
+              <IoTrashOutline className="text-2xl" />
+            </div>
+            <h2 className="font-serif text-2xl text-white mb-2">Remove item?</h2>
+            <p className="mb-6 text-luxury-mut">
+              Remove <span className="text-white">{itemToDelete.name || "this item"}</span> from your bag?
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => setItemToDelete(null)}
+                className="py-3 rounded-full border border-white/15 text-luxury-text hover:border-luxury-gold/40 transition"
+              >
+                Keep
+              </button>
+              <button
+                onClick={() => {
+                  removeFromCart(itemToDelete.productId, itemToDelete.cartItemId);
+                  setItemToDelete(null);
+                }}
+                className="py-3 rounded-full bg-red-500/80 hover:bg-red-500 text-white font-semibold transition"
+              >
+                Remove
+              </button>
             </div>
           </div>
         </div>
-
-        {/* Sticky footer */}
-        {itemCount > 0 && (
-          <footer className="fixed left-0 right-0 bottom-[calc(80px+env(safe-area-inset-bottom))] md:bottom-[env(safe-area-inset-bottom)] z-50">
-            <div className="bg-gradient-to-t from-luxury-gold/90 via-luxury-gold/80 to-transparent pt-5 pb-4 sm:pt-8 sm:pb-6 px-6">
-              <div className="mx-auto w-full max-w-screen-2xl">
-                <div className="bg-white rounded-2xl p-5 shadow-2xl">
-                  <div className="mb-3">
-                    {/* MOBILE: both lines LEFT, row-by-row */}
-                    <div className="sm:hidden space-y-1">
-                      <div className="font-semibold">
-                        {itemCount} item{itemCount !== 1 ? "s" : ""} in cart
-                      </div>
-                      <div className="text-gray-600 text-sm">
-                        Cart subtotal:{" "}
-                        <span className="font-semibold text-gray-900">RM {subtotal.toFixed(2)}</span>
-                      </div>
-
-                      <div className="pt-2 flex items-baseline justify-between">
-                        <span className="font-semibold">Selected: {selectedItemCount} item{selectedItemCount !== 1 ? "s" : ""}</span>
-                        <span className="font-extrabold">RM {selectedSubtotal.toFixed(2)}</span>
-                      </div>
-                    </div>
-
-                    {/* DESKTOP/TABLET: keep your 2-row layout */}
-                    <div className="hidden sm:flex sm:flex-col gap-2">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <span className="font-semibold">
-                          {itemCount} item{itemCount !== 1 ? "s" : ""} in cart
-                        </span>
-
-                        <span className="text-gray-500 text-sm whitespace-nowrap">
-                          Cart subtotal:{" "}
-                          <span className="font-semibold text-gray-800">RM {subtotal.toFixed(2)}</span>
-                        </span>
-                      </div>
-
-                      <div className="flex items-baseline justify-between gap-3">
-                        <span className="font-semibold whitespace-nowrap">
-                          Selected: {selectedItemCount} item{selectedItemCount !== 1 ? "s" : ""}
-                        </span>
-                        <span className="font-extrabold whitespace-nowrap">RM {selectedSubtotal.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={handleCheckout}
-                    disabled={selectedIds.length === 0}
-                    className={`w-full py-4 rounded-xl font-extrabold text-lg transition ${
-                      selectedIds.length === 0
-                        ? "bg-gray-400 text-white cursor-not-allowed"
-                        : "bg-luxury-gold hover:bg-luxury-gold text-white"
-                    }`}
-                  >
-                    {selectedIds.length === 0 ? "Select items to checkout" : "CHECKOUT SELECTED"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </footer>
-        )}
-
-        {/* Confirmation dialog */}
-        {itemToDelete && (
-          <ConfirmationDialog
-            item={itemToDelete}
-            onConfirm={() => {
-              removeFromCart(itemToDelete.productId, itemToDelete.cartItemId);
-              setItemToDelete(null);
-            }}
-            onCancel={() => setItemToDelete(null)}
-          />
-        )}
-      </div>
-    </>
+      )}
+    </div>
   );
 };
-
-const ConfirmationDialog = ({ item, onConfirm, onCancel }) => (
-  <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-    <div className="bg-white rounded-2xl p-7 w-full max-w-sm text-center shadow-2xl">
-      <div className="w-16 h-16 rounded-2xl bg-red-600/10 flex items-center justify-center mx-auto mb-5">
-        <Trash2 className="w-8 h-8 text-red-600" />
-      </div>
-
-      <h2 className="text-xl font-extrabold mb-2">Remove Item?</h2>
-      <p className="mb-6 text-gray-600">
-        Remove <span className="font-bold text-gray-900">{item.name || "this item"}</span> from your cart?
-      </p>
-
-      <div className="grid grid-cols-2 gap-4">
-        <button
-          onClick={onCancel}
-          className="border border-gray-200 py-2.5 rounded-xl font-semibold hover:bg-gray-50 transition"
-        >
-          Keep
-        </button>
-        <button
-          onClick={onConfirm}
-          className="bg-red-600 text-white py-2.5 rounded-xl font-semibold hover:bg-red-500 transition"
-        >
-          Remove
-        </button>
-      </div>
-    </div>
-  </div>
-);
 
 export default CartPage;

@@ -3,17 +3,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  IoCubeOutline,
-  IoRocketOutline,
   IoCheckmarkCircleOutline,
   IoStarOutline,
-  IoTimeOutline,
   IoDownloadOutline,
-  IoCloseCircleOutline,
-  IoCardOutline,
-  IoReceiptOutline,
 } from "react-icons/io5";
-import PageHeader from "../components/PageHeader";
 import ConfirmModal from "../components/ConfirmModal";
 import http from "../lib/http";
 
@@ -26,11 +19,11 @@ const ORDER_TABS = {
 };
 
 const TABS = [
-  { key: ORDER_TABS.TO_PAY, label: "To Pay", icon: IoCardOutline },
-  { key: ORDER_TABS.TO_SHIP, label: "To Ship", icon: IoCubeOutline },
-  { key: ORDER_TABS.TO_RECEIVE, label: "To Receive", icon: IoRocketOutline },
-  { key: ORDER_TABS.TO_RATE, label: "To Rate", icon: IoStarOutline },
-  { key: ORDER_TABS.HISTORY, label: "History", icon: IoTimeOutline },
+  { key: ORDER_TABS.TO_PAY, label: "To Pay" },
+  { key: ORDER_TABS.TO_SHIP, label: "To Ship" },
+  { key: ORDER_TABS.TO_RECEIVE, label: "To Receive" },
+  { key: ORDER_TABS.TO_RATE, label: "To Rate" },
+  { key: ORDER_TABS.HISTORY, label: "History" },
 ];
 
 const formatMYR = (num) =>
@@ -49,7 +42,6 @@ export default function OrdersPage() {
 
   const navigate = useNavigate();
 
-  // Auth check + load orders on tab change
   useEffect(() => {
     const token = localStorage.getItem("access");
     if (!token) {
@@ -67,8 +59,7 @@ export default function OrdersPage() {
       setOrders(res.data || []);
     } catch (err) {
       console.error("Error loading orders:", err?.response || err);
-      const status = err?.response?.status;
-      if (status === 401) {
+      if (err?.response?.status === 401) {
         alert("Session expired. Please login again.");
         navigate("/login", { replace: true });
       }
@@ -91,7 +82,6 @@ export default function OrdersPage() {
     );
   }, [orders, tab]);
 
-  // Confirm modal helpers
   const ask = (cfg) => setConfirm({ open: true, ...cfg });
   const close = () => setConfirm({ open: false });
 
@@ -99,16 +89,13 @@ export default function OrdersPage() {
     const { type, id } = confirm;
     close();
     if (!id || !type) return;
-
     try {
       await http.post(`orders/${id}/${type}/`);
       await loadOrders();
     } catch (err) {
       console.error("Order action failed:", err?.response || err);
       const data = err?.response?.data || {};
-      const rawMsg =
-        data.detail || data.error || data?.messages?.[0]?.message || "";
-
+      const rawMsg = data.detail || data.error || data?.messages?.[0]?.message || "";
       if (
         rawMsg.includes("token_not_valid") ||
         rawMsg.includes("Given token not valid for any token type") ||
@@ -118,21 +105,15 @@ export default function OrdersPage() {
         navigate("/login", { replace: true });
         return;
       }
-
       alert(rawMsg || "Action failed, please try again.");
     }
   };
 
-  // Download Invoice / Receipt PDF
   const handleDownloadPdf = async (orderId, isReceipt) => {
     try {
-      const res = await http.get(`orders/${orderId}/receipt-pdf/`, {
-        responseType: "blob",
-      });
-
+      const res = await http.get(`orders/${orderId}/receipt-pdf/`, { responseType: "blob" });
       const blob = new Blob([res.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
-
       const link = document.createElement("a");
       link.href = url;
       link.download = `${isReceipt ? "receipt" : "invoice"}_order_${orderId}.pdf`;
@@ -142,8 +123,7 @@ export default function OrdersPage() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Download order PDF failed:", err?.response || err);
-      const status = err?.response?.status;
-      if (status === 401) {
+      if (err?.response?.status === 401) {
         alert("Session expired. Please login again.");
         navigate("/login", { replace: true });
         return;
@@ -153,131 +133,79 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-luxury-navy/20">
-      {/* Decorative background elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/4 -left-32 w-96 h-96 bg-luxury-gold/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-luxury-accent/5 rounded-full blur-3xl" />
-      </div>
+    <div className="relative">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(60% 40% at 50% 0%,rgba(212,175,55,0.1),transparent 60%)" }}
+      />
 
-      <div className="relative px-4 sm:px-6 lg:px-10 xl:px-14 2xl:px-20">
-        <div className="max-w-screen-2xl mx-auto py-8">
-          <motion.div
-            initial={{ opacity: 0, y: -18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55 }}
-          >
-            <PageHeader title="My Orders" />
-          </motion.div>
+      <main className="relative z-10 max-w-5xl mx-auto px-6 sm:px-8 py-12 md:py-14">
+        <h1 className="font-serif text-4xl sm:text-5xl text-white mb-2">My Orders</h1>
+        <p className="font-cormorant italic text-xl text-luxury-champagne/70 mb-8">
+          Your history with the house.
+        </p>
 
-          {/* Luxury Tab Navigation */}
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.08 }}
-            className="flex flex-wrap gap-3 mb-10"
-          >
-            {TABS.map((t, index) => {
-              const Icon = t.icon;
-              const isActive = tab === t.key;
-              return (
-                <motion.button
-                  key={t.key}
-                  onClick={() => changeTab(t.key)}
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: 0.1 + index * 0.05 }}
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`relative flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300
-                    border backdrop-blur-md
-                    ${
-                      isActive
-                        ? "text-slate-900 border-luxury-gold/50 shadow-[0_0_25px_rgba(212,175,55,0.35)]"
-                        : "bg-white/10 text-white/90 border-white/20 shadow-[0_0_18px_rgba(255,255,255,0.10)] hover:bg-white/15 hover:border-white/30 hover:shadow-[0_0_22px_rgba(255,255,255,0.16)]"
-                    }`}
-                >
-                  <Icon className="text-xl" />
-                  <span>{t.label}</span>
-
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 bg-luxury-gold rounded-xl -z-10"
-                      transition={{ type: "spring", duration: 0.5 }}
-                    />
-                  )}
-                </motion.button>
-              );
-            })}
-          </motion.div>
-
-          {/* Loading State */}
-          {loading && (
-            <div className="flex justify-center items-center py-20">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                className="w-12 h-12 border-2 border-luxury-gold border-t-transparent rounded-full"
-              />
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!loading && filtered.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45 }}
-              className="text-center py-20"
+        {/* Tabs */}
+        <div className="flex items-center gap-6 sm:gap-8 text-[11px] label uppercase mb-8 border-b border-white/8 overflow-x-auto">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => changeTab(t.key)}
+              className={`pb-3 whitespace-nowrap transition ${
+                tab === t.key
+                  ? "text-luxury-champagne border-b border-luxury-gold"
+                  : "text-luxury-mut hover:text-white"
+              }`}
             >
-              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center border border-luxury-gold/20">
-                <IoCubeOutline className="text-4xl text-luxury-gold/50" />
-              </div>
-              <p className="text-white/60 text-lg">No orders in this category</p>
-            </motion.div>
-          )}
-
-          {/* Order Cards Grid */}
-          {!loading && filtered.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.45, delay: 0.12 }}
-              className="grid md:grid-cols-2 xl:grid-cols-3 gap-6"
-            >
-              <AnimatePresence mode="popLayout">
-                {filtered.map((o, index) => (
-                  <motion.div
-                    key={o.id}
-                    initial={{ opacity: 0, scale: 0.92, y: 18 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.92, y: -18 }}
-                    transition={{ duration: 0.35, delay: index * 0.05 }}
-                  >
-                    <OrderCard
-                      order={o}
-                      onAsk={ask}
-                      onDownloadPdf={handleDownloadPdf}
-                    />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </motion.div>
-          )}
-
-          <ConfirmModal
-            open={confirm.open}
-            title={confirm.title}
-            message={confirm.message}
-            confirmText={confirm.confirmText || "Confirm"}
-            cancelText="Cancel"
-            onCancel={close}
-            onConfirm={doAction}
-            variant={confirm.type === "cancel" ? "danger" : "primary"}
-          />
+              {t.label}
+            </button>
+          ))}
         </div>
-      </div>
+
+        {loading && (
+          <div className="flex justify-center py-20">
+            <div className="w-12 h-12 border-2 border-luxury-gold/80 border-t-transparent rounded-full animate-spin-gold" />
+          </div>
+        )}
+
+        {!loading && filtered.length === 0 && (
+          <div className="text-center py-20">
+            <p className="font-cormorant italic text-2xl text-luxury-champagne/70">
+              No orders in this category.
+            </p>
+          </div>
+        )}
+
+        {!loading && filtered.length > 0 && (
+          <div className="space-y-5">
+            <AnimatePresence mode="popLayout">
+              {filtered.map((o, index) => (
+                <motion.div
+                  key={o.id}
+                  layout
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -16 }}
+                  transition={{ duration: 0.3, delay: index * 0.04 }}
+                >
+                  <OrderCard order={o} onAsk={ask} onDownloadPdf={handleDownloadPdf} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+
+        <ConfirmModal
+          open={confirm.open}
+          title={confirm.title}
+          message={confirm.message}
+          confirmText={confirm.confirmText || "Confirm"}
+          cancelText="Cancel"
+          onCancel={close}
+          onConfirm={doAction}
+          variant={confirm.type === "cancel" ? "danger" : "primary"}
+        />
+      </main>
     </div>
   );
 }
@@ -285,7 +213,6 @@ export default function OrdersPage() {
 /* ----------------------------- Card ----------------------------- */
 function OrderCard({ order, onAsk, onDownloadPdf }) {
   const navigate = useNavigate();
-
   const { id, created_at, items = [], total, status, payment } = order;
 
   const method = payment?.method || null;
@@ -307,55 +234,46 @@ function OrderCard({ order, onAsk, onDownloadPdf }) {
     return pStatus || "UNPAID";
   })();
 
-  const paymentBadgeClass = (() => {
-    if (paymentLabel.includes("PAID") || paymentLabel.includes("Collected"))
-      return "bg-luxury-gold/20 text-luxury-gold2 border-luxury-gold/30";
-    if (
-      paymentLabel.includes("PENDING") ||
-      paymentLabel.includes("Pay on delivery")
-    )
-      return "bg-luxury-gold/20 text-luxury-gold border-luxury-gold/30";
-    if (
-      paymentLabel.includes("CANCELLED") ||
-      paymentLabel.includes("REFUNDED") ||
-      paymentLabel.includes("FAILED")
-    )
-      return "bg-luxury-gold/20 text-luxury-gold border-luxury-gold/30";
-    return "bg-white/10 text-white/70 border-white/10";
-  })();
-
   const isCOD = method === "COD";
   const isPaid = payment?.status === "SUCCESS";
-  const isToReceive = status === "TO_RECEIVE";
   const codCollected = isCOD && (status === "TO_RATE" || status === "COMPLETED");
   const isReceipt = (!isCOD && isPaid) || codCollected;
   const downloadLabel = isReceipt ? "Receipt" : "Invoice";
 
-  // force label for COD while waiting delivery
   const computedPaymentLabel =
     method === "COD" && !codCollected ? "(Pay on delivery)" : paymentLabel;
 
-  const ActionButton = ({ onClick, variant = "default", children }) => {
-    const variantClasses = {
-      primary:
-        "bg-luxury-gold text-slate-900 shadow-lg shadow-luxury-gold/20 hover:bg-luxury-gold/90",
-      danger:
-        "bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/30 hover:bg-luxury-gold/30",
-      success:
-        "bg-luxury-gold/20 text-luxury-gold2 border border-luxury-gold/30 hover:bg-luxury-gold/30",
-      default:
-        "bg-white/10 text-white/80 border border-white/10 hover:bg-white/20",
-    };
+  const statusLabel = {
+    TO_PAY: "To Pay",
+    TO_SHIP: "To Ship",
+    TO_RECEIVE: "Shipped",
+    TO_RATE: "To Rate",
+    COMPLETED: "Completed",
+    CANCELLED: "Cancelled",
+  }[status] || status;
 
+  const statusClass =
+    status === "COMPLETED" || status === "CANCELLED"
+      ? "border-white/15 text-luxury-mut"
+      : "border-luxury-gold/30 text-luxury-gold2";
+
+  const firstImg =
+    items[0]?.product?.card_image || items[0]?.product?.promo_image || null;
+
+  const Pill = ({ onClick, variant = "ghost", children }) => {
+    const cls =
+      variant === "primary"
+        ? "btn-lux"
+        : variant === "danger"
+        ? "border border-red-500/40 text-red-300 hover:bg-red-500/10"
+        : "border border-luxury-gold/40 text-luxury-champagne hover:bg-luxury-gold/10";
     return (
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+      <button
         onClick={onClick}
-        className={`px-4 py-2.5 rounded-xl font-medium transition-all ${variantClasses[variant]}`}
+        className={`px-6 py-2.5 rounded-full text-[10px] label uppercase transition ${cls}`}
       >
         {children}
-      </motion.button>
+      </button>
     );
   };
 
@@ -364,13 +282,10 @@ function OrderCard({ order, onAsk, onDownloadPdf }) {
       case "TO_PAY":
         return (
           <>
-            <ActionButton
-              variant="primary"
-              onClick={() => navigate(`/checkout?order=${id}`)}
-            >
+            <Pill variant="primary" onClick={() => navigate(`/checkout?order=${id}`)}>
               Pay Now
-            </ActionButton>
-            <ActionButton
+            </Pill>
+            <Pill
               variant="danger"
               onClick={() =>
                 onAsk({
@@ -383,34 +298,29 @@ function OrderCard({ order, onAsk, onDownloadPdf }) {
               }
             >
               Cancel
-            </ActionButton>
+            </Pill>
           </>
         );
-
       case "TO_SHIP":
         return (
-          <>
-            <ActionButton
-              variant="danger"
-              onClick={() =>
-                onAsk({
-                  type: "cancel",
-                  id,
-                  title: "Cancel Order?",
-                  message: "Cancel this order before it is shipped?",
-                  confirmText: "Cancel Order",
-                })
-              }
-            >
-              Cancel
-            </ActionButton>
-          </>
+          <Pill
+            variant="danger"
+            onClick={() =>
+              onAsk({
+                type: "cancel",
+                id,
+                title: "Cancel Order?",
+                message: "Cancel this order before it is shipped?",
+                confirmText: "Cancel Order",
+              })
+            }
+          >
+            Cancel
+          </Pill>
         );
-
       case "TO_RECEIVE":
         return (
-          <ActionButton
-            variant="success"
+          <Pill
             onClick={() =>
               onAsk({
                 type: "deliver",
@@ -423,108 +333,66 @@ function OrderCard({ order, onAsk, onDownloadPdf }) {
           >
             <IoCheckmarkCircleOutline className="inline mr-1" />
             Confirm Delivery
-          </ActionButton>
+          </Pill>
         );
-
       case "TO_RATE":
         return (
-          <ActionButton variant="primary" onClick={() => navigate(`/rate/${id}`)}>
+          <Pill variant="primary" onClick={() => navigate(`/rate/${id}`)}>
             <IoStarOutline className="inline mr-1" />
             Rate Now
-          </ActionButton>
+          </Pill>
         );
-
       default:
         return (
-          <ActionButton variant="default" onClick={() => navigate("/")}>
-            Reorder
-          </ActionButton>
+          <Pill onClick={() => navigate("/shop")}>Reorder</Pill>
         );
     }
   };
 
   return (
-    <motion.div
-      whileHover={{ y: -4 }}
-      className="group relative bg-gradient-to-br from-white/10 via-white/5 to-transparent rounded-2xl p-6 border border-white/10 hover:border-luxury-gold/30 transition-all duration-300"
-    >
-      {/* Corner accent */}
-      <div className="absolute top-0 right-0 w-20 h-20 overflow-hidden rounded-tr-2xl">
-        <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-luxury-gold/20 to-transparent rotate-45" />
-      </div>
-
-      {/* Header */}
-      <div className="flex justify-between items-start mb-4">
+    <div className="glass rounded-2xl p-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <div className="text-sm text-white/50 mb-1">
+          <p className="label uppercase text-[10px] text-luxury-mut">Order #{id}</p>
+          <p className="text-sm text-luxury-mut mt-1">
             {new Date(created_at).toLocaleDateString("en-MY", {
               day: "numeric",
               month: "short",
               year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
             })}
-          </div>
-
-          <div className="font-semibold text-lg text-white flex items-center gap-2">
-            <IoReceiptOutline className="text-luxury-gold" />
-            Order #{id}
-          </div>
-
-          {/* Payment Badge */}
-          {status !== "TO_PAY" ? (
-            <div
-              className={`mt-2 inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium border ${paymentBadgeClass}`}
-            >
-              {payment ? `${method} · ${computedPaymentLabel}` : computedPaymentLabel}
-            </div>
-          ) : (
-            payment &&
-            (payment.status === "FAILED" || payment.status === "CANCELLED") && (
-              <div className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/30">
-                <IoCloseCircleOutline />
-                Payment Failed — Try Again
-              </div>
-            )
-          )}
+          </p>
         </div>
-
-        {/* Total */}
-        <div className="text-right">
-          <div className="text-xs text-white/50 mb-1">Total</div>
-          <div className="text-2xl font-bold bg-gradient-to-r from-luxury-gold via-luxury-gold-light to-luxury-gold bg-clip-text text-transparent">
-            {formatMYR(total)}
-          </div>
-        </div>
+        <span className={`px-4 py-1.5 rounded-full text-[10px] label uppercase border ${statusClass}`}>
+          {statusLabel}
+        </span>
       </div>
 
-      {/* Items */}
-      <div className="bg-black/20 rounded-xl p-4 mb-4 border border-white/5">
-        <ul className="space-y-2">
-          {items.slice(0, 3).map((it) => (
-            <li key={it.id} className="flex justify-between text-sm">
-              <span className="text-white/80 truncate flex-1">
-                {it.product?.name}
-              </span>
-              <span className="text-luxury-gold ml-2">×{it.quantity}</span>
-            </li>
-          ))}
-          {items.length > 3 && (
-            <li className="text-sm text-white/50 italic">
-              + {items.length - 3} more items
-            </li>
-          )}
-        </ul>
+      <div className="flex items-center gap-4">
+        <div className="w-14 h-16 rounded-lg overflow-hidden bg-luxury-panel2 shrink-0">
+          {firstImg ? <img src={firstImg} alt="" className="w-full h-full object-cover" /> : null}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-serif text-xl text-white truncate">
+            {items[0]?.product?.name || "Order"}
+            {items.length > 1 ? ` + ${items.length - 1} more` : ""}
+          </p>
+          <p className="text-xs text-luxury-mut mt-0.5">
+            {items.reduce((n, it) => n + (it.quantity || 0), 0)} item(s)
+            {payment ? ` · ${method} ${computedPaymentLabel}` : ""}
+          </p>
+        </div>
+        <span className="font-cormorant text-2xl text-luxury-champagne whitespace-nowrap">
+          {formatMYR(total)}
+        </span>
       </div>
 
-      {/* Actions */}
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="flex flex-wrap gap-3 mt-5 justify-end">
         {actions()}
-        <ActionButton variant="default" onClick={() => onDownloadPdf(id, !!isReceipt)}>
+        <Pill onClick={() => onDownloadPdf(id, !!isReceipt)}>
           <IoDownloadOutline className="inline mr-1" />
           {downloadLabel}
-        </ActionButton>
+        </Pill>
       </div>
-    </motion.div>
+    </div>
   );
 }
