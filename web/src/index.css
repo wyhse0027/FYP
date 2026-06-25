@@ -42,7 +42,41 @@ body {
   }
   /* Hairline gold rule */
   .gold-rule { height: 1px; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.55), transparent); }
+  .rule { height: 1px; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.55), transparent); }
+
+  /* Frosted gold-tinted glass panel */
+  .glass {
+    background: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(212,175,55,0.16);
+  }
+  /* Couture tracking helper */
+  .label { letter-spacing: 0.34em; }
+  /* Gold radial glow (page atmosphere) — override position per page with inline style */
+  .glow { background: radial-gradient(60% 45% at 60% 0%, rgba(212,175,55,0.14), transparent 60%); }
+  /* Gold gradient clipped text */
+  .gold-text {
+    background: linear-gradient(92deg, #F3D37A, #D4AF37 60%, #B8860B);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  /* Ghost (secondary) button */
+  .ghost { border: 1px solid rgba(212,175,55,0.45); color: #F7E7CE; transition: .3s; }
+  .ghost:hover { border-color: #D4AF37; background: rgba(212,175,55,0.08); }
+  /* Product / collection card hover lift */
+  .card { transition: transform .5s cubic-bezier(.2,.7,.2,1), border-color .4s, box-shadow .4s; }
+  .card:hover { transform: translateY(-8px); border-color: rgba(212,175,55,0.5); box-shadow: 0 30px 70px -25px rgba(0,0,0,0.8); }
+  .card:hover img { transform: scale(1.05); }
+  /* Form field (dark glass input) */
+  .fld { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); transition: border-color .25s, background .25s; }
+  .fld:focus { border-color: rgba(212,175,55,0.6); background: rgba(255,255,255,0.07); }
 }
+
+/* Releases coverflow — dim inactive slides, gold-frame the active one */
+.rel-card { transition: opacity .45s ease, border-color .45s ease; }
+.swiper-slide:not(.swiper-slide-active) .rel-card { opacity: 0.5; }
+.swiper-slide-active .rel-card { border-color: rgba(212,175,55,0.5) !important; }
+.releases-swiper .swiper-pagination-bullet { background: rgba(255,255,255,0.3); }
+.releases-swiper .swiper-pagination-bullet-active { background: #F3D37A; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

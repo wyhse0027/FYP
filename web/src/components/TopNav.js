@@ -24,37 +24,44 @@ export default function TopNav() {
   }
 
   return (
-    <header className="hidden md:block sticky top-0 z-40 w-full bg-luxury-bg/80 backdrop-blur-xl border-b border-luxury-gold/15">
-      <div className="mx-auto max-w-screen-2xl h-20 px-10 grid grid-cols-3 items-center">
-        {/* Left nav */}
-        <nav className="flex items-center gap-9 justify-start">
-          <NavLink to="/" end className={navItem}>Home</NavLink>
-          <NavLink to="/shop" className={navItem}>Shop</NavLink>
-          <NavLink to="/releases" className={navItem}>Releases</NavLink>
-          <NavLink to="/quiz" className={navItem}>Scent Quiz</NavLink>
-        </nav>
-
-        {/* Center brand */}
-        <Link
-          to="/"
-          className="text-center font-serif text-2xl lg:text-3xl font-medium tracking-[0.35em] text-white hover:text-luxury-champagne transition-colors"
-        >
-          GERAIN&nbsp;CHAN
-        </Link>
-
-        {/* Right */}
-        <nav className="flex items-center gap-8 justify-end">
-          {user?.is_staff === true && (
-            <NavLink to="/admin/dashboard" className={navItem}>Admin</NavLink>
-          )}
-          <NavLink to="/cart" className={iconItem} aria-label="Cart">
-            <IoCartOutline className="text-2xl" />
-          </NavLink>
-          <NavLink to="/account" className={iconItem} aria-label="Account">
-            <IoPersonCircleOutline className="text-2xl" />
-          </NavLink>
-        </nav>
+    <div className="hidden md:block sticky top-0 z-40 w-full">
+      {/* Announcement */}
+      <div className="bg-luxury-bg text-center text-[10px] label uppercase text-luxury-gold/80 py-2.5 border-b border-white/5">
+        Complimentary engraving &amp; shipping on every order
       </div>
-    </header>
+      {/* Nav */}
+      <header className="w-full bg-luxury-bg/80 backdrop-blur-xl border-b border-luxury-gold/15">
+        <div className="mx-auto max-w-screen-2xl h-20 px-10 grid grid-cols-3 items-center">
+          {/* Left nav */}
+          <nav className="flex items-center gap-9 justify-start">
+            <NavLink to="/" end className={navItem}>Home</NavLink>
+            <NavLink to="/shop" className={navItem}>Shop</NavLink>
+            <NavLink to="/quiz" className={navItem}>Scent Quiz</NavLink>
+          </nav>
+
+          {/* Center brand */}
+          <Link
+            to="/"
+            className="text-center font-serif text-2xl lg:text-[28px] font-medium tracking-[0.3em] text-white hover:text-luxury-champagne transition-colors"
+          >
+            GÉRAIN&nbsp;CHAN
+          </Link>
+
+          {/* Right */}
+          <nav className="flex items-center gap-7 justify-end">
+            <NavLink to="/releases" className={navItem}>Releases</NavLink>
+            {user?.is_staff === true && (
+              <NavLink to="/admin/dashboard" className={navItem}>Admin</NavLink>
+            )}
+            <NavLink to="/cart" className={iconItem} aria-label="Cart">
+              <IoCartOutline className="text-2xl" />
+            </NavLink>
+            <NavLink to="/account" className={iconItem} aria-label="Account">
+              <IoPersonCircleOutline className="text-2xl" />
+            </NavLink>
+          </nav>
+        </div>
+      </header>
+    </div>
   );
 }

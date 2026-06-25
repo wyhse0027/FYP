@@ -40,100 +40,101 @@ const Footer = () => {
   };
 
   return (
-    <footer
-      className="
-        mt-12 border-t border-luxury-gold/20 bg-[#070B14] text-luxury-champagne
-        pb-20 md:pb-10  /* keep copyright above BottomNav on small screens */
-      "
-    >
-      {/* 4 columns, full width */}
-      <div className="w-full px-6 lg:px-16 py-12 grid grid-cols-1 md:grid-cols-4 gap-12">
+    <footer className="relative mt-10 border-t border-white/8 bg-luxury-bg text-luxury-text pb-20 md:pb-10 overflow-hidden">
+      {/* gold glow */}
+      <div
+        className="absolute inset-x-0 top-0 h-44 pointer-events-none"
+        style={{ background: "radial-gradient(50% 100% at 50% 0%,rgba(212,175,55,0.10),transparent 70%)" }}
+      />
+
+      {/* Maison wordmark divider */}
+      <div className="relative w-full px-6 lg:px-16 pt-12">
+        <div className="flex items-center gap-5 sm:gap-6 max-w-screen-2xl mx-auto">
+          <div className="flex-1 gold-rule" />
+          <Link
+            to="/"
+            className="font-serif text-xl sm:text-2xl tracking-[0.3em] text-white hover:text-luxury-champagne transition whitespace-nowrap"
+          >
+            GÉRAIN&nbsp;CHAN
+          </Link>
+          <div className="flex-1 gold-rule" />
+        </div>
+      </div>
+
+      {/* Columns */}
+      <div className="relative w-full max-w-screen-2xl mx-auto px-6 lg:px-16 py-12 grid grid-cols-1 md:grid-cols-4 gap-12">
         {/* ABOUT */}
         <div className="space-y-3">
-          <h2 className="text-xl font-extrabold tracking-[0.2em] text-white uppercase">
-            {siteAbout?.title || "GERAIN CHAN"}
-          </h2>
-          <p className="text-sm text-luxury-gold/80 leading-relaxed">
+          <p className="label uppercase text-[11px] text-luxury-gold/80">The Maison</p>
+          <p className="text-sm text-luxury-mut leading-relaxed">
             {siteAbout?.intro_text ||
-              "Immersive perfume experiences, online and in-store."}
+              "A modern maison blending scent, storytelling and technology — perfumery for the digital age."}
           </p>
         </div>
 
         {/* CONTACT */}
         <div className="space-y-3">
-          <h3 className="text-xs font-semibold tracking-[0.2em] text-luxury-gold uppercase">
-            Contact
-          </h3>
-
+          <p className="label uppercase text-[11px] text-luxury-gold/80">Contact</p>
           {siteAbout?.contact_email && (
             <p>
               <a
                 href={`mailto:${siteAbout.contact_email}`}
-                className="hover:text-white underline underline-offset-2"
+                className="text-sm text-luxury-text hover:text-luxury-gold2 transition"
               >
                 {siteAbout.contact_email}
               </a>
             </p>
           )}
-
           {siteAbout?.contact_phone && (
             <p>
               <a
                 href={`tel:${siteAbout.contact_phone}`}
-                className="hover:text-white"
+                className="text-sm text-luxury-text hover:text-luxury-gold2 transition"
               >
                 {siteAbout.contact_phone}
               </a>
             </p>
           )}
-
           {siteAbout?.address && (
-            <p className="whitespace-pre-line">{siteAbout.address}</p>
+            <p className="text-sm text-luxury-mut whitespace-pre-line leading-relaxed">
+              {siteAbout.address}
+            </p>
           )}
         </div>
 
         {/* EXPLORE */}
         <div className="space-y-3">
-          <h3 className="text-xs font-semibold tracking-[0.2em] text-luxury-gold uppercase">
-            Explore
-          </h3>
-          <ul className="space-y-1 text-sm">
+          <p className="label uppercase text-[11px] text-luxury-gold/80">Explore</p>
+          <ul className="space-y-2 text-sm">
             <li>
-              <Link to="/shop" className="hover:text-white">
-                Shop
-              </Link>
+              <Link to="/shop" className="hover:text-luxury-gold2 transition">Shop</Link>
             </li>
             <li>
-              <Link to="/quiz" className="hover:text-white">
-                Fragrance Quiz
-              </Link>
+              <Link to="/quiz" className="hover:text-luxury-gold2 transition">Scent Quiz</Link>
             </li>
             <li>
-              <Link to="/settings/retailers" className="hover:text-white">
-                Retail Partners
-              </Link>
+              <Link to="/settings/retailers" className="hover:text-luxury-gold2 transition">Boutiques</Link>
             </li>
             <li>
-              <Link to="/settings/about" className="hover:text-white">
-                About Us
-              </Link>
+              <Link to="/settings/about" className="hover:text-luxury-gold2 transition">The Maison</Link>
             </li>
           </ul>
         </div>
 
         {/* FOLLOW */}
         <div className="space-y-3">
-          <h3 className="text-xs font-semibold tracking-[0.2em] text-luxury-gold uppercase">
-            Follow
-          </h3>
-          <div className="flex flex-wrap gap-3">
+          <p className="label uppercase text-[11px] text-luxury-gold/80">Follow</p>
+          <p className="text-sm text-luxury-mut leading-relaxed mb-1">
+            Releases, AR experiences and the people who compose them.
+          </p>
+          <div className="flex flex-wrap gap-3 pt-1">
             {Object.entries(socialLinks).map(([platform, url]) => (
               <a
                 key={platform}
                 href={url}
                 target="_blank"
                 rel="noreferrer"
-                className="w-9 h-9 rounded-full border border-luxury-gold/40 flex items-center justify-center text-luxury-gold hover:text-[#070B14] hover:bg-luxury-gold hover:border-luxury-gold transition"
+                className="w-11 h-11 rounded-full border border-luxury-gold/40 flex items-center justify-center text-luxury-gold2 hover:text-luxury-bg hover:bg-luxury-gold hover:border-luxury-gold transition"
               >
                 {renderSocialIcon(platform)}
               </a>
@@ -142,22 +143,10 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* BOTTOM BAR */}
-      <div
-        className="
-          w-full px-6 lg:px-16 py-4
-          flex flex-col md:flex-row
-          items-center
-          justify-center md:justify-between
-          text-[11px] text-luxury-gold/80
-          text-center md:text-left
-          gap-1
-        "
-      >
-        <span>© {year} GERAIN CHAN. All rights reserved.</span>
-        <span className="uppercase tracking-[0.2em]">
-          Immersive Perfume · AR Experience
-        </span>
+      {/* Bottom bar */}
+      <div className="relative w-full max-w-screen-2xl mx-auto px-6 lg:px-16 pt-6 border-t border-white/8 flex flex-col md:flex-row items-center justify-center md:justify-between text-[10px] label uppercase text-luxury-mut text-center gap-2">
+        <span>© {year} Gérain Chan. All rights reserved.</span>
+        <span>Immersive Perfume · AR Experience</span>
       </div>
     </footer>
   );

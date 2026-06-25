@@ -9,10 +9,13 @@ module.exports = {
           panel: "#0B1222",       // card background
           panel2: "#0E1830",      // hover / modal
           navy: "#0B1222",        // legacy alias → dark surface
+          line: "#1C2740",        // hairline borders / dividers
           gold: "#D4AF37",
           gold2: "#F3D37A",
           accent: "#F3D37A",      // legacy alias → gold accent
           champagne: "#F7E7CE",
+          text: "#ECE7DD",        // high-contrast body text
+          mut: "#A9B0BE",         // muted secondary text
           silver: "#C2C7D0",      // secondary text on dark
         },
       },
