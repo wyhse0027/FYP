@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ConfirmModal from "../components/ConfirmModal";
+import { Dropdown } from "../components/ui";
 import { getSettings, patchSettings, resetSettings } from "../store/settingsStore";
 import { resetProfile } from "../store/profileStore";
 import { useAuth } from "../context/AuthContext";
@@ -19,6 +20,12 @@ import {
   IoHelpCircleOutline,
   IoTrashBinOutline,
 } from "react-icons/io5";
+
+const LANGUAGE_OPTIONS = [
+  { value: "en", label: "English" },
+  { value: "ms", label: "Bahasa Melayu" },
+  { value: "zh", label: "中文" },
+];
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -109,18 +116,15 @@ export default function SettingsPage() {
 
             {/* Language */}
             <p className="label uppercase text-[11px] text-luxury-mut mb-3">Language</p>
-            <div className="fld rounded-xl px-4 mb-7 flex items-center gap-3">
-              <IoLanguageOutline className="text-luxury-gold2 shrink-0" />
-              <select
+            <div className="mb-7">
+              <Dropdown
                 value={settings.language}
-                onChange={(e) => update({ language: e.target.value })}
-                className="w-full bg-transparent py-3.5 text-luxury-text outline-none cursor-pointer"
-              >
-                <option className="bg-luxury-panel2" value="en">English</option>
-                <option className="bg-luxury-panel2" value="ms">Bahasa Melayu</option>
-                <option className="bg-luxury-panel2" value="zh">中文</option>
-              </select>
-              <span className="text-luxury-gold2 pointer-events-none">▾</span>
+                onChange={(v) => update({ language: v })}
+                options={LANGUAGE_OPTIONS}
+                leftIcon={<IoLanguageOutline className="text-luxury-gold2 shrink-0" />}
+                className="fld rounded-xl px-4 py-3.5 w-full text-luxury-text"
+                menuClassName="w-full"
+              />
             </div>
 
             {/* Notifications */}

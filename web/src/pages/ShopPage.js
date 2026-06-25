@@ -3,9 +3,16 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import http from "../lib/http";
-import { Chip } from "../components/ui";
+import { Chip, Dropdown } from "../components/ui";
 
 const MAX_PRIMARY_CATEGORIES = 5;
+
+const SORT_OPTIONS = [
+  { value: "featured", label: "Featured" },
+  { value: "price-asc", label: "Price · Low to High" },
+  { value: "price-desc", label: "Price · High to Low" },
+  { value: "name", label: "Name · A–Z" },
+];
 
 const targetLabel = (t) =>
   t === "MEN" ? "Men" : t === "WOMEN" ? "Women" : "Unisex";
@@ -180,26 +187,14 @@ const ShopPage = () => {
 
           <div className="flex items-center gap-3 text-[11px] label uppercase text-luxury-mut">
             <span>Sort</span>
-            <div className="glass rounded-full px-5 py-2.5">
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                className="bg-transparent text-luxury-text outline-none cursor-pointer text-[11px] label uppercase"
-              >
-                <option className="bg-luxury-panel2" value="featured">
-                  Featured
-                </option>
-                <option className="bg-luxury-panel2" value="price-asc">
-                  Price ↑
-                </option>
-                <option className="bg-luxury-panel2" value="price-desc">
-                  Price ↓
-                </option>
-                <option className="bg-luxury-panel2" value="name">
-                  Name A–Z
-                </option>
-              </select>
-            </div>
+            <Dropdown
+              value={sort}
+              onChange={setSort}
+              options={SORT_OPTIONS}
+              align="right"
+              className="glass rounded-full px-5 py-2.5 min-w-[12rem] text-[11px] label uppercase text-luxury-text"
+              optionClassName="text-[11px] label uppercase"
+            />
           </div>
         </div>
 
