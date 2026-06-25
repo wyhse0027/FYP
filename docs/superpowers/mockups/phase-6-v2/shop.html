@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eleganza — Shop</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>tailwind.config={theme:{extend:{colors:{lux:{bg:"#070B14",ink:"#0B1222",ink2:"#0E1830",line:"#1C2740",gold:"#D4AF37",gold2:"#F3D37A",champ:"#F7E7CE",text:"#ECE7DD",mut:"#A9B0BE"}},fontFamily:{display:['"Playfair Display"','serif'],serif:['"Cormorant Garamond"','serif'],sans:['Inter','sans-serif']}}}}</script>
+<style>
+ body{background:#070B14}
+ .glass{background:linear-gradient(160deg,rgba(255,255,255,0.055),rgba(255,255,255,0.02));backdrop-filter:blur(16px);border:1px solid rgba(212,175,55,0.16)}
+ .label{letter-spacing:.34em}.rule{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.55),transparent)}
+ .glow{background:radial-gradient(60% 40% at 50% 0%,rgba(212,175,55,0.12),transparent 60%)}
+ .chip{border:1px solid rgba(247,231,206,0.25);color:rgba(247,231,206,0.9)}
+ .chip:hover{border-color:rgba(212,175,55,0.6);color:#fff}
+ .chip-on{border-color:rgba(212,175,55,0.7);background:rgba(212,175,55,0.2);color:#F7E7CE}
+ .card{transition:transform .5s cubic-bezier(.2,.7,.2,1),border-color .4s,box-shadow .4s}
+ .card:hover{transform:translateY(-8px);border-color:rgba(212,175,55,0.5);box-shadow:0 30px 70px -25px rgba(0,0,0,0.8)}
+ .card:hover img{transform:scale(1.05)}
+ @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body class="font-sans text-lux-text antialiased">
+<div class="glow fixed inset-0 pointer-events-none"></div>
+<header class="relative z-20 border-b border-white/8"><div class="max-w-screen-2xl mx-auto px-8 h-20 grid grid-cols-3 items-center">
+  <nav class="flex items-center gap-9 text-[11px] label uppercase"><a class="text-lux-text hover:text-white" href="#">Home</a><a class="text-lux-gold2" href="#">Shop</a><a class="text-lux-text hover:text-white" href="#">Scent Quiz</a></nav>
+  <a href="#" class="text-center font-display text-2xl lg:text-[28px] tracking-[0.3em] text-white">GÉRAIN&nbsp;CHAN</a>
+  <div class="flex items-center justify-end gap-7 text-lux-text"><a href="#" class="text-[11px] label uppercase hover:text-white" >Releases</a>
+   <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h2l2.4 12.3a2 2 0 0 0 2 1.7h7.7a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>
+   <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+</div></header>
+
+<main class="relative z-10 max-w-screen-2xl mx-auto px-8 py-14">
+  <div class="text-center mb-10">
+    <p class="label uppercase text-[11px] text-lux-gold/85 mb-4">The Maison</p>
+    <h1 class="font-display text-6xl text-white mb-3">Shop</h1>
+    <p class="font-serif italic text-2xl text-lux-champ/75">Five fragrances, each a chapter of the house.</p>
+  </div>
+
+  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5 mb-10">
+    <div class="flex flex-wrap items-center gap-3 text-xs label uppercase">
+      <span class="chip-on px-6 py-2.5 rounded-full inline-flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-lux-gold2"></span>All</span>
+      <span class="chip px-6 py-2.5 rounded-full">Bold</span><span class="chip px-6 py-2.5 rounded-full">Fresh</span>
+      <span class="chip px-6 py-2.5 rounded-full">Floral</span><span class="chip px-6 py-2.5 rounded-full">Woody</span>
+      <span class="w-px h-5 bg-white/15"></span>
+      <span class="chip px-6 py-2.5 rounded-full">Men</span><span class="chip px-6 py-2.5 rounded-full">Women</span><span class="chip px-6 py-2.5 rounded-full">Unisex</span>
+    </div>
+    <div class="flex items-center gap-3 text-[11px] label uppercase text-lux-mut">
+      <span>Sort</span>
+      <span class="glass px-5 py-2.5 rounded-full text-lux-text inline-flex items-center gap-3">Featured <span class="text-lux-gold2">▾</span></span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 lg:grid-cols-3 gap-7">
+    <a href="#" class="card block rounded-2xl glass p-5"><div class="rounded-xl overflow-hidden aspect-[4/5] mb-5 bg-lux-ink2 relative">
+      <span class="absolute top-3 left-3 z-10 px-3 py-1 rounded-full text-[9px] label uppercase bg-lux-bg/80 border border-white/10 text-lux-champ">Unisex</span>
+      <img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/ChatGPT_Image_Jun_13_2025_10_33_35_PM_v4zgvl" class="w-full h-full object-cover transition-transform duration-700" alt="Eleganza"/></div>
+      <p class="label uppercase text-[10px] text-lux-gold/90 mb-1">Bold</p><h3 class="font-display text-2xl text-white">Eleganza</h3>
+      <div class="flex items-center justify-between mt-3"><span class="font-serif text-xl text-lux-champ">RM 199.90</span><span class="text-lux-gold2">→</span></div></a>
+    <a href="#" class="card block rounded-2xl glass p-5"><div class="rounded-xl overflow-hidden aspect-[4/5] mb-5 bg-lux-ink2 relative">
+      <span class="absolute top-3 left-3 z-10 px-3 py-1 rounded-full text-[9px] label uppercase bg-lux-bg/80 border border-white/10 text-lux-champ">Unisex</span>
+      <img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/ELEGANZA_INTENSE_1_vacop3" class="w-full h-full object-cover transition-transform duration-700" alt="Eleganza Intense"/></div>
+      <p class="label uppercase text-[10px] text-lux-gold/90 mb-1">Intense</p><h3 class="font-display text-2xl text-white">Eleganza Intense</h3>
+      <div class="flex items-center justify-between mt-3"><span class="font-serif text-xl text-lux-champ">RM 199.90</span><span class="text-lux-gold2">→</span></div></a>
+    <a href="#" class="card block rounded-2xl glass p-5"><div class="rounded-xl overflow-hidden aspect-[4/5] mb-5 bg-lux-ink2 relative">
+      <span class="absolute top-3 left-3 z-10 px-3 py-1 rounded-full text-[9px] label uppercase bg-lux-bg/80 border border-white/10 text-lux-champ">Men</span>
+      <img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/4e95fbc1-d3d4-468d-b96a-f05b0c3a07b8_hcayoq" class="w-full h-full object-cover transition-transform duration-700" alt="Project K"/></div>
+      <p class="label uppercase text-[10px] text-lux-gold/90 mb-1">Woody</p><h3 class="font-display text-2xl text-white">Project K</h3>
+      <div class="flex items-center justify-between mt-3"><span class="font-serif text-xl text-lux-champ">RM 149.00</span><span class="text-lux-gold2">→</span></div></a>
+    <a href="#" class="card block rounded-2xl glass p-5"><div class="rounded-xl overflow-hidden aspect-[4/5] mb-5 bg-lux-ink2 relative">
+      <span class="absolute top-3 left-3 z-10 px-3 py-1 rounded-full text-[9px] label uppercase bg-lux-bg/80 border border-white/10 text-lux-champ">Unisex</span>
+      <img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/562705c8-58b3-48c4-a7d8-1baf1469b8ed_otdwt5" class="w-full h-full object-cover transition-transform duration-700" alt="Project M"/></div>
+      <p class="label uppercase text-[10px] text-lux-gold/90 mb-1">Fresh</p><h3 class="font-display text-2xl text-white">Project M</h3>
+      <div class="flex items-center justify-between mt-3"><span class="font-serif text-xl text-lux-champ">RM 169.00</span><span class="text-lux-gold2">→</span></div></a>
+    <a href="#" class="card block rounded-2xl glass p-5"><div class="rounded-xl overflow-hidden aspect-[4/5] mb-5 bg-lux-ink2 relative">
+      <span class="absolute top-3 left-3 z-10 px-3 py-1 rounded-full text-[9px] label uppercase bg-lux-bg/80 border border-white/10 text-lux-champ">Unisex</span>
+      <img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/n_long_promo_eelsgp" class="w-full h-full object-cover transition-transform duration-700" alt="Project N"/></div>
+      <p class="label uppercase text-[10px] text-lux-gold/90 mb-1">Fruity</p><h3 class="font-display text-2xl text-white">Project N</h3>
+      <div class="flex items-center justify-between mt-3"><span class="font-serif text-xl text-lux-champ">RM 169.00</span><span class="text-lux-gold2">→</span></div></a>
+    <a href="#" class="card block rounded-2xl glass p-5 items-center justify-center flex flex-col text-center border-dashed">
+      <div class="w-14 h-14 rounded-full border border-lux-gold/40 flex items-center justify-center mb-4 text-lux-gold2 text-2xl">✦</div>
+      <h3 class="font-display text-xl text-white mb-1">Not sure where to start?</h3>
+      <p class="text-sm text-lux-mut mb-4">Take the scent quiz.</p>
+      <span class="chip px-6 py-2.5 rounded-full text-[11px] label uppercase">Find your scent</span></a>
+  </div>
+</main>
+<footer class="relative z-10 border-t border-white/8 mt-6"><div class="max-w-screen-2xl mx-auto px-8 py-10 text-center text-[10px] label uppercase text-lux-mut">© 2026 Gérain Chan · Immersive Perfume · AR Experience</div></footer>
+</body></html>

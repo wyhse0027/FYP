@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eleganza — Product</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>tailwind.config={theme:{extend:{colors:{lux:{bg:"#070B14",ink:"#0B1222",ink2:"#0E1830",line:"#1C2740",gold:"#D4AF37",gold2:"#F3D37A",champ:"#F7E7CE",text:"#ECE7DD",mut:"#A9B0BE"}},fontFamily:{display:['"Playfair Display"','serif'],serif:['"Cormorant Garamond"','serif'],sans:['Inter','sans-serif']}}}}</script>
+<style>
+ body{background:#070B14}
+ .glass{background:linear-gradient(160deg,rgba(255,255,255,0.055),rgba(255,255,255,0.02));backdrop-filter:blur(16px);border:1px solid rgba(212,175,55,0.16)}
+ .label{letter-spacing:.34em}.rule{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.5),transparent)}
+ .glow{background:radial-gradient(60% 40% at 70% 0%,rgba(212,175,55,0.12),transparent 60%)}
+ .btn{position:relative;overflow:hidden;color:#070B14;background:linear-gradient(110deg,#D4AF37,#F3D37A 45%,#D4AF37);background-size:220% 100%;animation:pan 7s linear infinite;box-shadow:0 14px 40px -10px rgba(212,175,55,0.5)}
+ .btn::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,0.7),transparent);transform:skewX(-20deg)}
+ .btn:hover::after{animation:sweep .9s ease}
+ .ghost{border:1px solid rgba(212,175,55,0.45);color:#F7E7CE}.ghost:hover{border-color:#D4AF37;background:rgba(212,175,55,0.08)}
+ .stage{background:radial-gradient(120% 100% at 50% 20%,#16213f,#0a1124 55%,#070B14)}
+ @keyframes pan{0%{background-position:0 0}100%{background-position:220% 0}}@keyframes sweep{0%{left:-70%}100%{left:130%}}
+ @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.btn::after{display:none}}
+</style></head>
+<body class="font-sans text-lux-text antialiased">
+<div class="glow fixed inset-0 pointer-events-none"></div>
+<header class="relative z-20 border-b border-white/8"><div class="max-w-screen-2xl mx-auto px-8 h-20 grid grid-cols-3 items-center">
+  <nav class="flex items-center gap-9 text-[11px] label uppercase"><a class="text-lux-text hover:text-white" href="#">Home</a><a class="text-lux-text hover:text-white" href="#">Shop</a><a class="text-lux-text hover:text-white" href="#">Scent Quiz</a></nav>
+  <a href="#" class="text-center font-display text-2xl lg:text-[28px] tracking-[0.3em] text-white">GÉRAIN&nbsp;CHAN</a>
+  <div class="flex items-center justify-end gap-7 text-lux-text"><a href="#" class="text-[11px] label uppercase">Releases</a>
+   <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h2l2.4 12.3a2 2 0 0 0 2 1.7h7.7a2 2 0 0 0 2-1.6L22 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/></svg>
+   <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+</div></header>
+
+<main class="relative z-10 max-w-screen-2xl mx-auto px-8 py-10">
+  <p class="label uppercase text-[11px] text-lux-mut mb-8">Shop / Bold / <span class="text-lux-gold/80">Eleganza</span></p>
+  <div class="grid lg:grid-cols-2 gap-12 lg:gap-16">
+    <div>
+      <div class="stage relative rounded-3xl aspect-square glass overflow-hidden flex items-center justify-center">
+        <div class="absolute w-80 h-80 rounded-full" style="background:radial-gradient(circle,rgba(212,175,55,0.2),transparent 62%)"></div>
+        <img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/ChatGPT_Image_Jun_13_2025_10_33_35_PM_v4zgvl" class="relative max-h-[78%] object-contain drop-shadow-[0_30px_50px_rgba(0,0,0,0.7)]" alt="Eleganza"/>
+        <button class="ghost absolute bottom-5 right-5 px-5 py-2.5 rounded-full text-[11px] label uppercase inline-flex items-center gap-2 backdrop-blur"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2 4 6v6c0 5 3.4 7.7 8 10 4.6-2.3 8-5 8-10V6z"/></svg>View in AR</button>
+      </div>
+      <div class="grid grid-cols-4 gap-4 mt-4">
+        <div class="stage rounded-xl aspect-square border border-lux-gold/40 overflow-hidden"><img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/ChatGPT_Image_Jun_13_2025_10_33_35_PM_v4zgvl" class="w-full h-full object-cover"/></div>
+        <div class="stage rounded-xl aspect-square border border-white/8"></div>
+        <div class="stage rounded-xl aspect-square border border-white/8"></div>
+        <div class="stage rounded-xl aspect-square border border-white/8"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="flex items-center gap-3 mb-5">
+        <span class="px-3 py-1 rounded-full text-[10px] label uppercase border border-lux-gold/40 text-lux-gold2">Unisex</span>
+        <span class="label uppercase text-[11px] text-lux-mut">Bold · Eau de Parfum</span>
+      </div>
+      <h1 class="font-display text-6xl sm:text-7xl font-medium text-white leading-[0.95] mb-5">Eleganza</h1>
+      <div class="flex items-center gap-3 mb-7">
+        <div class="flex text-lux-gold2 text-lg">★★★★<span class="text-white/20">★</span></div>
+        <span class="text-sm text-lux-mut">4.6 · 9 reviews</span>
+      </div>
+      <p class="font-serif text-2xl text-lux-champ/85 leading-relaxed max-w-xl mb-8">A sophisticated, gender-neutral fragrance for those who command the room — a magnetic burst of black pepper and bergamot over a smoky heart of oud and crimson rose.</p>
+      <div class="rule mb-8"></div>
+      <div class="flex items-end justify-between mb-8">
+        <div><p class="label uppercase text-[10px] text-lux-mut mb-1">100 ml · Eau de Parfum</p><p class="font-display text-4xl text-white">RM 199.90</p></div>
+        <div class="flex items-center border border-white/15 rounded-full"><button class="w-11 h-11 text-lux-mut hover:text-lux-gold2">–</button><span class="w-8 text-center text-white">1</span><button class="w-11 h-11 text-lux-mut hover:text-lux-gold2">+</button></div>
+      </div>
+      <div class="flex flex-wrap gap-4 mb-10">
+        <button class="btn flex-1 min-w-[220px] px-8 py-4 rounded-full text-[12px] font-medium label uppercase">Add to Cart</button>
+        <button class="ghost px-8 py-4 rounded-full text-[12px] font-medium label uppercase inline-flex items-center gap-2"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2 4 6v6c0 5 3.4 7.7 8 10 4.6-2.3 8-5 8-10V6z"/></svg>Try AR</button>
+      </div>
+      <div class="glass rounded-2xl p-7 mb-6">
+        <p class="label uppercase text-[11px] text-lux-gold/85 mb-5">The Composition</p>
+        <div class="space-y-4">
+          <div class="flex items-baseline gap-5"><span class="w-16 label uppercase text-[10px] text-lux-mut">Top</span><span class="font-serif text-xl text-lux-champ">Black Pepper · Bergamot</span></div>
+          <div class="flex items-baseline gap-5"><span class="w-16 label uppercase text-[10px] text-lux-mut">Heart</span><span class="font-serif text-xl text-lux-champ">Oud · Crimson Rose</span></div>
+          <div class="flex items-baseline gap-5"><span class="w-16 label uppercase text-[10px] text-lux-mut">Base</span><span class="font-serif text-xl text-lux-champ">Amber · Leather</span></div>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2.5">
+        <span class="px-4 py-1.5 rounded-full text-[10px] label uppercase text-lux-mut border border-white/12">Oud</span><span class="px-4 py-1.5 rounded-full text-[10px] label uppercase text-lux-mut border border-white/12">Smoky</span><span class="px-4 py-1.5 rounded-full text-[10px] label uppercase text-lux-mut border border-white/12">Luxury</span><span class="px-4 py-1.5 rounded-full text-[10px] label uppercase text-lux-mut border border-white/12">Evening Wear</span><span class="px-4 py-1.5 rounded-full text-[10px] label uppercase text-lux-mut border border-white/12">Long-lasting</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="mt-20">
+    <div class="flex items-center gap-5 mb-8"><h2 class="font-display text-3xl text-white">Reviews</h2><div class="flex-1 rule"></div></div>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="glass rounded-2xl p-7"><div class="flex items-center justify-between mb-3"><span class="font-serif text-xl text-white">Aisha R.</span><span class="text-lux-gold2 text-sm">★★★★★</span></div><p class="text-sm leading-relaxed text-lux-mut">Unmatched longevity. The oud is rich but never heavy — exactly the evening signature I wanted.</p></div>
+      <div class="glass rounded-2xl p-7"><div class="flex items-center justify-between mb-3"><span class="font-serif text-xl text-white">Daniel T.</span><span class="text-lux-gold2 text-sm">★★★★<span class="text-white/20">★</span></span></div><p class="text-sm leading-relaxed text-lux-mut">The AR preview sold me before I ordered — seeing the bottle on my shelf was a lovely touch.</p></div>
+    </div>
+  </section>
+</main>
+<footer class="relative z-10 border-t border-white/8 mt-16"><div class="max-w-screen-2xl mx-auto px-8 py-10 text-center text-[10px] label uppercase text-lux-mut">© 2026 Gérain Chan · Immersive Perfume · AR Experience</div></footer>
+</body></html>
