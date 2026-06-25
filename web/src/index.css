@@ -71,15 +71,17 @@ body {
   .fld:focus { border-color: rgba(212,175,55,0.6); background: rgba(255,255,255,0.07); }
 }
 
-/* Releases coverflow — dim inactive slides, gold-frame the active one */
-.rel-card { transition: opacity .45s ease, border-color .45s ease; }
-.swiper-slide:not(.swiper-slide-active) .rel-card { opacity: 0.5; }
-.swiper-slide-active .rel-card { border-color: rgba(212,175,55,0.5) !important; }
-.releases-swiper .swiper-pagination-bullet { background: rgba(255,255,255,0.3); }
-.releases-swiper .swiper-pagination-bullet-active { background: #F3D37A; }
+/* Keyframes used by raw CSS classes (.btn-lux sheen/pan, .skel shimmer).
+   Defined here because Tailwind only emits theme keyframes when their
+   animate-* utility class is used in markup — these are referenced via
+   raw `animation:` declarations, so they must live in plain CSS. */
+@keyframes lux-pan { 0% { background-position: 0 0; } 100% { background-position: 220% 0; } }
+@keyframes lux-sweep { 0% { left: -70%; } 100% { left: 130%; } }
+@keyframes shimmer { 100% { transform: translateX(100%); } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+  .btn-lux::after { display: none; }
 }
 
 /* ================================
