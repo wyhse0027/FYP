@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eleganza — Releases (Timeline)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>tailwind.config={theme:{extend:{colors:{lux:{bg:"#070B14",ink:"#0B1222",ink2:"#0E1830",line:"#1C2740",gold:"#D4AF37",gold2:"#F3D37A",champ:"#F7E7CE",text:"#ECE7DD",mut:"#A9B0BE"}},fontFamily:{display:['"Playfair Display"','serif'],serif:['"Cormorant Garamond"','serif'],sans:['Inter','sans-serif']}}}}</script>
+<style>
+ body{background:#070B14}
+ .glass{background:linear-gradient(160deg,rgba(255,255,255,0.055),rgba(255,255,255,0.02));backdrop-filter:blur(16px);border:1px solid rgba(212,175,55,0.16)}
+ .label{letter-spacing:.34em}.rule{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.5),transparent)}
+ .glow{background:radial-gradient(55% 40% at 50% 0%,rgba(212,175,55,0.14),transparent 60%)}
+ .btn{position:relative;overflow:hidden;color:#070B14;background:linear-gradient(110deg,#D4AF37,#F3D37A 45%,#D4AF37);background-size:220% 100%;animation:pan 7s linear infinite}
+ .btn::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,0.7),transparent);transform:skewX(-20deg)}.btn:hover::after{animation:sweep .9s ease}
+ .ghost{border:1px solid rgba(212,175,55,0.45);color:#F7E7CE}.ghost:hover{border-color:#D4AF37;background:rgba(212,175,55,0.08)}
+ .rail{background:linear-gradient(180deg,rgba(212,175,55,0.5),rgba(212,175,55,0.12))}
+ @keyframes pan{0%{background-position:0 0}100%{background-position:220% 0}}@keyframes sweep{0%{left:-70%}100%{left:130%}}
+ @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.btn::after{display:none}}
+</style></head>
+<body class="font-sans text-lux-text antialiased">
+<div class="glow fixed inset-0 pointer-events-none"></div>
+
+<header class="relative z-20 border-b border-white/8"><div class="max-w-screen-2xl mx-auto px-8 h-20 grid grid-cols-3 items-center">
+  <nav class="flex items-center gap-9 text-[11px] label uppercase"><a class="text-lux-text hover:text-white" href="#">Home</a><a class="text-lux-text hover:text-white" href="#">Shop</a><a class="text-lux-text hover:text-white" href="#">Scent Quiz</a></nav>
+  <a href="#" class="text-center font-display text-2xl lg:text-[28px] tracking-[0.3em] text-white">GÉRAIN&nbsp;CHAN</a>
+  <div class="flex items-center justify-end gap-7 text-lux-text"><span class="text-[11px] label uppercase text-lux-gold2">Releases</span></div>
+</div></header>
+
+<main class="relative z-10 max-w-6xl mx-auto px-6 sm:px-8 py-14">
+  <div class="text-center mb-16">
+    <p class="label uppercase text-[11px] text-lux-gold2 mb-4">New &amp; Limited</p>
+    <h1 class="font-display text-5xl sm:text-6xl text-white mb-3">The Release Journal</h1>
+    <p class="font-serif italic text-xl sm:text-2xl text-lux-champ/85">Every drop, in the order it arrived.</p>
+  </div>
+
+  <!-- Timeline -->
+  <div class="relative pl-14 sm:pl-20">
+    <!-- vertical rail -->
+    <div class="rail absolute left-5 sm:left-7 top-2 bottom-24 w-px"></div>
+
+    <!-- entry 1 -->
+    <article class="relative mb-16">
+      <span class="absolute -left-[2.15rem] sm:-left-[3.05rem] top-1 w-9 h-9 rounded-full bg-lux-ink2 border border-lux-gold/50 text-lux-gold2 flex items-center justify-center text-[11px] label">01</span>
+      <p class="label uppercase text-[10px] text-lux-mut mb-3">24 Jun 2026 · Just Landed</p>
+      <div class="glass rounded-3xl overflow-hidden grid sm:grid-cols-2">
+        <div class="aspect-[4/3] sm:aspect-auto overflow-hidden bg-lux-ink2"><img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/ChatGPT_Image_Jun_13_2025_10_33_35_PM_v4zgvl" class="w-full h-full object-cover" alt="Eleganza"/></div>
+        <div class="p-8 flex flex-col justify-center">
+          <div class="flex gap-2 mb-3"><span class="px-3 py-1 rounded-full text-[9px] label uppercase border border-lux-gold/40 text-lux-gold2">New</span></div>
+          <p class="label uppercase text-[10px] text-lux-gold2 mb-2">Bold · Unisex</p>
+          <h2 class="font-display text-4xl text-white mb-3">Eleganza</h2>
+          <p class="font-serif italic text-xl text-lux-champ leading-relaxed mb-6">Black pepper and bergamot drawn into oud, crimson rose and leather.</p>
+          <a href="#" class="ghost self-start px-7 py-3 rounded-full text-[11px] label uppercase">Discover</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- entry 2 (image right) -->
+    <article class="relative mb-16">
+      <span class="absolute -left-[2.15rem] sm:-left-[3.05rem] top-1 w-9 h-9 rounded-full bg-lux-ink2 border border-lux-gold/50 text-lux-gold2 flex items-center justify-center text-[11px] label">02</span>
+      <p class="label uppercase text-[10px] text-lux-mut mb-3">11 Jun 2026 · Limited Edition</p>
+      <div class="glass rounded-3xl overflow-hidden grid sm:grid-cols-2">
+        <div class="p-8 flex flex-col justify-center order-2 sm:order-1">
+          <div class="flex gap-2 mb-3"><span class="px-3 py-1 rounded-full text-[9px] label uppercase border border-lux-gold/40 text-lux-gold2">Limited · 100</span></div>
+          <p class="label uppercase text-[10px] text-lux-gold2 mb-2">Intense · Unisex</p>
+          <h2 class="font-display text-4xl text-white mb-3">Eleganza Intense</h2>
+          <p class="font-serif italic text-xl text-lux-champ leading-relaxed mb-6">A deeper, smokier reading of the signature — for those who linger.</p>
+          <a href="#" class="ghost self-start px-7 py-3 rounded-full text-[11px] label uppercase">Discover</a>
+        </div>
+        <div class="aspect-[4/3] sm:aspect-auto overflow-hidden bg-lux-ink2 order-1 sm:order-2"><img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/ELEGANZA_INTENSE_1_vacop3" class="w-full h-full object-cover" alt="Eleganza Intense"/></div>
+      </div>
+    </article>
+
+    <!-- entry 3 -->
+    <article class="relative mb-16">
+      <span class="absolute -left-[2.15rem] sm:-left-[3.05rem] top-1 w-9 h-9 rounded-full bg-lux-ink2 border border-lux-gold/50 text-lux-gold2 flex items-center justify-center text-[11px] label">03</span>
+      <p class="label uppercase text-[10px] text-lux-mut mb-3">02 Jun 2026</p>
+      <div class="glass rounded-3xl overflow-hidden grid sm:grid-cols-2">
+        <div class="aspect-[4/3] sm:aspect-auto overflow-hidden bg-lux-ink2"><img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/4e95fbc1-d3d4-468d-b96a-f05b0c3a07b8_hcayoq" class="w-full h-full object-cover" alt="Project K"/></div>
+        <div class="p-8 flex flex-col justify-center">
+          <p class="label uppercase text-[10px] text-lux-gold2 mb-2">Woody · Men</p>
+          <h2 class="font-display text-4xl text-white mb-3">Project K</h2>
+          <p class="font-serif italic text-xl text-lux-champ leading-relaxed mb-6">Cedar, vetiver and a trail of warm amber for the evening.</p>
+          <a href="#" class="ghost self-start px-7 py-3 rounded-full text-[11px] label uppercase">Discover</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- next drop -->
+    <div class="relative">
+      <span class="absolute -left-[2.15rem] sm:-left-[3.05rem] top-1 w-9 h-9 rounded-full bg-lux-ink2 border border-dashed border-lux-gold/40 text-lux-gold2 flex items-center justify-center">✦</span>
+      <div class="glass rounded-3xl p-10 text-center border-dashed">
+        <p class="label uppercase text-[11px] text-lux-gold2 mb-3">Coming Soon</p>
+        <h3 class="font-display text-3xl text-white mb-3">The next chapter is in composition</h3>
+        <p class="text-lux-mut mb-7 max-w-md mx-auto">Be the first to know when the next fragrance is released.</p>
+        <a href="#" class="btn inline-block px-9 py-4 rounded-full text-[12px] font-medium label uppercase">Notify Me</a>
+      </div>
+    </div>
+  </div>
+</main>
+<footer class="relative z-10 border-t border-white/8 mt-6"><div class="max-w-screen-2xl mx-auto px-8 py-10 text-center text-[10px] label uppercase text-lux-mut">© 2026 Gérain Chan · Immersive Perfume · AR Experience</div></footer>
+</body></html>
