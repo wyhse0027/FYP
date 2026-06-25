@@ -15,7 +15,7 @@ function Toast({ message, type = "success", onClose }) {
   const bg =
     type === "error"
       ? "bg-red-600/90 border-red-400"
-      : "bg-green-600/90 border-green-400";
+      : "bg-luxury-gold/90 border-luxury-gold";
 
   useEffect(() => {
     const timer = setTimeout(onClose, 3000);
@@ -117,7 +117,7 @@ export default function AdminUsersPage() {
   if (err) return <div className="p-6 text-red-500">{err}</div>;
 
   return (
-    <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 lg:px-16">
+    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-16">
       <div className="max-w-6xl mx-auto py-6">
         <PageHeader title="Users Management" />
 
@@ -141,7 +141,7 @@ export default function AdminUsersPage() {
                   <td className="p-3">
                     <span
                       className={`px-2 py-1 rounded text-xs ${
-                        u.is_staff === true ? "bg-green-600" : "bg-gray-600"
+                        u.is_staff === true ? "bg-luxury-gold" : "bg-gray-600"
                       }`}
                     >
                       {u.role}
@@ -150,7 +150,7 @@ export default function AdminUsersPage() {
                   <td className="p-3 space-x-2">
                     <button
                       onClick={() => setDetails(u)}
-                      className="px-3 py-1 bg-sky-600 rounded hover:bg-sky-700 text-sm"
+                      className="px-3 py-1 bg-luxury-gold rounded hover:bg-luxury-gold text-sm"
                     >
                       View
                     </button>
@@ -180,7 +180,7 @@ export default function AdminUsersPage() {
         {/* Details Modal */}
         {details && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-40 px-4">
-            <div className="bg-[#0c1a3a] rounded-2xl p-6 sm:p-8 w-full max-w-4xl max-h-[85vh] overflow-y-auto">
+            <div className="bg-[#070B14] rounded-2xl p-6 sm:p-8 w-full max-w-4xl max-h-[85vh] overflow-y-auto">
               <h2 className="text-xl sm:text-2xl font-bold text-center mb-6">
                 User Profile — {details.username}
               </h2>

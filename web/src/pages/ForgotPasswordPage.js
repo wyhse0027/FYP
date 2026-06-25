@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-[#0c1a3a] relative overflow-hidden">
+    <div className="min-h-screen w-full flex bg-[#070B14] relative overflow-hidden">
       {/* shared background accents */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-24 left-1/4 w-[600px] h-[600px] bg-white/10 rounded-full blur-3xl" />
@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
                 <Send className="w-10 h-10 text-[rgba(212,175,55,0.95)]" />
               </div>
               <div className="absolute -top-2 -right-2 w-9 h-9 rounded-full bg-white flex items-center justify-center shadow">
-                <Sparkles className="w-4 h-4 text-[#0c1a3a]" />
+                <Sparkles className="w-4 h-4 text-[#070B14]" />
               </div>
             </div>
           </div>
@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
 
           <div className="mt-10 flex items-center gap-8 text-white text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <div className="w-2 h-2 rounded-full bg-luxury-gold" />
               <span>Secure Reset</span>
             </div>
             <div className="flex items-center gap-2">
@@ -146,8 +146,8 @@ export default function ForgotPasswordPage() {
               )}
 
               {msg && (
-                <div className="mb-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-emerald-200 text-sm flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <div className="mb-6 rounded-xl bg-luxury-gold/10 border border-luxury-gold/20 px-4 py-3 text-luxury-champagne text-sm flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-luxury-gold" />
                   {msg}
                 </div>
               )}
@@ -186,14 +186,14 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={busy}
-                  className="relative w-full h-14 rounded-xl font-extrabold text-[#0c1a3a] overflow-hidden group
+                  className="relative w-full h-14 rounded-xl font-extrabold text-[#070B14] overflow-hidden group
                              disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <div className="absolute inset-0 bg-white group-hover:bg-white/90 transition-all duration-300" />
                   <span className="relative flex items-center justify-center gap-2">
                     {busy ? (
                       <>
-                        <div className="w-5 h-5 border-2 border-[#0c1a3a]/30 border-t-[#0c1a3a] rounded-full animate-spin" />
+                        <div className="w-5 h-5 border-2 border-[#070B14]/30 border-t-[#070B14] rounded-full animate-spin" />
                         <span>Sending…</span>
                       </>
                     ) : (

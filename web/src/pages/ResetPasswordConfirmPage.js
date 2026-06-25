@@ -42,7 +42,7 @@ export default function ResetPasswordConfirmPage() {
   }, [done, navigate]);
 
   return (
-    <div className="min-h-screen w-full flex bg-[#0c1a3a] relative overflow-hidden">
+    <div className="min-h-screen w-full flex bg-[#070B14] relative overflow-hidden">
       {/* background accents */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-24 left-1/4 w-[600px] h-[600px] bg-white/10 rounded-full blur-3xl" />
@@ -124,8 +124,8 @@ export default function ResetPasswordConfirmPage() {
               )}
 
               {done && (
-                <div className="mb-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-emerald-200 text-sm flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <div className="mb-6 rounded-xl bg-luxury-gold/10 border border-luxury-gold/20 px-4 py-3 text-luxury-champagne text-sm flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-luxury-gold" />
                   Password reset successful! Redirecting to login…
                 </div>
               )}
@@ -190,14 +190,14 @@ export default function ResetPasswordConfirmPage() {
                 <button
                   type="submit"
                   disabled={busy || done}
-                  className="relative w-full h-14 rounded-xl font-extrabold text-[#0c1a3a] overflow-hidden group
+                  className="relative w-full h-14 rounded-xl font-extrabold text-[#070B14] overflow-hidden group
                              disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <div className="absolute inset-0 bg-white group-hover:bg-white/90 transition-all duration-300" />
                   <span className="relative flex items-center justify-center gap-2">
                     {busy ? (
                       <>
-                        <div className="w-5 h-5 border-2 border-[#0c1a3a]/30 border-t-[#0c1a3a] rounded-full animate-spin" />
+                        <div className="w-5 h-5 border-2 border-[#070B14]/30 border-t-[#070B14] rounded-full animate-spin" />
                         <span>Saving…</span>
                       </>
                     ) : (

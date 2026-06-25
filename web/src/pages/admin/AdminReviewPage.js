@@ -7,7 +7,7 @@ import { IoClose, IoAlertCircle, IoCheckmarkCircle } from "react-icons/io5";
 function Stars({ value }) {
   const n = Math.round(Number(value) || 0);
   return (
-    <span className="text-yellow-400">
+    <span className="text-luxury-gold">
       {"★".repeat(n)}
       {"☆".repeat(5 - n)}
     </span>
@@ -26,7 +26,7 @@ function Toast({ message, type = "success", onClose }) {
   const color =
     type === "error"
       ? "bg-red-600/90 border-red-400"
-      : "bg-green-600/90 border-green-400";
+      : "bg-luxury-gold/90 border-luxury-gold";
 
   return (
     <div
@@ -174,7 +174,7 @@ export default function AdminReviewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 lg:px-16">
+    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-16">
       <div className="max-w-6xl mx-auto py-6">
         <PageHeader title="Review Management" />
 
@@ -187,7 +187,7 @@ export default function AdminReviewPage() {
               setSelectedProduct(val);
               fetchReviews(val);
             }}
-            className="bg-[#10224e] text-white rounded-lg px-4 py-2 w-full sm:w-80 border border-white/20 outline-none focus:ring-2 focus:ring-sky-500 transition"
+            className="bg-[#10224e] text-white rounded-lg px-4 py-2 w-full sm:w-80 border border-white/20 outline-none focus:ring-2 focus:ring-luxury-gold transition"
           >
             <option value="">All Products</option>
             {products.map((p) => (
@@ -200,7 +200,7 @@ export default function AdminReviewPage() {
           <div className="flex gap-3 w-full sm:w-auto">
             <button
               onClick={() => fetchReviews(selectedProduct)}
-              className="px-5 py-2.5 bg-sky-600 rounded-lg hover:bg-sky-700 font-semibold text-white shadow-md transition w-full sm:w-auto"
+              className="px-5 py-2.5 bg-luxury-gold rounded-lg hover:bg-luxury-gold font-semibold text-white shadow-md transition w-full sm:w-auto"
             >
               Apply Filter
             </button>
@@ -324,7 +324,7 @@ export default function AdminReviewPage() {
                         className={`px-3 py-1.5 rounded-md text-sm font-semibold transition shadow-sm ${
                           expanded === r.id
                             ? "bg-gray-600 hover:bg-gray-700 text-white"
-                            : "bg-sky-600 hover:bg-sky-700 text-white"
+                            : "bg-luxury-gold hover:bg-luxury-gold text-white"
                         }`}
                       >
                         {expanded === r.id ? "Hide" : "View"}

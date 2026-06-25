@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eleganza — Releases (Cinematic)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>tailwind.config={theme:{extend:{colors:{lux:{bg:"#070B14",ink:"#0B1222",ink2:"#0E1830",line:"#1C2740",gold:"#D4AF37",gold2:"#F3D37A",champ:"#F7E7CE",text:"#ECE7DD",mut:"#A9B0BE"}},fontFamily:{display:['"Playfair Display"','serif'],serif:['"Cormorant Garamond"','serif'],sans:['Inter','sans-serif']}}}}</script>
+<style>
+ body{background:#070B14}
+ .glass{background:linear-gradient(160deg,rgba(255,255,255,0.055),rgba(255,255,255,0.02));backdrop-filter:blur(16px);border:1px solid rgba(212,175,55,0.16)}
+ .label{letter-spacing:.34em}.rule{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.5),transparent)}
+ .gold-text{background:linear-gradient(92deg,#F3D37A,#D4AF37 60%,#B8860B);-webkit-background-clip:text;background-clip:text;color:transparent}
+ .btn{position:relative;overflow:hidden;color:#070B14;background:linear-gradient(110deg,#D4AF37,#F3D37A 45%,#D4AF37);background-size:220% 100%;animation:pan 7s linear infinite}
+ .btn::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,0.7),transparent);transform:skewX(-20deg)}.btn:hover::after{animation:sweep .9s ease}
+ .ghost{border:1px solid rgba(212,175,55,0.45);color:#F7E7CE}.ghost:hover{border-color:#D4AF37;background:rgba(212,175,55,0.08)}
+ .card{transition:transform .5s,border-color .4s}.card:hover{transform:translateY(-6px);border-color:rgba(212,175,55,0.5)}
+ @keyframes pan{0%{background-position:0 0}100%{background-position:220% 0}}@keyframes sweep{0%{left:-70%}100%{left:130%}}
+ @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.btn::after{display:none}}
+</style></head>
+<body class="font-sans text-lux-text antialiased">
+
+<header class="absolute top-0 inset-x-0 z-30"><div class="max-w-screen-2xl mx-auto px-8 h-20 grid grid-cols-3 items-center">
+  <nav class="flex items-center gap-9 text-[11px] label uppercase"><a class="text-lux-text hover:text-white" href="#">Home</a><a class="text-lux-text hover:text-white" href="#">Shop</a><a class="text-lux-text hover:text-white" href="#">Scent Quiz</a></nav>
+  <a href="#" class="text-center font-display text-2xl lg:text-[28px] tracking-[0.3em] text-white">GÉRAIN&nbsp;CHAN</a>
+  <div class="flex items-center justify-end gap-7 text-lux-text"><span class="text-[11px] label uppercase text-lux-gold2">Releases</span></div>
+</div></header>
+
+<!-- Cinematic full-bleed hero -->
+<section class="relative h-screen min-h-[640px] overflow-hidden flex items-end">
+  <img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/n_long_promo_eelsgp" class="absolute inset-0 w-full h-full object-cover object-center" alt="Latest drop"/>
+  <div class="absolute inset-0" style="background:linear-gradient(180deg,rgba(7,11,20,0.6) 0%,rgba(7,11,20,0.15) 35%,rgba(7,11,20,0.97) 100%)"></div>
+  <div class="absolute inset-0" style="background:radial-gradient(60% 50% at 80% 30%,rgba(212,175,55,0.18),transparent 60%)"></div>
+  <div class="relative z-10 max-w-screen-2xl mx-auto px-8 pb-16 w-full">
+    <div class="flex items-center gap-3 mb-5">
+      <span class="px-3 py-1 rounded-full text-[10px] label uppercase bg-lux-gold text-lux-bg">Just Landed</span>
+      <span class="label uppercase text-[11px] text-lux-champ">24 Jun 2026</span>
+    </div>
+    <p class="label uppercase text-[11px] text-lux-gold2 mb-3">Fruity · Unisex</p>
+    <h1 class="font-display text-7xl sm:text-8xl text-white leading-[0.92] mb-5">Project&nbsp;N<br><span class="gold-text">Eau Fraîche</span></h1>
+    <p class="font-serif italic text-2xl sm:text-3xl text-lux-champ max-w-xl mb-8">Sun-ripened pear and grapefruit over a soft musk — the lightest chapter yet.</p>
+    <div class="flex flex-wrap items-center gap-5">
+      <a href="#" class="btn px-10 py-4 rounded-full text-[12px] font-medium label uppercase">Discover</a>
+      <a href="#" class="ghost px-10 py-4 rounded-full text-[12px] font-medium label uppercase">Notify on next drop</a>
+    </div>
+  </div>
+</section>
+
+<!-- Dated filmstrip -->
+<main class="relative z-10 max-w-screen-2xl mx-auto px-8 py-16">
+  <div class="flex items-center gap-6 mb-9">
+    <span class="font-display text-3xl text-white">The Drops</span>
+    <div class="flex-1 rule"></div>
+    <span class="text-[11px] label uppercase text-lux-mut">2026 Collection</span>
+  </div>
+
+  <div class="flex gap-6 overflow-x-auto pb-4">
+    <a href="#" class="card glass rounded-2xl overflow-hidden w-72 shrink-0">
+      <div class="relative aspect-[3/4] bg-lux-ink2"><img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/n_long_promo_eelsgp" class="w-full h-full object-cover" alt="Project N"/>
+        <span class="absolute top-3 left-3 px-3 py-1 rounded-full text-[9px] label uppercase bg-lux-gold text-lux-bg">New</span></div>
+      <div class="p-5"><p class="label uppercase text-[10px] text-lux-mut mb-1">24 Jun 2026</p><h3 class="font-display text-xl text-white">Project N</h3></div>
+    </a>
+    <a href="#" class="card glass rounded-2xl overflow-hidden w-72 shrink-0">
+      <div class="relative aspect-[3/4] bg-lux-ink2"><img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/ChatGPT_Image_Jun_13_2025_10_33_35_PM_v4zgvl" class="w-full h-full object-cover" alt="Eleganza"/></div>
+      <div class="p-5"><p class="label uppercase text-[10px] text-lux-mut mb-1">13 Jun 2026</p><h3 class="font-display text-xl text-white">Eleganza</h3></div>
+    </a>
+    <a href="#" class="card glass rounded-2xl overflow-hidden w-72 shrink-0">
+      <div class="relative aspect-[3/4] bg-lux-ink2"><img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/ELEGANZA_INTENSE_1_vacop3" class="w-full h-full object-cover" alt="Eleganza Intense"/>
+        <span class="absolute top-3 left-3 px-3 py-1 rounded-full text-[9px] label uppercase border border-lux-gold/40 text-lux-gold2 bg-lux-bg/70">Limited</span></div>
+      <div class="p-5"><p class="label uppercase text-[10px] text-lux-mut mb-1">11 Jun 2026</p><h3 class="font-display text-xl text-white">Eleganza Intense</h3></div>
+    </a>
+    <a href="#" class="card glass rounded-2xl overflow-hidden w-72 shrink-0">
+      <div class="relative aspect-[3/4] bg-lux-ink2"><img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/4e95fbc1-d3d4-468d-b96a-f05b0c3a07b8_hcayoq" class="w-full h-full object-cover" alt="Project K"/></div>
+      <div class="p-5"><p class="label uppercase text-[10px] text-lux-mut mb-1">02 Jun 2026</p><h3 class="font-display text-xl text-white">Project K</h3></div>
+    </a>
+    <a href="#" class="card glass rounded-2xl overflow-hidden w-72 shrink-0">
+      <div class="relative aspect-[3/4] bg-lux-ink2"><img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/562705c8-58b3-48c4-a7d8-1baf1469b8ed_otdwt5" class="w-full h-full object-cover" alt="Project M"/></div>
+      <div class="p-5"><p class="label uppercase text-[10px] text-lux-mut mb-1">20 May 2026</p><h3 class="font-display text-xl text-white">Project M</h3></div>
+    </a>
+  </div>
+</main>
+<footer class="relative z-10 border-t border-white/8 mt-6"><div class="max-w-screen-2xl mx-auto px-8 py-10 text-center text-[10px] label uppercase text-lux-mut">© 2026 Gérain Chan · Immersive Perfume · AR Experience</div></footer>
+</body></html>

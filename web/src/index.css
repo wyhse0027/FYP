@@ -4,11 +4,84 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #070B14;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@layer base {
+  /* Couture headings app-wide (Playfair). Per-element font-sans utility still overrides. */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  /* Signature CTA: panning gold + sheen that sweeps and disappears on hover */
+  .btn-lux {
+    position: relative; overflow: hidden; color: #070B14;
+    background: linear-gradient(110deg, #D4AF37, #F3D37A 45%, #D4AF37);
+    background-size: 220% 100%; animation: lux-pan 7s linear infinite;
+    box-shadow: 0 10px 34px rgba(212,175,55,0.28);
+  }
+  .btn-lux:hover { filter: brightness(1.06); }
+  .btn-lux::after {
+    content: ""; position: absolute; top: 0; left: -70%; width: 45%; height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255,255,255,0.65), transparent);
+    transform: skewX(-20deg);
+  }
+  .btn-lux:hover::after { animation: lux-sweep 0.9s ease; }
+  /* Shimmer skeleton (gold-tinted, replaces grey pulse) */
+  .skel { position: relative; overflow: hidden; background: rgba(255,255,255,0.05); }
+  .skel::after {
+    content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(212,175,55,0.22), transparent);
+    animation: shimmer 1.6s infinite;
+  }
+  /* Hairline gold rule */
+  .gold-rule { height: 1px; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.55), transparent); }
+  .rule { height: 1px; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.55), transparent); }
+
+  /* Frosted gold-tinted glass panel */
+  .glass {
+    background: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(212,175,55,0.16);
+  }
+  /* Couture tracking helper */
+  .label { letter-spacing: 0.34em; }
+  /* Gold radial glow (page atmosphere) — override position per page with inline style */
+  .glow { background: radial-gradient(60% 45% at 60% 0%, rgba(212,175,55,0.14), transparent 60%); }
+  /* Gold gradient clipped text */
+  .gold-text {
+    background: linear-gradient(92deg, #F3D37A, #D4AF37 60%, #B8860B);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  /* Ghost (secondary) button */
+  .ghost { border: 1px solid rgba(212,175,55,0.45); color: #F7E7CE; transition: .3s; }
+  .ghost:hover { border-color: #D4AF37; background: rgba(212,175,55,0.08); }
+  /* Product / collection card hover lift */
+  .card { transition: transform .5s cubic-bezier(.2,.7,.2,1), border-color .4s, box-shadow .4s; }
+  .card:hover { transform: translateY(-8px); border-color: rgba(212,175,55,0.5); box-shadow: 0 30px 70px -25px rgba(0,0,0,0.8); }
+  .card:hover img { transform: scale(1.05); }
+  /* Form field (dark glass input) */
+  .fld { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); transition: border-color .25s, background .25s; }
+  .fld:focus { border-color: rgba(212,175,55,0.6); background: rgba(255,255,255,0.07); }
+}
+
+/* Keyframes used by raw CSS classes (.btn-lux sheen/pan, .skel shimmer).
+   Defined here because Tailwind only emits theme keyframes when their
+   animate-* utility class is used in markup — these are referenced via
+   raw `animation:` declarations, so they must live in plain CSS. */
+@keyframes lux-pan { 0% { background-position: 0 0; } 100% { background-position: 220% 0; } }
+@keyframes lux-sweep { 0% { left: -70%; } 100% { left: 130%; } }
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .btn-lux::after { display: none; }
 }
 
 /* ================================

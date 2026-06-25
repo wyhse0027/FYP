@@ -6,7 +6,7 @@ function Toast({ message, type = "success", onClose }) {
   return (
     <div
       className={`fixed bottom-6 right-6 px-4 py-2 rounded-lg text-sm shadow-lg z-50 ${
-        type === "error" ? "bg-red-600" : "bg-green-600"
+        type === "error" ? "bg-red-600" : "bg-luxury-gold"
       }`}
     >
       <div className="flex items-center gap-2">
@@ -46,17 +46,17 @@ function ConfirmModal({ title, message, onCancel, onConfirm }) {
 
 // ✅ Payment display helpers
 const PAYMENT_STATUS_COLORS = {
-  PENDING: "text-yellow-300",
-  SUCCESS: "text-emerald-300",
-  FAILED: "text-rose-300",
-  CANCELLED: "text-rose-300",
+  PENDING: "text-luxury-gold2",
+  SUCCESS: "text-luxury-gold2",
+  FAILED: "text-luxury-gold",
+  CANCELLED: "text-luxury-gold",
 };
 
 const PAYMENT_METHOD_COLORS = {
   COD: "bg-slate-700",
-  CARD: "bg-blue-700",
-  FPX: "bg-indigo-700",
-  E_WALLET: "bg-purple-700",
+  CARD: "bg-luxury-gold",
+  FPX: "bg-luxury-gold",
+  E_WALLET: "bg-luxury-gold",
 };
 
 export default function AdminOrdersPage() {
@@ -131,20 +131,20 @@ export default function AdminOrdersPage() {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-[#0c1a3a] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#070B14] text-white flex items-center justify-center">
         Loading orders...
       </div>
     );
 
   if (error)
     return (
-      <div className="min-h-screen bg-[#0c1a3a] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#070B14] text-white flex items-center justify-center">
         {error}
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 py-6">
+    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 py-6">
       <div className="px-6 md:px-12">
         <PageHeader title="Orders Management" />
       </div>
@@ -156,12 +156,12 @@ export default function AdminOrdersPage() {
           placeholder="Search by Order ID or Username..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="px-4 py-2 rounded-md bg-[#1a2a5a] text-white border border-gray-600 w-full md:w-1/2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className="px-4 py-2 rounded-md bg-[#1a2a5a] text-white border border-gray-600 w-full md:w-1/2 focus:outline-none focus:ring-2 focus:ring-luxury-gold"
         />
         <select
           value={sortStatus}
           onChange={(e) => setSortStatus(e.target.value)}
-          className="px-4 py-2 rounded-md bg-[#1a2a5a] text-white border border-gray-600 w-full md:w-1/4 focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className="px-4 py-2 rounded-md bg-[#1a2a5a] text-white border border-gray-600 w-full md:w-1/4 focus:outline-none focus:ring-2 focus:ring-luxury-gold"
         >
           <option value="ALL">All Status</option>
           <option value="TO_PAY">To Pay</option>
@@ -214,15 +214,15 @@ export default function AdminOrdersPage() {
                       <span
                         className={`px-2 py-1 rounded-md text-sm font-semibold ${
                           order.status === "TO_PAY"
-                            ? "bg-yellow-600"
+                            ? "bg-luxury-gold"
                             : order.status === "TO_SHIP"
-                            ? "bg-blue-600"
+                            ? "bg-luxury-gold"
                             : order.status === "TO_RECEIVE"
-                            ? "bg-indigo-600"
+                            ? "bg-luxury-gold"
                             : order.status === "TO_RATE"
-                            ? "bg-orange-600"
+                            ? "bg-luxury-gold"
                             : order.status === "COMPLETED"
-                            ? "bg-green-700"
+                            ? "bg-luxury-gold"
                             : "bg-red-700"
                         }`}
                       >

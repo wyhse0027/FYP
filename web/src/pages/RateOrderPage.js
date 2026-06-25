@@ -8,7 +8,7 @@ const Star = ({ filled, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className={`text-2xl ${filled ? "text-yellow-400" : "text-gray-500"}`}
+    className={`text-2xl ${filled ? "text-luxury-gold" : "text-gray-500"}`}
     aria-label={filled ? "star-filled" : "star"}
   >
     ★
@@ -34,7 +34,7 @@ export default function RateOrderPage() {
 
   if (!order) {
     return (
-      <div className="min-h-screen w-full bg-[#0c1a3a] px-4 sm:px-6 md:px-10 lg:px-16 text-white">
+      <div className="min-h-screen w-full bg-[#070B14] px-4 sm:px-6 md:px-10 lg:px-16 text-white">
         <div className="mx-auto w-full max-w-screen-2xl py-8">
           <PageHeader title="Rate Order" />
           <div className="bg-white/5 rounded-xl p-6">Loading order…</div>
@@ -82,7 +82,7 @@ export default function RateOrderPage() {
 
   // ─── UI ─────────────────────────────
   return (
-    <div className="min-h-screen w-full bg-[#0c1a3a] px-4 sm:px-6 md:px-10 lg:px-16 text-white">
+    <div className="min-h-screen w-full bg-[#070B14] px-4 sm:px-6 md:px-10 lg:px-16 text-white">
       <div className="mx-auto w-full max-w-screen-2xl py-8">
         <PageHeader title="Rate your items" />
 
@@ -124,7 +124,7 @@ export default function RateOrderPage() {
                         {name}
                       </div>
                       <Link
-                        className="text-sky-400 text-sm sm:text-xs md:text-sm underline mt-1 xs:mt-0"
+                        className="text-luxury-gold text-sm sm:text-xs md:text-sm underline mt-1 xs:mt-0"
                         to={`/product/${pid}`}
                         target="_blank"
                         rel="noreferrer"
@@ -158,7 +158,7 @@ export default function RateOrderPage() {
                     {/* Comment */}
                     <textarea
                       rows={3}
-                      className="w-full bg-white/10 rounded-lg p-3 text-sm outline-none focus:ring-4 focus:ring-sky-500/30"
+                      className="w-full bg-white/10 rounded-lg p-3 text-sm outline-none focus:ring-4 focus:ring-luxury-gold/30"
                       placeholder="Tell others what you liked (optional)…"
                       value={comments[pid] || ""}
                       onChange={(e) =>
@@ -171,7 +171,7 @@ export default function RateOrderPage() {
 
                     {/* File upload – mobile-friendly button */}
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                      <label className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-sky-500 hover:bg-sky-600 text-sm font-semibold cursor-pointer w-full sm:w-auto text-center">
+                      <label className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-luxury-gold hover:bg-luxury-gold text-sm font-semibold cursor-pointer w-full sm:w-auto text-center">
                         Choose files
                         <input
                           type="file"
@@ -204,7 +204,7 @@ export default function RateOrderPage() {
           </button>
           <button
             onClick={onSubmit}
-            className="flex-1 bg-amber-500 hover:bg-amber-600 rounded-xl py-3 font-bold"
+            className="flex-1 bg-luxury-gold hover:bg-luxury-gold rounded-xl py-3 font-bold"
           >
             Submit reviews
           </button>

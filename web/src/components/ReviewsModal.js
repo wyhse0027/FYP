@@ -23,7 +23,7 @@ const ReviewsModal = ({ reviews, onClose }) => {
                             </div>
                             <div className="flex mb-2">
                                 {Array(5).fill(0).map((_, i) => (
-                                    <span key={i} className={i < review.rating ? 'text-yellow-400' : 'text-gray-500'}>★</span>
+                                    <span key={i} className={i < review.rating ? 'text-luxury-gold' : 'text-gray-500'}>★</span>
                                 ))}
                             </div>
                             <p className="text-gray-300 mb-2">{review.comment}</p>

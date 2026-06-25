@@ -90,10 +90,12 @@ export function AuthProvider({ children }) {
         } catch (e2) {
           clearAuth();
         }
-      } else {
-        // any other error: keep it strict
+      } else if (status === 401) {
+        // confirmed unauthorized with no refresh token: clear the session
         clearAuth();
       }
+      // Transient errors (network/CORS/5xx) must NOT clear the session — keep the
+      // cached user so the UI doesn't flicker guest↔loading on a hiccup.
     } finally {
       fetchingRef.current = false;
       setLoadingUser(false);

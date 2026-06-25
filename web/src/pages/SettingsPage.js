@@ -1,8 +1,8 @@
 // src/pages/SettingsPage.jsx
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import PageHeader from "../components/PageHeader";
 import ConfirmModal from "../components/ConfirmModal";
+import { Dropdown } from "../components/ui";
 import { getSettings, patchSettings, resetSettings } from "../store/settingsStore";
 import { resetProfile } from "../store/profileStore";
 import { useAuth } from "../context/AuthContext";
@@ -20,6 +20,12 @@ import {
   IoHelpCircleOutline,
   IoTrashBinOutline,
 } from "react-icons/io5";
+
+const LANGUAGE_OPTIONS = [
+  { value: "en", label: "English" },
+  { value: "ms", label: "Bahasa Melayu" },
+  { value: "zh", label: "中文" },
+];
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -58,181 +64,128 @@ export default function SettingsPage() {
     { k: "system", label: "System", Icon: IoDesktopOutline },
   ];
 
+  const links = [
+    { to: "/settings/about", Icon: IoInformationCircleOutline, label: "About Us" },
+    { to: "/settings/retailers", Icon: IoStorefrontOutline, label: "Boutiques" },
+    { to: "/settings/help", Icon: IoHelpCircleOutline, label: "Help Center" },
+  ];
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 relative overflow-hidden px-6 md:px-10 lg:px-16">
-      {/* Decorative blobs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-luxury-gold/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-cyan-400/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-0 w-64 h-64 bg-white/5 rounded-full blur-2xl" />
-      </div>
+    <div className="relative">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(60% 40% at 50% 0%,rgba(212,175,55,0.12),transparent 60%)" }}
+      />
 
-      <div className="relative z-10 mx-auto w-full max-w-[1600px] py-8 text-white">
-        <PageHeader title="Account Setting" />
+      <main className="relative z-10 max-w-screen-2xl mx-auto px-6 sm:px-8 py-12 md:py-14">
+        <div className="mb-10">
+          <p className="label uppercase text-[11px] text-luxury-gold2 mb-2">Your Preferences</p>
+          <h1 className="font-serif text-4xl sm:text-5xl text-white">Account Settings</h1>
+          <p className="font-cormorant italic text-xl text-luxury-champagne mt-2">
+            Tune the maison to your taste.
+          </p>
+        </div>
 
-        <div className="grid lg:grid-cols-3 gap-10">
-          {/* Left: Preferences */}
-          <section className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8 shadow-2xl">
-            <h2 className="text-2xl font-semibold mb-6">
-              <span className="bg-gradient-to-r from-luxury-gold via-luxury-gold-light to-luxury-gold bg-clip-text text-transparent">
-                Preferences
-              </span>
-            </h2>
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Preferences */}
+          <section className="glass rounded-3xl p-8">
+            <h2 className="font-serif text-2xl text-white mb-7">Preferences</h2>
 
             {/* Theme */}
-            <div className="mb-6">
-              <label className="block text-white/70 mb-2">Theme</label>
-
-              {/* mobile: 2 cols (Light/Dark), System spans full row
-                  sm+: 3 cols (Light/Dark/System all same row) */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {themeOptions.map(({ k, label, Icon }) => {
-                  const active = settings.theme === k;
-                  const isSystem = k === "system";
-                  const iconOnly = k === "light" || k === "dark"; // phone: icon-only
-
-                  return (
-                    <button
-                      key={k}
-                      onClick={() => update({ theme: k })}
-                      className={[
-                        "flex items-center justify-center gap-2 rounded-xl border transition-all duration-300",
-                        // sizing
-                        iconOnly
-                          ? "h-12 sm:h-14" // icon buttons shorter on mobile
-                          : "h-12 sm:h-14", // system same height
-                        // layout: System full width on mobile
-                        isSystem ? "col-span-2 sm:col-span-1" : "",
-                        // active styling
-                        active
-                          ? "border-luxury-gold/60 bg-luxury-gold/10 shadow-[0_0_30px_rgba(212,175,55,0.18)]"
-                          : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-luxury-gold/25",
-                        // icon-only buttons can be more square-ish on mobile
-                        iconOnly ? "px-0" : "px-4",
-                      ].join(" ")}
-                      aria-label={label}
-                      title={label}
-                    >
-                      <Icon
-                        className={[
-                          "text-xl",
-                          active ? "text-luxury-gold-light" : "text-white/80",
-                          iconOnly ? "text-2xl" : "", // slightly bigger icon on mobile
-                        ].join(" ")}
-                      />
-
-                      {/* Text rules:
-                          - Light/Dark: hide on mobile, show on sm+
-                          - System: always show text (so it looks like a proper full-width button) */}
-                      <span
-                        className={[
-                          "font-medium",
-                          active ? "text-white" : "text-white/80",
-                          iconOnly ? "hidden sm:inline" : "inline",
-                        ].join(" ")}
-                      >
-                        {label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+            <p className="label uppercase text-[11px] text-luxury-mut mb-3">Theme</p>
+            <div className="grid grid-cols-3 gap-3 mb-7">
+              {themeOptions.map(({ k, label, Icon }) => {
+                const active = settings.theme === k;
+                return (
+                  <button
+                    key={k}
+                    onClick={() => update({ theme: k })}
+                    className={`rounded-xl h-14 flex items-center justify-center gap-2 text-sm border transition ${
+                      active
+                        ? "border-luxury-gold/70 bg-luxury-gold/12 text-luxury-champagne"
+                        : "border-white/12 text-luxury-mut hover:border-luxury-gold/40 hover:text-white"
+                    }`}
+                    aria-pressed={active}
+                  >
+                    <Icon className="text-xl" />
+                    <span className="hidden sm:inline">{label}</span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Language */}
-            <div className="mb-6">
-              <label className="block text-white/70 mb-2">Language</label>
-
-              <div className="relative">
-                {/* left icon */}
-                <IoLanguageOutline
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60 pointer-events-none"
-                />
-
-                <select
-                  value={settings.language}
-                  onChange={(e) => update({ language: e.target.value })}
-                  className="
-                    w-full appearance-none
-                    bg-white/10 border border-white/15 rounded-xl
-                    pl-10 pr-9 py-3
-                    text-white outline-none
-                    focus:border-luxury-gold/50 focus:ring-4 focus:ring-luxury-gold/20
-                  "
-                >
-                  <option className="bg-slate-900" value="en">English</option>
-                  <option className="bg-slate-900" value="ms">Bahasa Melayu</option>
-                  <option className="bg-slate-900" value="zh">中文</option>
-                </select>
-
-                {/* custom dropdown chevron (centers better than native) */}
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white/60">
-                  ▼
-                </span>
-              </div>
+            <p className="label uppercase text-[11px] text-luxury-mut mb-3">Language</p>
+            <div className="mb-7">
+              <Dropdown
+                value={settings.language}
+                onChange={(v) => update({ language: v })}
+                options={LANGUAGE_OPTIONS}
+                leftIcon={<IoLanguageOutline className="text-luxury-gold2 shrink-0" />}
+                className="fld rounded-xl px-4 py-3.5 w-full text-luxury-text"
+                menuClassName="w-full"
+              />
             </div>
 
             {/* Notifications */}
-            <div className="mb-6">
-              <label className="block text-white/70 mb-2">Notifications</label>
-              <div className="space-y-3">
-                <ToggleRow
-                  checked={settings.notifications.email}
-                  onChange={(v) => updateNotifications({ email: v })}
-                  icon={<IoMailOutline className="text-xl" />}
-                  label="Email updates"
-                />
-                <ToggleRow
-                  checked={settings.notifications.push}
-                  onChange={(v) => updateNotifications({ push: v })}
-                  icon={<IoNotificationsOutline className="text-xl" />}
-                  label="Push notifications"
-                />
-                <ToggleRow
-                  checked={settings.notifications.sms}
-                  onChange={(v) => updateNotifications({ sms: v })}
-                  icon={<IoChatbubbleOutline className="text-xl" />}
-                  label="SMS alerts"
-                />
-              </div>
+            <p className="label uppercase text-[11px] text-luxury-mut mb-3">Notifications</p>
+            <div className="space-y-3 mb-8">
+              <ToggleRow
+                checked={settings.notifications.email}
+                onChange={(v) => updateNotifications({ email: v })}
+                icon={<IoMailOutline />}
+                label="Email updates"
+              />
+              <ToggleRow
+                checked={settings.notifications.push}
+                onChange={(v) => updateNotifications({ push: v })}
+                icon={<IoNotificationsOutline />}
+                label="Push notifications"
+              />
+              <ToggleRow
+                checked={settings.notifications.sms}
+                onChange={(v) => updateNotifications({ sms: v })}
+                icon={<IoChatbubbleOutline />}
+                label="SMS alerts"
+              />
             </div>
 
             <button
               onClick={save}
-              className="w-full h-14 rounded-xl font-extrabold text-slate-900
-                         bg-gradient-to-r from-luxury-gold to-luxury-gold-light
-                         shadow-lg shadow-luxury-gold/20 hover:shadow-luxury-gold/35
-                         transition-all duration-300"
+              className="btn-lux w-full py-4 rounded-full text-[12px] font-medium label uppercase"
             >
-              Save changes
+              Save Changes
             </button>
           </section>
 
-          {/* Right: Quick links + Danger zone */}
-          <section className="lg:col-span-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8 shadow-2xl">
-            <h2 className="text-2xl font-semibold mb-6">
-              <span className="bg-gradient-to-r from-luxury-gold via-luxury-gold-light to-luxury-gold bg-clip-text text-transparent">
-                More
-              </span>
-            </h2>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              <LinkCard to="/settings/about" Icon={IoInformationCircleOutline} label="About Us" />
-              <LinkCard to="/settings/retailers" Icon={IoStorefrontOutline} label="Retailers" />
-              <LinkCard to="/settings/help" Icon={IoHelpCircleOutline} label="Help Center" />
+          {/* More + Danger */}
+          <section className="lg:col-span-2 space-y-8">
+            <div className="glass rounded-3xl p-8">
+              <h2 className="font-serif text-2xl text-white mb-7">More</h2>
+              <div className="grid sm:grid-cols-3 gap-5">
+                {links.map(({ to, Icon, label }) => (
+                  <Link key={to} to={to} className="item glass rounded-2xl p-6 text-center">
+                    <div className="w-12 h-12 mx-auto rounded-xl bg-luxury-gold/10 border border-luxury-gold/25 flex items-center justify-center mb-4 text-luxury-gold2">
+                      <Icon className="text-xl" />
+                    </div>
+                    <p className="font-serif text-lg text-white">{label}</p>
+                  </Link>
+                ))}
+              </div>
             </div>
 
-            <div className="mt-10 border-t border-white/10 pt-8">
-              <h3 className="text-xl font-semibold mb-3">Danger zone</h3>
+            <div className="glass rounded-3xl p-8">
+              <p className="label uppercase text-[11px] text-red-300/80 mb-2">Danger Zone</p>
+              <h3 className="font-serif text-2xl text-white mb-1">Delete account</h3>
+              <p className="text-sm text-luxury-mut mb-6">
+                This removes your profile &amp; settings on this device and signs you out.
+              </p>
               <button
                 onClick={() => setConfirm(true)}
-                className="w-full md:w-auto h-12 px-6 rounded-xl
-                           bg-rose-500/15 border border-rose-500/25 text-rose-200
-                           hover:bg-rose-500/20 hover:border-rose-500/35
-                           transition-all duration-300 flex items-center gap-3"
+                className="px-7 py-3 rounded-full text-[11px] label uppercase border border-red-500/50 text-red-300 hover:bg-red-500/10 transition inline-flex items-center gap-2"
               >
-                <IoTrashBinOutline className="text-xl" />
-                <span className="font-semibold">Delete my account</span>
+                <IoTrashBinOutline className="text-base" />
+                Delete my account
               </button>
             </div>
           </section>
@@ -248,45 +201,36 @@ export default function SettingsPage() {
           onCancel={() => setConfirm(false)}
           onConfirm={doDelete}
         />
-      </div>
+      </main>
     </div>
   );
 }
 
 function ToggleRow({ checked, onChange, icon, label }) {
   return (
-    <label className="flex items-center justify-between rounded-xl px-4 py-3
-                      bg-white/5 border border-white/10 hover:border-luxury-gold/20
-                      transition-all duration-300">
-      <span className="flex items-center gap-3 text-white/85">
-        <span className="p-2 rounded-lg bg-white/5 border border-white/10 text-luxury-gold-light">
+    <div className="item glass rounded-xl px-4 py-3 flex items-center justify-between">
+      <span className="inline-flex items-center gap-3 text-luxury-text">
+        <span className="w-9 h-9 rounded-lg bg-luxury-gold/10 border border-luxury-gold/25 flex items-center justify-center text-luxury-gold2">
           {icon}
         </span>
         <span className="font-medium">{label}</span>
       </span>
-
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="h-5 w-5 accent-[rgb(212,175,55)]"
-      />
-    </label>
-  );
-}
-
-function LinkCard({ to, Icon, label }) {
-  return (
-    <Link
-      to={to}
-      className="group h-28 rounded-2xl bg-white/5 border border-white/10
-                 hover:bg-white/10 hover:border-luxury-gold/25
-                 transition-all duration-300 flex items-center justify-center gap-3"
-    >
-      <Icon className="text-3xl text-luxury-gold/80 group-hover:text-luxury-gold-light transition-colors" />
-      <span className="text-xl font-semibold text-white/90 group-hover:text-white transition-colors">
-        {label}
-      </span>
-    </Link>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={`w-11 h-6 rounded-full relative transition-colors duration-300 ${
+          checked ? "bg-luxury-gold" : "bg-white/12"
+        }`}
+        aria-label={label}
+      >
+        <span
+          className={`absolute top-0.5 w-5 h-5 rounded-full transition-all duration-300 ${
+            checked ? "left-[22px] bg-luxury-bg" : "left-0.5 bg-white/70"
+          }`}
+        />
+      </button>
+    </div>
   );
 }

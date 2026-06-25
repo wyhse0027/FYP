@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eleganza — The Maison</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>tailwind.config={theme:{extend:{colors:{lux:{bg:"#070B14",ink:"#0B1222",ink2:"#0E1830",line:"#1C2740",gold:"#D4AF37",gold2:"#F3D37A",champ:"#F7E7CE",text:"#ECE7DD",mut:"#A9B0BE"}},fontFamily:{display:['"Playfair Display"','serif'],serif:['"Cormorant Garamond"','serif'],sans:['Inter','sans-serif']}}}}</script>
+<style>
+ body{background:#070B14}
+ .glass{background:linear-gradient(160deg,rgba(255,255,255,0.055),rgba(255,255,255,0.02));backdrop-filter:blur(16px);border:1px solid rgba(212,175,55,0.16)}
+ .label{letter-spacing:.34em}.rule{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.5),transparent)}
+ .soc{border:1px solid rgba(212,175,55,0.4);color:#F3D37A;transition:.3s}.soc:hover{background:#D4AF37;color:#070B14;border-color:#D4AF37}
+ @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body class="font-sans text-lux-text antialiased">
+
+<!-- Nav -->
+<header class="relative z-20 border-b border-white/8"><div class="max-w-screen-2xl mx-auto px-8 h-20 grid grid-cols-3 items-center">
+  <nav class="flex items-center gap-9 text-[11px] label uppercase"><a class="text-lux-text hover:text-white" href="#">Home</a><a class="text-lux-text hover:text-white" href="#">Shop</a><a class="text-lux-text hover:text-white" href="#">Scent Quiz</a></nav>
+  <a href="#" class="text-center font-display text-2xl lg:text-[28px] tracking-[0.3em] text-white">GÉRAIN&nbsp;CHAN</a>
+  <div class="flex items-center justify-end gap-7 text-lux-text"><a href="#" class="text-[11px] label uppercase text-lux-gold2">Releases</a></div>
+</div></header>
+
+<!-- Editorial hero -->
+<section class="relative h-[62vh] min-h-[420px] overflow-hidden flex items-end">
+  <img src="https://storage.googleapis.com/eleganza-ar-media-439528178601/products/cards/n_long_promo_eelsgp" class="absolute inset-0 w-full h-full object-cover object-center" alt="The maison"/>
+  <div class="absolute inset-0" style="background:linear-gradient(180deg,rgba(7,11,20,0.55) 0%,rgba(7,11,20,0.25) 40%,rgba(7,11,20,0.96) 100%)"></div>
+  <div class="relative z-10 max-w-screen-2xl mx-auto px-8 pb-14 w-full">
+    <p class="label uppercase text-[11px] text-lux-gold2 mb-4">The House</p>
+    <h1 class="font-display text-5xl sm:text-7xl text-white leading-[0.95] mb-4">Gérain Chan</h1>
+    <p class="font-serif italic text-2xl sm:text-3xl text-lux-champ/85 max-w-2xl">Where scent, storytelling and technology become one.</p>
+  </div>
+</section>
+
+<!-- Story -->
+<section class="relative z-10 max-w-3xl mx-auto px-8 py-16 text-center">
+  <div class="w-16 rule mx-auto mb-8"></div>
+  <p class="font-serif italic text-2xl sm:text-3xl text-lux-champ leading-relaxed mb-8">
+    A modern maison born in Kota Kinabalu — composing fragrances that live as much in memory as in the air.
+  </p>
+  <p class="text-base text-lux-mut leading-relaxed">
+    Every Gérain Chan creation is an encounter: a bottle you can place in your own world through augmented reality,
+    a scent profiled to your character, and a story that lingers long after the room empties. We blend old-world
+    perfumery with the tools of the digital age — so discovery feels personal, immersive and quietly unforgettable.
+  </p>
+</section>
+
+<!-- Mission / Vision -->
+<section class="relative z-10 max-w-screen-2xl mx-auto px-8 pb-6">
+  <div class="flex flex-wrap justify-center gap-7">
+    <div class="glass rounded-3xl p-9 w-full md:w-[calc(50%-0.875rem)] max-w-2xl">
+      <p class="label uppercase text-[11px] text-lux-gold2 mb-3">Our Mission</p>
+      <h3 class="font-display text-3xl text-white mb-4">Scent, made personal</h3>
+      <p class="text-lux-mut leading-relaxed">To make luxury fragrance feel personal and immersive — guiding every visitor to a signature scent that is unmistakably theirs, online or in person.</p>
+    </div>
+    <div class="glass rounded-3xl p-9 w-full md:w-[calc(50%-0.875rem)] max-w-2xl">
+      <p class="label uppercase text-[11px] text-lux-gold2 mb-3">Our Vision</p>
+      <h3 class="font-display text-3xl text-white mb-4">The future of perfumery</h3>
+      <p class="text-lux-mut leading-relaxed">A house where artistry and technology meet — where augmented reality, scent personas and craft come together to redefine how the world discovers perfume.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Contact + Follow -->
+<section class="relative z-10 max-w-screen-2xl mx-auto px-8 py-12">
+  <div class="flex flex-wrap justify-center gap-7">
+    <!-- Contact -->
+    <div class="glass rounded-3xl p-9 w-full md:w-[calc(50%-0.875rem)] max-w-2xl">
+      <p class="label uppercase text-[11px] text-lux-gold2 mb-6">Contact Us</p>
+      <div class="space-y-5">
+        <div class="flex items-center gap-4">
+          <span class="w-11 h-11 rounded-xl bg-lux-gold/10 border border-lux-gold/25 flex items-center justify-center text-lux-gold2 shrink-0"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+          <a href="#" class="text-lux-text hover:text-lux-gold2 transition">hello@gerainchan.com</a>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="w-11 h-11 rounded-xl bg-lux-gold/10 border border-lux-gold/25 flex items-center justify-center text-lux-gold2 shrink-0"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5c0 8.3 6.7 15 15 15a2 2 0 0 0 2-2v-2.5a1 1 0 0 0-.8-1l-3.4-.7a1 1 0 0 0-1 .3l-1 1.2a12 12 0 0 1-5.3-5.3l1.2-1a1 1 0 0 0 .3-1L9.5 4.8a1 1 0 0 0-1-.8H6a2 2 0 0 0-2 2z"/></svg></span>
+          <a href="#" class="text-lux-text hover:text-lux-gold2 transition">+60 88-247 767</a>
+        </div>
+        <div class="flex items-start gap-4">
+          <span class="w-11 h-11 rounded-xl bg-lux-gold/10 border border-lux-gold/25 flex items-center justify-center text-lux-gold2 shrink-0"><svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-5.2-7-11a7 7 0 1 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
+          <span class="text-lux-mut leading-relaxed">Suria Sabah, Kota Kinabalu, Sabah, Malaysia</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Follow -->
+    <div class="glass rounded-3xl p-9 w-full md:w-[calc(50%-0.875rem)] max-w-2xl flex flex-col">
+      <p class="label uppercase text-[11px] text-lux-gold2 mb-6">Follow the House</p>
+      <p class="text-lux-mut leading-relaxed mb-7">Step behind the scenes — new releases, AR experiences and the people who compose them.</p>
+      <div class="flex flex-wrap gap-4 mt-auto">
+        <a href="#" class="soc w-14 h-14 rounded-full flex items-center justify-center"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></a>
+        <a href="#" class="soc w-14 h-14 rounded-full flex items-center justify-center"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M13 22v-8h3l1-4h-4V7.5c0-1 .3-1.7 1.8-1.7H17V2.2A24 24 0 0 0 14.6 2C12 2 10 3.7 10 6.9V10H7v4h3v8z"/></svg></a>
+        <a href="#" class="soc w-14 h-14 rounded-full flex items-center justify-center"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M14 3v10.5a3.5 3.5 0 1 1-2-3.16V3zm2 0a4 4 0 0 0 4 4V5a2 2 0 0 1-2-2z"/></svg></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="relative z-10 border-t border-white/8 mt-6"><div class="max-w-screen-2xl mx-auto px-8 py-10 text-center text-[10px] label uppercase text-lux-mut">© 2026 Gérain Chan · Crafted with emotion, art &amp; technology</div></footer>
+</body></html>

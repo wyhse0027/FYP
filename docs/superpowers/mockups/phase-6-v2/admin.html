@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eleganza — Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>tailwind.config={theme:{extend:{colors:{lux:{bg:"#070B14",ink:"#0B1222",ink2:"#0E1830",gold:"#D4AF37",gold2:"#F3D37A",champ:"#F7E7CE",text:"#ECE7DD",mut:"#A9B0BE"}},fontFamily:{display:['"Playfair Display"','serif'],serif:['"Cormorant Garamond"','serif'],sans:['Inter','sans-serif']}}}}</script>
+<style> body{background:#070B14}.glass{background:linear-gradient(160deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02));backdrop-filter:blur(16px);border:1px solid rgba(212,175,55,0.14)}
+ .label{letter-spacing:.32em}.glow{background:radial-gradient(50% 30% at 80% 0%,rgba(212,175,55,0.1),transparent 60%)}
+ .nav-on{background:rgba(212,175,55,0.12);color:#F7E7CE;border-left:2px solid #D4AF37}.nav{color:#A9B0BE;border-left:2px solid transparent}.nav:hover{color:#fff}
+ @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}</style></head>
+<body class="font-sans text-lux-text antialiased">
+<div class="glow fixed inset-0 pointer-events-none"></div>
+<div class="flex min-h-screen">
+  <!-- Sidebar -->
+  <aside class="hidden lg:flex flex-col w-64 border-r border-white/8 p-6 shrink-0">
+    <a href="#" class="font-display text-lg tracking-[0.25em] text-white mb-10">GÉRAIN CHAN</a>
+    <p class="label uppercase text-[10px] text-lux-mut mb-3 px-3">Manage</p>
+    <nav class="space-y-1 text-sm">
+      <a href="#" class="nav-on flex items-center gap-3 px-3 py-2.5 rounded-r-lg">Dashboard</a>
+      <a href="#" class="nav flex items-center gap-3 px-3 py-2.5 rounded-r-lg">Products</a>
+      <a href="#" class="nav flex items-center gap-3 px-3 py-2.5 rounded-r-lg">Orders</a>
+      <a href="#" class="nav flex items-center gap-3 px-3 py-2.5 rounded-r-lg">Users</a>
+      <a href="#" class="nav flex items-center gap-3 px-3 py-2.5 rounded-r-lg">Reviews</a>
+      <a href="#" class="nav flex items-center gap-3 px-3 py-2.5 rounded-r-lg">AR Experiences</a>
+      <a href="#" class="nav flex items-center gap-3 px-3 py-2.5 rounded-r-lg">Scent Personas</a>
+    </nav>
+  </aside>
+  <!-- Main -->
+  <main class="flex-1 px-8 py-8 relative z-10">
+    <div class="flex items-center justify-between mb-8">
+      <div><p class="label uppercase text-[11px] text-lux-gold/80 mb-2">Maison Admin</p><h1 class="font-display text-4xl text-white">Dashboard</h1></div>
+      <div class="flex items-center gap-3"><span class="w-9 h-9 rounded-full bg-lux-ink2 border border-lux-gold/30"></span></div>
+    </div>
+    <!-- Stats -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+      <div class="glass rounded-2xl p-6"><p class="label uppercase text-[10px] text-lux-mut mb-2">Revenue</p><p class="font-display text-3xl text-white">RM 12,480</p><p class="text-xs text-lux-gold2 mt-2">▲ 8.2% this month</p></div>
+      <div class="glass rounded-2xl p-6"><p class="label uppercase text-[10px] text-lux-mut mb-2">Orders</p><p class="font-display text-3xl text-white">16</p><p class="text-xs text-lux-mut mt-2">3 awaiting fulfilment</p></div>
+      <div class="glass rounded-2xl p-6"><p class="label uppercase text-[10px] text-lux-mut mb-2">Products</p><p class="font-display text-3xl text-white">5</p><p class="text-xs text-lux-mut mt-2">All in stock</p></div>
+      <div class="glass rounded-2xl p-6"><p class="label uppercase text-[10px] text-lux-mut mb-2">Customers</p><p class="font-display text-3xl text-white">8</p><p class="text-xs text-lux-gold2 mt-2">▲ 2 new</p></div>
+    </div>
+    <!-- Table -->
+    <div class="glass rounded-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-5 border-b border-white/8">
+        <h2 class="font-display text-xl text-white">Recent Orders</h2>
+        <button class="px-5 py-2 rounded-full text-[10px] label uppercase bg-gradient-to-r from-lux-gold to-lux-gold2 text-lux-bg">Export</button>
+      </div>
+      <table class="w-full text-sm">
+        <thead><tr class="text-left text-[10px] label uppercase text-lux-mut border-b border-white/8">
+          <th class="px-6 py-4 font-medium">Order</th><th class="px-6 py-4 font-medium">Customer</th><th class="px-6 py-4 font-medium">Total</th><th class="px-6 py-4 font-medium">Status</th><th class="px-6 py-4 font-medium text-right">Action</th></tr></thead>
+        <tbody class="text-lux-text">
+          <tr class="border-b border-white/5 hover:bg-white/[0.03]"><td class="px-6 py-4 font-medium text-white">#ELZ-1042</td><td class="px-6 py-4">Aisha Rahman</td><td class="px-6 py-4 font-serif text-lux-champ text-base">RM 348.90</td><td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-[10px] label uppercase border border-lux-gold/30 text-lux-gold2">Shipped</span></td><td class="px-6 py-4 text-right text-lux-gold2">View →</td></tr>
+          <tr class="border-b border-white/5 hover:bg-white/[0.03]"><td class="px-6 py-4 font-medium text-white">#ELZ-1041</td><td class="px-6 py-4">Daniel Tan</td><td class="px-6 py-4 font-serif text-lux-champ text-base">RM 199.90</td><td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-[10px] label uppercase border border-amber-400/30 text-amber-200">To Pay</span></td><td class="px-6 py-4 text-right text-lux-gold2">View →</td></tr>
+          <tr class="border-b border-white/5 hover:bg-white/[0.03]"><td class="px-6 py-4 font-medium text-white">#ELZ-1040</td><td class="px-6 py-4">Mei Ling</td><td class="px-6 py-4 font-serif text-lux-champ text-base">RM 318.00</td><td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-[10px] label uppercase border border-white/15 text-lux-mut">Completed</span></td><td class="px-6 py-4 text-right text-lux-gold2">View →</td></tr>
+          <tr class="hover:bg-white/[0.03]"><td class="px-6 py-4 font-medium text-white">#ELZ-1039</td><td class="px-6 py-4">Jing Ning</td><td class="px-6 py-4 font-serif text-lux-champ text-base">RM 149.00</td><td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-[10px] label uppercase border border-lux-gold/30 text-lux-gold2">Shipped</span></td><td class="px-6 py-4 text-right text-lux-gold2">View →</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+</body></html>

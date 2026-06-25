@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eleganza — Home (Phase 6 mockup)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>
+tailwind.config = { theme: { extend: {
+  colors:{ luxury:{ bg:"#070B14",panel:"#0B1222",panel2:"#0E1830",gold:"#D4AF37",gold2:"#F3D37A",champagne:"#F7E7CE" } },
+  fontFamily:{ display:['"Playfair Display"','serif'], serif:['"Cormorant Garamond"','serif'], sans:['Inter','sans-serif'] },
+  boxShadow:{ gold:"0 0 0 1px rgba(212,175,55,0.20), 0 24px 70px rgba(0,0,0,0.55)" },
+} } }
+</script>
+<style>
+  body{background:#070B14}
+  .glass{background:linear-gradient(160deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02));backdrop-filter:blur(14px);border:1px solid rgba(212,175,55,0.14)}
+  .label{letter-spacing:.30em}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.55),transparent)}
+  .glow{background:radial-gradient(70% 40% at 50% -5%,rgba(212,175,55,0.14),transparent 60%)}
+  /* CSS perfume bottle */
+  .stage{background:radial-gradient(120% 100% at 50% 20%,#16213f 0%,#0a1124 55%,#070B14 100%)}
+  .bottle{position:relative;width:74px;height:118px;border-radius:10px;
+    background:linear-gradient(160deg,rgba(247,231,206,0.22),rgba(212,175,55,0.10) 45%,rgba(255,255,255,0.04));
+    border:1px solid rgba(247,231,206,0.35);box-shadow:inset 0 0 22px rgba(255,255,255,0.10),0 18px 40px rgba(0,0,0,0.5)}
+  .bottle::before{content:"";position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:26px;height:18px;border-radius:4px;background:linear-gradient(180deg,#F3D37A,#B8860B);box-shadow:0 4px 12px rgba(0,0,0,0.5)}
+  .bottle::after{content:"";position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:14px;height:12px;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#F7E7CE,#D4AF37)}
+  .bottle.lg{width:150px;height:236px;border-radius:16px}
+  .bottle.lg::before{top:-30px;width:50px;height:34px;border-radius:7px}
+  .bottle.lg::after{top:-50px;width:26px;height:22px}
+  .shimmer:hover .bottle{filter:brightness(1.08)}
+  .card{transition:transform .45s cubic-bezier(.2,.7,.2,1),border-color .4s,box-shadow .4s}
+  .card:hover{transform:translateY(-6px);border-color:rgba(212,175,55,0.55);box-shadow:0 24px 60px rgba(0,0,0,0.6)}
+  .btn-lux{position:relative;overflow:hidden;color:#070B14;background:linear-gradient(110deg,#D4AF37,#F3D37A 45%,#D4AF37);background-size:220% 100%;animation:lux-pan 7s linear infinite;box-shadow:0 10px 34px rgba(212,175,55,0.28)}
+  .btn-lux:hover{filter:brightness(1.06)}
+  .btn-lux::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,0.65),transparent);transform:skewX(-20deg)}
+  .btn-lux:hover::after{animation:lux-sweep .9s ease}
+  @keyframes lux-pan{0%{background-position:0 0}100%{background-position:220% 0}}
+  @keyframes lux-sweep{0%{left:-70%}100%{left:130%}}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}.btn-lux::after{display:none}}
+</style>
+</head>
+<body class="font-sans text-luxury-champagne/90 antialiased">
+<div class="glow fixed inset-0 pointer-events-none"></div>
+
+<!-- Brand bar -->
+<header class="relative z-20 border-b border-white/8">
+  <div class="max-w-screen-xl mx-auto px-6 sm:px-10 h-20 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <span class="font-display text-2xl tracking-[0.2em] text-white">GERAIN&nbsp;CHAN</span>
+    </div>
+    <nav class="hidden md:flex items-center gap-10 text-xs label uppercase text-white/60">
+      <a class="hover:text-luxury-gold2 transition" href="#">Shop</a>
+      <a class="hover:text-luxury-gold2 transition" href="#">Scent Quiz</a>
+      <a class="hover:text-luxury-gold2 transition" href="#">Retailers</a>
+      <a class="hover:text-luxury-gold2 transition" href="#">About</a>
+    </nav>
+    <div class="flex items-center gap-5">
+      <span class="text-white/60 text-sm">Bag (2)</span>
+      <span class="w-10 h-10 rounded-full ring-1 ring-luxury-gold/40 bg-gradient-to-br from-luxury-panel2 to-luxury-bg"></span>
+    </div>
+  </div>
+</header>
+
+<main class="relative z-10 max-w-screen-xl mx-auto px-6 sm:px-10">
+
+  <!-- Welcome -->
+  <div class="flex items-end justify-between pt-12 pb-8">
+    <div>
+      <p class="label uppercase text-[11px] text-luxury-gold/80 mb-3">Welcome back</p>
+      <h1 class="font-display text-4xl sm:text-5xl font-medium text-white">Gerain</h1>
+    </div>
+    <div class="hidden sm:block text-right">
+      <p class="font-serif text-xl text-luxury-champagne/70 max-w-xs">“Scent is the most intense form of memory.”</p>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="relative mb-12">
+    <input placeholder="Search fragrance, note, or mood…" class="w-full h-14 pl-14 pr-5 text-base text-white bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 outline-none focus:border-luxury-gold/60 focus:bg-white/10 transition placeholder:text-white/35"/>
+    <svg class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-luxury-gold2/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+  </div>
+
+  <!-- Hero -->
+  <section class="relative overflow-hidden rounded-3xl glass shadow-gold mb-16">
+    <div class="grid md:grid-cols-2 items-center">
+      <div class="p-10 sm:p-14">
+        <p class="label uppercase text-[11px] text-luxury-gold/80 mb-5">Signature · Unisex</p>
+        <h2 class="font-display text-5xl sm:text-6xl leading-[1.05] font-medium text-white mb-5">Eleganza<br>Noir Absolu</h2>
+        <div class="w-12 h-px bg-luxury-gold mb-5"></div>
+        <p class="font-serif text-2xl text-luxury-champagne/75 max-w-md mb-8">Black pepper and bergamot melt into oud, crimson rose, amber and leather — a fragrance that commands the room.</p>
+        <div class="flex flex-wrap gap-4">
+          <button class="btn-lux px-8 py-3 rounded-full text-sm font-medium label uppercase">Discover</button>
+          <button class="px-8 py-3 rounded-full text-sm font-medium label uppercase text-luxury-champagne border border-luxury-gold/40 hover:border-luxury-gold hover:bg-luxury-gold/10 transition inline-flex items-center gap-2">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2 4 6v6c0 5 3.4 7.7 8 10 4.6-2.3 8-5 8-10V6z"/></svg>
+            View in AR
+          </button>
+        </div>
+      </div>
+      <div class="stage relative h-72 md:h-[26rem] flex items-center justify-center">
+        <div class="absolute w-64 h-64 rounded-full" style="background:radial-gradient(circle,rgba(212,175,55,0.18),transparent 65%)"></div>
+        <div class="bottle lg"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filters (gold system) -->
+  <div class="flex flex-wrap items-center gap-3 mb-10 text-xs label uppercase">
+    <button class="px-6 py-2.5 rounded-full bg-luxury-gold text-luxury-bg">All</button>
+    <button class="px-6 py-2.5 rounded-full text-white/65 border border-white/15 hover:border-luxury-gold/50 hover:text-white transition">Bold</button>
+    <button class="px-6 py-2.5 rounded-full text-white/65 border border-white/15 hover:border-luxury-gold/50 hover:text-white transition">Floral</button>
+    <button class="px-6 py-2.5 rounded-full text-white/65 border border-white/15 hover:border-luxury-gold/50 hover:text-white transition">Woody</button>
+    <button class="px-6 py-2.5 rounded-full text-white/65 border border-white/15 hover:border-luxury-gold/50 hover:text-white transition">Fresh</button>
+    <span class="w-px h-5 bg-white/15 mx-1"></span>
+    <button class="px-6 py-2.5 rounded-full text-white/65 border border-white/15 hover:border-luxury-gold/50 hover:text-white transition">Men</button>
+    <button class="px-6 py-2.5 rounded-full text-white/65 border border-white/15 hover:border-luxury-gold/50 hover:text-white transition">Women</button>
+    <button class="px-6 py-2.5 rounded-full text-white/65 border border-white/15 hover:border-luxury-gold/50 hover:text-white transition">Unisex</button>
+  </div>
+
+  <!-- Grid -->
+  <section class="grid grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-7 pb-20">
+    <!-- card -->
+    <a href="#" class="card shimmer block rounded-2xl glass p-4 sm:p-5">
+      <div class="stage relative rounded-xl aspect-[3/4] flex items-center justify-center mb-5 overflow-hidden">
+        <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[9px] label uppercase bg-luxury-bg/80 border border-white/10 text-white/70">Unisex</span>
+        <div class="bottle"></div>
+      </div>
+      <h3 class="font-display text-lg text-white leading-snug">Eleganza</h3>
+      <p class="label uppercase text-[10px] text-luxury-gold/90 mt-1">Bold</p>
+      <p class="font-serif text-xl text-luxury-champagne/85 mt-2">RM 199.90</p>
+    </a>
+    <a href="#" class="card shimmer block rounded-2xl glass p-4 sm:p-5">
+      <div class="stage relative rounded-xl aspect-[3/4] flex items-center justify-center mb-5 overflow-hidden">
+        <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[9px] label uppercase bg-luxury-bg/80 border border-white/10 text-white/70">Women</span>
+        <div class="bottle"></div>
+      </div>
+      <h3 class="font-display text-lg text-white leading-snug">Champagne Rose</h3>
+      <p class="label uppercase text-[10px] text-luxury-gold/90 mt-1">Floral</p>
+      <p class="font-serif text-xl text-luxury-champagne/85 mt-2">RM 179.00</p>
+    </a>
+    <a href="#" class="card shimmer block rounded-2xl glass p-4 sm:p-5">
+      <div class="stage relative rounded-xl aspect-[3/4] flex items-center justify-center mb-5 overflow-hidden">
+        <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[9px] label uppercase bg-luxury-bg/80 border border-white/10 text-white/70">Men</span>
+        <div class="bottle"></div>
+      </div>
+      <h3 class="font-display text-lg text-white leading-snug">Velvet Oud</h3>
+      <p class="label uppercase text-[10px] text-luxury-gold/90 mt-1">Woody</p>
+      <p class="font-serif text-xl text-luxury-champagne/85 mt-2">RM 229.00</p>
+    </a>
+    <a href="#" class="card shimmer block rounded-2xl glass p-4 sm:p-5">
+      <div class="stage relative rounded-xl aspect-[3/4] flex items-center justify-center mb-5 overflow-hidden">
+        <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[9px] label uppercase bg-luxury-bg/80 border border-white/10 text-white/70">Unisex</span>
+        <div class="bottle"></div>
+      </div>
+      <h3 class="font-display text-lg text-white leading-snug">Iris Lumière</h3>
+      <p class="label uppercase text-[10px] text-luxury-gold/90 mt-1">Fresh</p>
+      <p class="font-serif text-xl text-luxury-champagne/85 mt-2">RM 189.00</p>
+    </a>
+  </section>
+
+  <div class="rule mb-8"></div>
+  <p class="text-xs text-white/40 pb-12">Phase 6 mockup · Home · Eleganza / GERAIN CHAN</p>
+</main>
+</body>
+</html>

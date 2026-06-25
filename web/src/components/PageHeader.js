@@ -1,5 +1,4 @@
   import { useNavigate } from "react-router-dom";
-  import { IoChevronBack } from "react-icons/io5";
 
   export default function PageHeader({
     title,
@@ -20,11 +19,11 @@
           {showBack ? (
             <button
               onClick={goBack}
-              className="w-11 h-11 grid place-items-center text-3xl md:text-4xl leading-none"
+              className="w-11 h-11 grid place-items-center rounded-full border border-luxury-gold/30 text-luxury-gold2 hover:border-luxury-gold/70 hover:bg-luxury-gold/10 transition text-2xl leading-none font-serif"
               aria-label="Go back"
               title="Back"
             >
-              <IoChevronBack />
+              ‹
             </button>
           ) : (
             <div className="w-11 h-11" />

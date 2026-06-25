@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eleganza — Boutiques</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>tailwind.config={theme:{extend:{colors:{lux:{bg:"#070B14",ink:"#0B1222",ink2:"#0E1830",line:"#1C2740",gold:"#D4AF37",gold2:"#F3D37A",champ:"#F7E7CE",text:"#ECE7DD",mut:"#A9B0BE"}},fontFamily:{display:['"Playfair Display"','serif'],serif:['"Cormorant Garamond"','serif'],sans:['Inter','sans-serif']}}}}</script>
+<style>
+ body{background:#070B14}
+ .glass{background:linear-gradient(160deg,rgba(255,255,255,0.055),rgba(255,255,255,0.02));backdrop-filter:blur(16px);border:1px solid rgba(212,175,55,0.16)}
+ .label{letter-spacing:.34em}.rule{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.5),transparent)}
+ .glow{background:radial-gradient(60% 40% at 50% 0%,rgba(212,175,55,0.12),transparent 60%)}
+ .card{transition:transform .5s cubic-bezier(.2,.7,.2,1),border-color .4s,box-shadow .4s}
+ .card:hover{transform:translateY(-8px);border-color:rgba(212,175,55,0.5);box-shadow:0 30px 70px -25px rgba(0,0,0,0.8)}
+ .card:hover img{transform:scale(1.05)}
+ .pill{border:1px solid rgba(212,175,55,0.45);color:#F7E7CE;transition:.3s}.pill:hover{border-color:#D4AF37;background:rgba(212,175,55,0.08)}
+ @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body class="font-sans text-lux-text antialiased">
+<div class="glow fixed inset-0 pointer-events-none"></div>
+
+<!-- Nav -->
+<header class="relative z-20 border-b border-white/8"><div class="max-w-screen-2xl mx-auto px-8 h-20 grid grid-cols-3 items-center">
+  <nav class="flex items-center gap-9 text-[11px] label uppercase"><a class="text-lux-text hover:text-white" href="#">Home</a><a class="text-lux-text hover:text-white" href="#">Shop</a><a class="text-lux-text hover:text-white" href="#">Scent Quiz</a></nav>
+  <a href="#" class="text-center font-display text-2xl lg:text-[28px] tracking-[0.3em] text-white">GÉRAIN&nbsp;CHAN</a>
+  <div class="flex items-center justify-end gap-7 text-lux-text"><a href="#" class="text-[11px] label uppercase text-lux-gold2">Releases</a></div>
+</div></header>
+
+<main class="relative z-10 max-w-screen-2xl mx-auto px-8 py-14">
+  <!-- Header -->
+  <div class="text-center mb-12">
+    <p class="label uppercase text-[11px] text-lux-gold2 mb-4">Where to Find Us</p>
+    <h1 class="font-display text-5xl sm:text-6xl text-white mb-3">Boutiques</h1>
+    <p class="font-serif italic text-xl sm:text-2xl text-lux-champ/80">Experience the maison in person.</p>
+  </div>
+
+  <!-- Boutique grid (centered, balances when few) -->
+  <div class="flex flex-wrap justify-center gap-7">
+
+    <!-- card -->
+    <div class="card glass rounded-2xl overflow-hidden w-full sm:w-[calc(50%-0.875rem)] lg:w-[calc(33.333%-1.17rem)] max-w-[420px]">
+      <div class="aspect-[4/3] overflow-hidden bg-lux-ink2">
+        <img src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=800&q=80" class="w-full h-full object-cover transition-transform duration-700" alt="Suria Sabah boutique"/>
+      </div>
+      <div class="p-7">
+        <p class="label uppercase text-[10px] text-lux-gold2 mb-1.5">Kota Kinabalu</p>
+        <h3 class="font-display text-2xl text-white mb-4">Suria Sabah Flagship</h3>
+        <div class="rule mb-5"></div>
+        <div class="space-y-3 text-sm text-lux-mut">
+          <div class="flex items-start gap-3">
+            <svg class="w-4 h-4 mt-0.5 text-lux-gold2 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-5.2-7-11a7 7 0 1 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            <span>Lot 1-59, 1st Floor, Suria Sabah Shopping Mall, Jalan Tun Fuad Stephens, 88000 Kota Kinabalu</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-lux-gold2 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <span>10:00 – 22:00 daily</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-lux-gold2 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5c0 8.3 6.7 15 15 15a2 2 0 0 0 2-2v-2.5a1 1 0 0 0-.8-1l-3.4-.7a1 1 0 0 0-1 .3l-1 1.2a12 12 0 0 1-5.3-5.3l1.2-1a1 1 0 0 0 .3-1L9.5 4.8a1 1 0 0 0-1-.8H6a2 2 0 0 0-2 2z"/></svg>
+            <span>+60 88-247 767</span>
+          </div>
+        </div>
+        <div class="flex gap-3 mt-6">
+          <a href="#" class="pill inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[10px] label uppercase">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-5.2-7-11a7 7 0 1 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Directions
+          </a>
+          <a href="#" class="pill inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[10px] label uppercase">Call</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- card -->
+    <div class="card glass rounded-2xl overflow-hidden w-full sm:w-[calc(50%-0.875rem)] lg:w-[calc(33.333%-1.17rem)] max-w-[420px]">
+      <div class="aspect-[4/3] overflow-hidden bg-lux-ink2">
+        <img src="https://images.unsplash.com/photo-1567958451986-2de427a4a0be?w=800&q=80" class="w-full h-full object-cover transition-transform duration-700" alt="Imago boutique"/>
+      </div>
+      <div class="p-7">
+        <p class="label uppercase text-[10px] text-lux-gold2 mb-1.5">Kota Kinabalu</p>
+        <h3 class="font-display text-2xl text-white mb-4">Imago Mall Counter</h3>
+        <div class="rule mb-5"></div>
+        <div class="space-y-3 text-sm text-lux-mut">
+          <div class="flex items-start gap-3">
+            <svg class="w-4 h-4 mt-0.5 text-lux-gold2 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-5.2-7-11a7 7 0 1 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            <span>Ground Floor, Imago Shopping Mall, KK Times Square, 88100 Kota Kinabalu</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-lux-gold2 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <span>Open 24 Hours</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-lux-gold2 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5c0 8.3 6.7 15 15 15a2 2 0 0 0 2-2v-2.5a1 1 0 0 0-.8-1l-3.4-.7a1 1 0 0 0-1 .3l-1 1.2a12 12 0 0 1-5.3-5.3l1.2-1a1 1 0 0 0 .3-1L9.5 4.8a1 1 0 0 0-1-.8H6a2 2 0 0 0-2 2z"/></svg>
+            <span>+60 88-486 100</span>
+          </div>
+        </div>
+        <div class="flex gap-3 mt-6">
+          <a href="#" class="pill inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[10px] label uppercase">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-5.2-7-11a7 7 0 1 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Directions
+          </a>
+          <a href="#" class="pill inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[10px] label uppercase">Call</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- card -->
+    <div class="card glass rounded-2xl overflow-hidden w-full sm:w-[calc(50%-0.875rem)] lg:w-[calc(33.333%-1.17rem)] max-w-[420px]">
+      <div class="aspect-[4/3] overflow-hidden bg-lux-ink2">
+        <img src="https://images.unsplash.com/photo-1615634260167-c8cdede054de?w=800&q=80" class="w-full h-full object-cover transition-transform duration-700" alt="Atelier boutique"/>
+      </div>
+      <div class="p-7">
+        <p class="label uppercase text-[10px] text-lux-gold2 mb-1.5">By appointment</p>
+        <h3 class="font-display text-2xl text-white mb-4">The Atelier</h3>
+        <div class="rule mb-5"></div>
+        <div class="space-y-3 text-sm text-lux-mut">
+          <div class="flex items-start gap-3">
+            <svg class="w-4 h-4 mt-0.5 text-lux-gold2 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-5.2-7-11a7 7 0 1 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            <span>Level 3, Gaya Street, 88000 Kota Kinabalu — private fragrance consultations</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-lux-gold2 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <span>11:00 – 19:00 · Tue–Sun</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-lux-gold2 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5c0 8.3 6.7 15 15 15a2 2 0 0 0 2-2v-2.5a1 1 0 0 0-.8-1l-3.4-.7a1 1 0 0 0-1 .3l-1 1.2a12 12 0 0 1-5.3-5.3l1.2-1a1 1 0 0 0 .3-1L9.5 4.8a1 1 0 0 0-1-.8H6a2 2 0 0 0-2 2z"/></svg>
+            <span>hello@gerainchan.com</span>
+          </div>
+        </div>
+        <div class="flex gap-3 mt-6">
+          <a href="#" class="pill inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[10px] label uppercase">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-5.2-7-11a7 7 0 1 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Directions
+          </a>
+          <a href="#" class="pill inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[10px] label uppercase">Email</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+<footer class="relative z-10 border-t border-white/8 mt-10"><div class="max-w-screen-2xl mx-auto px-8 py-10 text-center text-[10px] label uppercase text-lux-mut">© 2026 Gérain Chan · Immersive Perfume · AR Experience</div></footer>
+</body></html>

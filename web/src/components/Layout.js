@@ -27,7 +27,7 @@ const Layout = () => {
   return (
     <div
       className={`relative min-h-screen flex flex-col ${
-        isARPage ? "bg-black" : "bg-[#050b1f]"
+        isARPage ? "bg-black" : "bg-luxury-bg"
       }`}
     >
       {/* ❌ Top navigation hidden in AR */}

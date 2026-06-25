@@ -1,6 +1,20 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import http from "../../lib/http";
+
+const NAV = [
+  { to: "/admin/dashboard", label: "Dashboard" },
+  { to: "/admin/products", label: "Products" },
+  { to: "/admin/orders", label: "Orders" },
+  { to: "/admin/payments", label: "Payments" },
+  { to: "/admin/users", label: "Users" },
+  { to: "/admin/reviews", label: "Reviews" },
+  { to: "/admin/ar-management", label: "AR Experiences" },
+  { to: "/admin/scent-personas", label: "Scent Personas" },
+  { to: "/admin/quiz-management", label: "Quizzes" },
+  { to: "/admin/retailers", label: "Retailers" },
+  { to: "/admin/about", label: "About" },
+];
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState({
@@ -14,169 +28,118 @@ export default function AdminDashboardPage() {
     payments: 0,
     scentPersonas: 0,
   });
-
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   useEffect(() => {
     let alive = true;
-
     async function fetchStats() {
       try {
         setLoading(true);
         const res = await http.get("/admin/dashboard-stats/");
         if (!alive) return;
-
-        setStats((prev) => ({
-          ...prev,
-          ...res.data,
-        }));
+        setStats((prev) => ({ ...prev, ...res.data }));
       } catch (err) {
         console.error("Failed to load dashboard stats:", err);
       } finally {
         if (alive) setLoading(false);
       }
     }
-
     fetchStats();
-
     return () => {
       alive = false;
     };
   }, []);
 
+  const primary = [
+    { label: "Orders", value: stats.orders, to: "/admin/orders" },
+    { label: "Products", value: stats.products, to: "/admin/products" },
+    { label: "Users", value: stats.users, to: "/admin/users" },
+    { label: "Reviews", value: stats.reviews, to: "/admin/reviews" },
+  ];
+
+  const manage = [
+    { label: "Payments", value: stats.payments, to: "/admin/payments" },
+    { label: "Quizzes", value: stats.quizzes, to: "/admin/quiz-management" },
+    { label: "Scent Personas", value: stats.scentPersonas, to: "/admin/scent-personas" },
+    { label: "AR Experiences", value: stats.ar, to: "/admin/ar-management" },
+    { label: "Retailers", value: stats.retailers, to: "/admin/retailers" },
+    { label: "About", value: "Site", to: "/admin/about" },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 lg:px-16">
-      <div className="max-w-6xl mx-auto py-6">
-        <h1 className="text-3xl font-bold mb-8 text-center">ADMIN DASHBOARD</h1>
+    <div className="relative flex min-h-[80vh]">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(50% 30% at 80% 0%,rgba(212,175,55,0.1),transparent 60%)" }}
+      />
 
-        {loading && (
-          <div className="text-center mb-6 opacity-80">
-            Loading dashboard stats...
-          </div>
-        )}
+      {/* Sidebar */}
+      <aside className="hidden lg:flex flex-col w-64 border-r border-white/8 p-6 shrink-0 relative z-10">
+        <p className="font-serif text-lg tracking-[0.25em] text-white mb-10">Maison Admin</p>
+        <p className="label uppercase text-[10px] text-luxury-mut mb-3 px-3">Manage</p>
+        <nav className="space-y-1 text-sm">
+          {NAV.map((n) => {
+            const active = location.pathname === n.to;
+            return (
+              <Link
+                key={n.to}
+                to={n.to}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-r-lg border-l-2 transition ${
+                  active
+                    ? "bg-luxury-gold/12 text-luxury-champagne border-luxury-gold"
+                    : "text-luxury-mut border-transparent hover:text-white"
+                }`}
+              >
+                {n.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Users */}
-          <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
-            <h2 className="text-4xl font-bold">{stats.users}</h2>
-            <p className="opacity-70">Users</p>
-            <Link
-              to="/admin/users"
-              className="mt-4 inline-block px-4 py-2 bg-sky-600 rounded-lg hover:bg-sky-700 font-semibold transition"
-            >
-              Manage Users
+      {/* Main */}
+      <main className="flex-1 px-6 sm:px-8 py-8 relative z-10">
+        <div className="mb-8">
+          <p className="label uppercase text-[11px] text-luxury-gold/80 mb-2">Maison Admin</p>
+          <h1 className="font-serif text-4xl text-white">Dashboard</h1>
+        </div>
+
+        {loading && <p className="text-luxury-mut text-sm mb-6">Loading dashboard stats…</p>}
+
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+          {primary.map((s) => (
+            <Link key={s.label} to={s.to} className="card glass rounded-2xl p-6 block">
+              <p className="label uppercase text-[10px] text-luxury-mut mb-2">{s.label}</p>
+              <p className="font-serif text-3xl text-white">{s.value}</p>
+              <p className="text-xs text-luxury-gold2 mt-2 inline-block border-b border-luxury-gold/40">Manage</p>
             </Link>
-          </div>
+          ))}
+        </div>
 
-          {/* Products */}
-          <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
-            <h2 className="text-4xl font-bold">{stats.products}</h2>
-            <p className="opacity-70">Products</p>
-            <Link
-              to="/admin/products"
-              className="mt-4 inline-block px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 font-semibold transition"
-            >
-              Manage Products
-            </Link>
+        {/* Manage grid */}
+        <div className="glass rounded-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-white/8">
+            <h2 className="font-serif text-xl text-white">Management</h2>
           </div>
-
-          {/* Orders */}
-          <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
-            <h2 className="text-4xl font-bold">{stats.orders}</h2>
-            <p className="opacity-70">Orders</p>
-            <Link
-              to="/admin/orders"
-              className="mt-4 inline-block px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700 font-semibold transition"
-            >
-              Manage Orders
-            </Link>
-          </div>
-
-          {/* Payments */}
-          <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
-            <h2 className="text-4xl font-bold">{stats.payments}</h2>
-            <p className="opacity-70">Payments</p>
-            <Link
-              to="/admin/payments"
-              className="mt-4 inline-block px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700 font-semibold transition"
-            >
-              Manage Payments
-            </Link>
-          </div>
-
-          {/* Quiz Management */}
-          <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
-            <h2 className="text-4xl font-bold">{stats.quizzes}</h2>
-            <p className="opacity-70">Quizzes</p>
-            <Link
-              to="/admin/quiz-management"
-              className="mt-4 inline-block px-4 py-2 bg-yellow-600 rounded-lg hover:bg-yellow-700 font-semibold transition"
-            >
-              Manage Quizzes
-            </Link>
-          </div>
-
-          {/* Scent Personas */}
-          <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
-            <h2 className="text-4xl font-bold">{stats.scentPersonas}</h2>
-            <p className="opacity-70">Scent Personas</p>
-            <Link
-              to="/admin/scent-personas"
-              className="mt-4 inline-block px-4 py-2 bg-pink-600 rounded-lg hover:bg-pink-700 font-semibold transition"
-            >
-              Manage Scent Personas
-            </Link>
-          </div>
-
-          {/* AR Management */}
-          <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
-            <h2 className="text-4xl font-bold">{stats.ar}</h2>
-            <p className="opacity-70">AR Experiences</p>
-            <Link
-              to="/admin/ar-management"
-              className="mt-4 inline-block px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-700 font-semibold transition"
-            >
-              Manage AR
-            </Link>
-          </div>
-
-          {/* Review Management */}
-          <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
-            <h2 className="text-4xl font-bold">{stats.reviews}</h2>
-            <p className="opacity-70">User Reviews</p>
-            <Link
-              to="/admin/reviews"
-              className="mt-4 inline-block px-4 py-2 bg-amber-600 rounded-lg hover:bg-amber-700 font-semibold transition"
-            >
-              Manage Reviews
-            </Link>
-          </div>
-
-          {/* Retailers Management */}
-          <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
-            <h2 className="text-4xl font-bold">{stats.retailers}</h2>
-            <p className="opacity-70">Retailers</p>
-            <Link
-              to="/admin/retailers"
-              className="mt-4 inline-block px-4 py-2 bg-teal-600 rounded-lg hover:bg-teal-700 font-semibold transition"
-            >
-              Manage Retailers
-            </Link>
-          </div>
-
-          {/* About Management */}
-          <div className="bg-white/10 p-6 rounded-xl text-center shadow-lg">
-            <h2 className="text-4xl font-bold">About</h2>
-            <p className="opacity-70">Site Information</p>
-            <Link
-              to="/admin/about"
-              className="mt-4 inline-block px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 font-semibold transition"
-            >
-              Manage About Page
-            </Link>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5">
+            {manage.map((m) => (
+              <Link
+                key={m.label}
+                to={m.to}
+                className="bg-luxury-bg/40 hover:bg-white/[0.03] transition px-6 py-5 flex items-center justify-between"
+              >
+                <div>
+                  <p className="label uppercase text-[10px] text-luxury-mut mb-1">{m.label}</p>
+                  <p className="font-serif text-2xl text-white">{m.value}</p>
+                </div>
+                <span className="text-luxury-gold2 text-sm">✦</span>
+              </Link>
+            ))}
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

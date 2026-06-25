@@ -63,12 +63,13 @@ export default function AddProductPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 lg:px-16 py-8">
+    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-16 py-8">
       <button
         onClick={() => navigate(-1)}
-        className="mb-6 p-2 rounded-full hover:bg-white/10"
+        className="mb-6 p-2 rounded-full hover:bg-white/10 text-2xl leading-none text-luxury-gold2 font-serif"
+        aria-label="Back"
       >
-        ←
+        ‹
       </button>
       <h1 className="text-2xl font-bold mb-6">Add New Product</h1>
 
@@ -85,7 +86,7 @@ export default function AddProductPage() {
         <label className="block">Card Image: <input type="file" name="card_image" onChange={handleFileChange} /></label>
         <label className="block">Media Gallery: <input type="file" multiple onChange={handleMediaChange} /></label>
 
-        <button disabled={loading} type="submit" className="px-6 py-2 bg-green-600 rounded hover:bg-green-700 font-semibold">
+        <button disabled={loading} type="submit" className="px-6 py-2 bg-luxury-gold rounded hover:bg-luxury-gold font-semibold">
           {loading ? "Saving..." : "Save Product"}
         </button>
       </form>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Eleganza — Sign In</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>tailwind.config={theme:{extend:{colors:{lux:{bg:"#070B14",ink:"#0B1222",ink2:"#0E1830",gold:"#D4AF37",gold2:"#F3D37A",champ:"#F7E7CE",text:"#ECE7DD",mut:"#A9B0BE"}},fontFamily:{display:['"Playfair Display"','serif'],serif:['"Cormorant Garamond"','serif'],sans:['Inter','sans-serif']}}}}</script>
+<style> body{background:#070B14}.glass{background:linear-gradient(160deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));backdrop-filter:blur(18px);border:1px solid rgba(212,175,55,0.18)}
+ .label{letter-spacing:.34em}.rule{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent)}
+ .fld{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)}.fld:focus{border-color:rgba(212,175,55,0.6)}
+ .btn{position:relative;overflow:hidden;color:#070B14;background:linear-gradient(110deg,#D4AF37,#F3D37A 45%,#D4AF37);background-size:220% 100%;animation:pan 7s linear infinite}
+ .btn::after{content:"";position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,0.7),transparent);transform:skewX(-20deg)}.btn:hover::after{animation:sweep .9s ease}
+ @keyframes pan{0%{background-position:0 0}100%{background-position:220% 0}}@keyframes sweep{0%{left:-70%}100%{left:130%}}
+ @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.btn::after{display:none}}</style></head>
+<body class="font-sans text-lux-text antialiased">
+<div class="min-h-screen grid lg:grid-cols-2">
+  <!-- Left: brand -->
+  <div class="relative hidden lg:flex flex-col justify-between p-14 overflow-hidden" style="background:radial-gradient(80% 60% at 30% 20%,#16213f,#0a1124 60%,#070B14)">
+    <div class="absolute w-[30rem] h-[30rem] rounded-full -left-32 top-1/4" style="background:radial-gradient(circle,rgba(212,175,55,0.16),transparent 62%)"></div>
+    <a href="#" class="relative font-display text-2xl tracking-[0.3em] text-white">GÉRAIN&nbsp;CHAN</a>
+    <div class="relative">
+      <p class="label uppercase text-[11px] text-lux-gold/85 mb-5">Welcome back</p>
+      <h1 class="font-display text-6xl text-white leading-tight mb-5">Enter your<br>atelier.</h1>
+      <p class="font-serif italic text-2xl text-lux-champ/75 max-w-sm">Your fragrances, orders and AR experiences — all in one place.</p>
+    </div>
+    <p class="relative text-[10px] label uppercase text-lux-mut">Immersive Perfume · AR Experience</p>
+  </div>
+  <!-- Right: form -->
+  <div class="flex items-center justify-center p-8">
+    <div class="glass rounded-3xl p-9 w-full max-w-md">
+      <h2 class="font-display text-3xl text-white mb-1">Sign In</h2>
+      <p class="text-sm text-lux-mut mb-7">Enter your credentials to continue.</p>
+      <label class="block text-[11px] label uppercase text-lux-mut mb-2">Email or Username</label>
+      <input class="fld w-full px-4 py-3.5 rounded-xl text-white outline-none mb-5" value="aisha@example.com"/>
+      <label class="block text-[11px] label uppercase text-lux-mut mb-2">Password</label>
+      <input type="password" class="fld w-full px-4 py-3.5 rounded-xl text-white outline-none mb-2" value="password"/>
+      <div class="text-right mb-6"><a href="#" class="text-[11px] label uppercase text-lux-gold2 hover:text-white">Forgot password?</a></div>
+      <button class="btn w-full py-4 rounded-full text-[12px] font-medium label uppercase mb-5">Sign In</button>
+      <div class="flex items-center gap-4 my-5"><div class="flex-1 rule"></div><span class="text-[10px] label uppercase text-lux-mut">or</span><div class="flex-1 rule"></div></div>
+      <button class="w-full py-3.5 rounded-full border border-white/15 text-sm text-lux-text hover:border-lux-gold/40 transition inline-flex items-center justify-center gap-3">
+        <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#fff" d="M21.35 11.1H12v3.83h5.35A5.34 5.34 0 0 1 6.66 12 5.34 5.34 0 0 1 12 6.66c1.36 0 2.6.5 3.55 1.32l2.7-2.7A9 9 0 1 0 21.35 11.1z"/></svg>
+        Continue with Google
+      </button>
+      <p class="text-center text-sm text-lux-mut mt-7">No account? <a href="#" class="text-lux-gold2 hover:text-white">Create one</a></p>
+    </div>
+  </div>
+</div>
+</body></html>

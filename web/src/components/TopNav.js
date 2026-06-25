@@ -1,21 +1,18 @@
 // src/components/TopNav.js
 import React from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import {
-  IoHomeOutline,
-  IoRocketOutline,
-  IoCartOutline,
-  IoPersonOutline,
-  IoSettingsOutline,
-} from "react-icons/io5";
+import { IoCartOutline, IoPersonCircleOutline } from "react-icons/io5";
 import { useAuth } from "../context/AuthContext";
 
-const linkBase =
-  "flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-colors " +
-  "text-white/90 hover:text-white hover:bg-white/15 ring-1 ring-transparent text-lg md:text-xl";
+const navItem = ({ isActive }) =>
+  `relative px-0.5 py-1 text-xs uppercase tracking-[0.3em] transition-colors ` +
+  `after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-px after:bg-luxury-gold after:transition-all after:duration-300 ` +
+  (isActive
+    ? "text-luxury-gold2 after:w-full"
+    : "text-luxury-champagne hover:text-white after:w-0 hover:after:w-full");
 
-const active = "text-sky-100 bg-white/20 ring-white/20";
-const navClass = ({ isActive }) => `${linkBase} ${isActive ? active : ""}`;
+const iconItem =
+  "text-luxury-champagne hover:text-luxury-gold2 transition-colors";
 
 export default function TopNav() {
   const { user } = useAuth();
@@ -27,50 +24,44 @@ export default function TopNav() {
   }
 
   return (
-    <header className="hidden md:block sticky top-0 z-40 w-full
-      bg-gradient-to-b from-[#06122e] to-[#0b1f4a]
-      border-b border-white/15 shadow-lg backdrop-blur">
-      
-      <div className="mx-auto max-w-screen-2xl h-20 px-10 flex items-center justify-between">
-        
-        {/* Brand */}
-        <Link
-          to="/"
-          className="text-white font-extrabold tracking-wide text-3xl lg:text-4xl"
-        >
-          GERAIN CHAN
-        </Link>
-
-        {/* Desktop Nav */}
-        <nav className="flex items-center gap-6">
-          <NavLink to="/" end className={navClass}>
-            <IoHomeOutline className="text-3xl" />
-            <span>Home</span>
-          </NavLink>
-
-          <NavLink to="/releases" className={navClass}>
-            <IoRocketOutline className="text-3xl" />
-            <span>Releases</span>
-          </NavLink>
-
-          <NavLink to="/shop" className={navClass}>
-            <IoCartOutline className="text-3xl" />
-            <span>Shop</span>
-          </NavLink>
-
-          <NavLink to="/account" className={navClass}>
-            <IoPersonOutline className="text-3xl" />
-            <span>Account</span>
-          </NavLink>
-
-          {user?.is_staff === true && (
-            <NavLink to="/admin/dashboard" className={navClass}>
-              <IoSettingsOutline className="text-3xl" />
-              <span>Admin</span>
-            </NavLink>
-          )}
-        </nav>
+    <div className="hidden md:block sticky top-0 z-40 w-full">
+      {/* Announcement */}
+      <div className="bg-luxury-bg text-center text-[10px] label uppercase text-luxury-gold/80 py-2.5 border-b border-white/5">
+        Complimentary engraving &amp; shipping on every order
       </div>
-    </header>
+      {/* Nav */}
+      <header className="w-full bg-luxury-bg/80 backdrop-blur-xl border-b border-luxury-gold/15">
+        <div className="mx-auto max-w-screen-2xl h-20 px-10 grid grid-cols-3 items-center">
+          {/* Left nav */}
+          <nav className="flex items-center gap-9 justify-start">
+            <NavLink to="/" end className={navItem}>Home</NavLink>
+            <NavLink to="/shop" className={navItem}>Shop</NavLink>
+            <NavLink to="/quiz" className={navItem}>Scent Quiz</NavLink>
+          </nav>
+
+          {/* Center brand */}
+          <Link
+            to="/"
+            className="text-center font-serif text-2xl lg:text-[28px] font-medium tracking-[0.3em] text-white hover:text-luxury-champagne transition-colors"
+          >
+            GÉRAIN&nbsp;CHAN
+          </Link>
+
+          {/* Right */}
+          <nav className="flex items-center gap-7 justify-end">
+            <NavLink to="/releases" className={navItem}>Releases</NavLink>
+            {user?.is_staff === true && (
+              <NavLink to="/admin/dashboard" className={navItem}>Admin</NavLink>
+            )}
+            <NavLink to="/cart" className={iconItem} aria-label="Cart">
+              <IoCartOutline className="text-2xl" />
+            </NavLink>
+            <NavLink to="/account" className={iconItem} aria-label="Account">
+              <IoPersonCircleOutline className="text-2xl" />
+            </NavLink>
+          </nav>
+        </div>
+      </header>
+    </div>
   );
 }

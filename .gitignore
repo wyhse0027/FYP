@@ -177,3 +177,6 @@ cloud-sql-proxy.exe
 
 # Firebase CLI local deploy cache
 .firebase/
+
+# Superpowers SDD scratch
+.superpowers/

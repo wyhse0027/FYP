@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import PageHeader from "../components/PageHeader";
 import ConfirmModal from "../components/ConfirmModal";
 import { useCart } from "../context/CartContext";
 import http from "../lib/http";
@@ -102,6 +101,7 @@ export default function CheckoutPage() {
         name: i.product?.name,
         price: Number(i.price),
         qty: Number(i.quantity),
+        image: i.product?.card_image || i.product?.promo_image,
       }))
     : (cartItems || [])
         .filter((it) =>
@@ -113,6 +113,7 @@ export default function CheckoutPage() {
           price: Number(it.product?.price || it.price),
           qty: Number(it.quantity),
           cartItemId: it.id,
+          image: it.product?.card_image || it.product?.promo_image,
         }));
 
   const subtotal = items.reduce((t, i) => t + i.price * i.qty, 0);
@@ -147,9 +148,7 @@ export default function CheckoutPage() {
       setLoading(true);
 
       if (pm === PAYMENT_METHODS.COD) {
-        // Existing order payment flow: just keep it unpaid / COD.
-        // You can optionally update method if backend supports it.
-        setPaidOrderId(existingOrderId); // or just redirect
+        setPaidOrderId(existingOrderId);
         return;
       }
       const res = await http.post(`orders/${existingOrderId}/pay/`, {
@@ -194,11 +193,8 @@ export default function CheckoutPage() {
       const order = orderRes.data;
 
       if (pm === PAYMENT_METHODS.COD) {
-        // COD = pay on delivery. No confirmation call here.
         if (typeof clearCart === "function") clearCart();
-
-        // show "Order Placed" panel (pay later style) or directly redirect
-        setInvoiceOrderId(order.id); // <-- use this panel
+        setInvoiceOrderId(order.id);
         return;
       }
 
@@ -260,256 +256,206 @@ export default function CheckoutPage() {
     { key: PAYMENT_METHODS.EWALLET, label: "E-Wallet", hint: "Touch 'n Go / etc" },
   ];
 
+  const field = (label, key, opts = {}) => (
+    <div className={opts.full ? "sm:col-span-2" : ""}>
+      <label className="block text-[11px] label uppercase text-luxury-mut mb-2">{label}</label>
+      <input
+        className="fld w-full px-4 py-3.5 rounded-xl text-white outline-none disabled:opacity-50"
+        placeholder={opts.placeholder || label}
+        value={addr[key]}
+        disabled={isExistingPayFlow}
+        onChange={(e) => setAddr({ ...addr, [key]: e.target.value })}
+      />
+    </div>
+  );
+
+  const downloadPdf = async (orderId, prefix) => {
+    try {
+      const res = await http.get(`orders/${orderId}/receipt-pdf/`, { responseType: "blob" });
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${prefix}_${orderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+    } catch (err) {
+      console.error("Failed to download PDF:", err);
+      alert("Unable to download PDF. Please try again.");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 relative overflow-hidden">
-      {/* Decorative blobs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-72 h-72 sm:w-96 sm:h-96 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-0 w-64 h-64 sm:w-80 sm:h-80 bg-cyan-400/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-0 w-56 h-56 sm:w-64 sm:h-64 bg-white/5 rounded-full blur-2xl" />
-      </div>
+    <div className="relative">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(60% 40% at 50% 0%,rgba(212,175,55,0.1),transparent 60%)" }}
+      />
 
-      <div className="relative z-10 px-4 sm:px-6 md:px-12 lg:px-16 py-6 sm:py-8">
-        <div className="mx-auto w-full max-w-screen-2xl text-[15px] sm:text-[17px] md:text-[18px] lg:text-[20px]">
-          {/* Header (keep PageHeader) */}
-          <div className="mb-4 sm:mb-6">
-            <PageHeader title={isExistingPayFlow ? "COMPLETE PAYMENT" : "SECURE CHECKOUT"} />
-            <p className="text-white/60 mt-1 sm:mt-2 text-sm sm:text-base">
-              {isExistingPayFlow
-                ? "Finalize your pending order"
-                : "Complete your purchase securely"}
-            </p>
-          </div>
+      <main className="relative z-10 max-w-screen-2xl mx-auto px-6 sm:px-8 py-10 md:py-12">
+        {/* Stepper */}
+        <div className="flex items-center gap-4 text-[11px] label uppercase mb-9 md:mb-10">
+          <span className="text-luxury-gold2">Bag</span>
+          <span className="text-luxury-mut">—</span>
+          <span className="text-luxury-gold2">Details</span>
+          <span className="text-luxury-mut">—</span>
+          <span className="text-luxury-mut">Confirmation</span>
+        </div>
 
-          <div className="grid lg:grid-cols-5 gap-4 md:gap-6">
-            {/* Left: Address + Payment */}
-            <div className="lg:col-span-3 space-y-4 sm:space-y-6">
-              {/* Address */}
-              <section className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 sm:p-6 shadow-2xl">
-                <h2 className="font-semibold text-white mb-3 sm:mb-4 text-lg sm:text-xl">
-                  Delivery Address
-                </h2>
-
-                <div className="grid md:grid-cols-2 gap-3 text-white text-sm sm:text-base">
-                  <input
-                    className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
-                    placeholder="Full name"
-                    value={addr.fullname}
-                    disabled={isExistingPayFlow}
-                    onChange={(e) => setAddr({ ...addr, fullname: e.target.value })}
-                  />
-                  <input
-                    className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
-                    placeholder="Phone"
-                    value={addr.phone}
-                    disabled={isExistingPayFlow}
-                    onChange={(e) => setAddr({ ...addr, phone: e.target.value })}
-                  />
-
-                  <div className="md:col-span-2">
-                    <input
-                      className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                                 focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
-                      placeholder="Address line 1"
-                      value={addr.line1}
-                      disabled={isExistingPayFlow}
-                      onChange={(e) => setAddr({ ...addr, line1: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <input
-                      className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                                 focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
-                      placeholder="Address line 2 (optional)"
-                      value={addr.line2}
-                      disabled={isExistingPayFlow}
-                      onChange={(e) => setAddr({ ...addr, line2: e.target.value })}
-                    />
-                  </div>
-
-                  <input
-                    className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
-                    placeholder="Postcode"
-                    value={addr.postcode}
-                    disabled={isExistingPayFlow}
-                    onChange={(e) => setAddr({ ...addr, postcode: e.target.value })}
-                  />
-                  <input
-                    className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
-                    placeholder="City"
-                    value={addr.city}
-                    disabled={isExistingPayFlow}
-                    onChange={(e) => setAddr({ ...addr, city: e.target.value })}
-                  />
-                  <input
-                    className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
-                    placeholder="State"
-                    value={addr.state}
-                    disabled={isExistingPayFlow}
-                    onChange={(e) => setAddr({ ...addr, state: e.target.value })}
-                  />
-                  <input
-                    className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-3 sm:px-4 sm:py-4 text-white placeholder-white/40
-                               focus:outline-none focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/20 transition disabled:opacity-50"
-                    placeholder="Country"
-                    value={addr.country}
-                    disabled={isExistingPayFlow}
-                    onChange={(e) => setAddr({ ...addr, country: e.target.value })}
-                  />
-                </div>
-              </section>
-
-              {/* Payment */}
-              <section className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 sm:p-6 shadow-2xl">
-                <h2 className="font-semibold text-white mb-3 sm:mb-4 text-lg sm:text-xl">
-                  Payment Method
-                </h2>
-
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {paymentOptions.map((opt) => {
-                    const selected = pm === opt.key;
-                    return (
-                      <button
-                        key={opt.key}
-                        type="button"
-                        onClick={() => setPm(opt.key)}
-                        className={`text-left p-3 sm:p-4 rounded-xl border transition-all duration-300 ${
-                          selected
-                            ? "bg-sky-500/20 border-sky-400/50 shadow-lg shadow-sky-500/10"
-                            : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p
-                              className={`font-semibold ${
-                                selected ? "text-white" : "text-white/80"
-                              } text-sm sm:text-base`}
-                            >
-                              {opt.label}
-                            </p>
-                            <p className="text-xs sm:text-sm text-white/50 mt-1">
-                              {opt.hint}
-                            </p>
-                          </div>
-                          <div
-                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                              selected ? "border-sky-300 bg-sky-300" : "border-white/30"
-                            }`}
-                          >
-                            {selected && (
-                              <div className="w-2 h-2 bg-slate-900 rounded-full" />
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {!isExistingPayFlow && pm === PAYMENT_METHODS.COD && (
-                  <p className="text-amber-300/80 text-xs sm:text-sm mt-3 sm:mt-4">
-                    COD orders will be paid upon delivery. Online payment is disabled.
-                  </p>
-                )}
-              </section>
+        <div className="grid lg:grid-cols-3 gap-10 lg:gap-12">
+          {/* Left */}
+          <div className="lg:col-span-2 space-y-10">
+            <div>
+              <h2 className="font-serif text-3xl text-white mb-6">Contact &amp; Delivery</h2>
+              <div className="grid sm:grid-cols-2 gap-5">
+                {field("Full name", "fullname", { full: true })}
+                {field("Phone", "phone")}
+                {field("Postal code", "postcode")}
+                {field("Address line 1", "line1", { full: true })}
+                {field("Address line 2 (optional)", "line2", { full: true })}
+                {field("City", "city")}
+                {field("State", "state")}
+                {field("Country", "country", { full: true })}
+              </div>
+              {isExistingPayFlow && (
+                <p className="text-xs text-luxury-mut mt-4">
+                  Delivery details are locked for this pending order.
+                </p>
+              )}
             </div>
 
-            {/* Right: Summary */}
-            <aside className="lg:col-span-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-4 sm:p-6 shadow-2xl h-max sticky top-4 sm:top-6">
-              <h2 className="font-semibold text-white mb-3 sm:mb-4 text-lg sm:text-xl">
-                Order Summary
-              </h2>
+            <div>
+              <h2 className="font-serif text-3xl text-white mb-6">Payment</h2>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {paymentOptions.map((opt) => {
+                  const selected = pm === opt.key;
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setPm(opt.key)}
+                      className={`text-left p-5 rounded-2xl border transition-all duration-300 ${
+                        selected
+                          ? "border-luxury-gold/70 bg-luxury-gold/12"
+                          : "border-white/10 bg-white/5 hover:border-luxury-gold/40"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className={`font-serif text-xl ${selected ? "text-white" : "text-luxury-text"}`}>
+                            {opt.label}
+                          </p>
+                          <p className="text-xs text-luxury-mut mt-1">{opt.hint}</p>
+                        </div>
+                        <span
+                          className={`w-5 h-5 rounded-full border flex items-center justify-center mt-1 ${
+                            selected ? "border-luxury-gold bg-luxury-gold" : "border-white/30"
+                          }`}
+                        >
+                          {selected && <span className="w-2 h-2 bg-luxury-bg rounded-full" />}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {!isExistingPayFlow && pm === PAYMENT_METHODS.COD && (
+                <p className="text-luxury-gold2/80 text-xs mt-4">
+                  COD orders are paid upon delivery. Online payment is disabled.
+                </p>
+              )}
+            </div>
+          </div>
 
-              <div className="space-y-2 text-white/75 text-sm sm:text-base">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span className="text-white">{formatMYR(subtotal)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Shipping</span>
-                  <span className="text-white">
-                    {shipping === 0 ? "FREE" : formatMYR(shipping)}
+          {/* Summary */}
+          <aside className="glass rounded-3xl p-8 h-fit lg:sticky lg:top-28">
+            <h3 className="font-serif text-2xl text-white mb-6">Order Summary</h3>
+
+            <div className="space-y-4 mb-6">
+              {items.map((i) => (
+                <div key={i.cartItemId || i.id} className="flex items-center gap-4">
+                  <div className="w-14 h-16 rounded-lg overflow-hidden bg-luxury-panel2 shrink-0">
+                    {i.image ? (
+                      <img src={i.image} alt={i.name} className="w-full h-full object-cover" />
+                    ) : null}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-serif text-lg text-white truncate">{i.name}</p>
+                    <p className="text-xs text-luxury-mut">Qty {i.qty}</p>
+                  </div>
+                  <span className="font-cormorant text-lg text-luxury-champagne whitespace-nowrap">
+                    {formatMYR(i.price * i.qty)}
                   </span>
                 </div>
-              </div>
+              ))}
+            </div>
 
-              <div className="flex justify-between text-lg sm:text-xl font-extrabold text-white pt-3 sm:pt-4 mt-3 sm:mt-4 border-t border-white/10">
-                <span>Total</span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-300 to-cyan-300">
-                  {formatMYR(total)}
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between text-luxury-mut">
+                <span>Subtotal</span>
+                <span className="text-luxury-text">{formatMYR(subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-luxury-mut">
+                <span>Shipping</span>
+                <span className={shipping === 0 ? "text-luxury-gold2" : "text-luxury-text"}>
+                  {shipping === 0 ? "Complimentary" : formatMYR(shipping)}
                 </span>
               </div>
+            </div>
 
-              <div className="grid grid-cols-1 gap-2 sm:gap-3 mt-5 sm:mt-6">
+            <div className="rule my-6" />
+
+            <div className="flex justify-between items-baseline mb-8">
+              <span className="label uppercase text-[11px] text-luxury-mut">Total</span>
+              <span className="font-serif text-3xl text-white">{formatMYR(total)}</span>
+            </div>
+
+            <div className="space-y-3">
+              {!isExistingPayFlow && (
                 <button
-                  onClick={() =>
-                    navigate(isExistingPayFlow ? "/orders?tab=TO_PAY" : "/cart")
-                  }
-                  className="w-full py-3 sm:py-4 rounded-xl font-bold text-sm sm:text-base bg-white/10 text-white hover:bg-white/15 transition disabled:opacity-50"
-                  disabled={loading}
-                >
-                  RETURN
-                </button>
-
-                {!isExistingPayFlow && (
-                  <button
-                    disabled={!isValid || loading}
-                    onClick={() => {
-                      setPayNow(false);
-                      setConfirmOpen(true);
-                    }}
-                    className={`w-full py-3 sm:py-4 rounded-xl font-extrabold text-base sm:text-lg transition-all duration-300
-                      flex items-center justify-center gap-3 ${
-                        isValid && !loading
-                          ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
-                          : "bg-white/10 text-white/40 cursor-not-allowed"
-                      }`}
-                  >
-                    {loading ? (
-                      <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      "PLACE ORDER (Pay Later)"
-                    )}
-                  </button>
-                )}
-
-                <button
-                  disabled={!payNowEnabled}
+                  disabled={!isValid || loading}
                   onClick={() => {
-                    if (isExistingPayFlow) {
-                      setConfirmOpen(true);
-                    } else {
-                      setPayNow(true);
-                      setConfirmOpen(true);
-                    }
+                    setPayNow(false);
+                    setConfirmOpen(true);
                   }}
-                  className={`w-full py-3 sm:py-4 rounded-xl font-extrabold text-base sm:text-lg transition-all duration-300
-                    flex items-center justify-center gap-3 ${
-                      payNowEnabled
-                        ? "bg-gradient-to-r from-sky-500 to-cyan-500 text-white shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40"
-                        : "bg-white/10 text-white/40 cursor-not-allowed"
-                    }`}
+                  className="w-full py-4 rounded-full text-[12px] font-medium label uppercase border border-luxury-gold/45 text-luxury-champagne hover:bg-luxury-gold/10 transition disabled:opacity-40"
                 >
-                  {loading ? (
-                    <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : isExistingPayFlow ? (
-                    "PAY NOW"
-                  ) : (
-                    "PAY & PLACE ORDER"
-                  )}
+                  {loading ? "Working…" : "Place Order · Pay Later"}
                 </button>
-              </div>
-            </aside>
-          </div>
+              )}
+
+              <button
+                disabled={!payNowEnabled}
+                onClick={() => {
+                  if (isExistingPayFlow) {
+                    setConfirmOpen(true);
+                  } else {
+                    setPayNow(true);
+                    setConfirmOpen(true);
+                  }
+                }}
+                className="btn-lux w-full py-4 rounded-full text-[12px] font-medium label uppercase disabled:opacity-40"
+              >
+                {loading
+                  ? "Working…"
+                  : isExistingPayFlow
+                  ? "Pay Now"
+                  : "Pay & Place Order"}
+              </button>
+
+              <button
+                onClick={() => navigate(isExistingPayFlow ? "/orders?tab=TO_PAY" : "/cart")}
+                disabled={loading}
+                className="w-full py-3 rounded-full text-[11px] label uppercase text-luxury-mut hover:text-white transition disabled:opacity-40"
+              >
+                Return
+              </button>
+            </div>
+          </aside>
         </div>
-      </div>
+      </main>
 
       {/* Confirm modal */}
       <ConfirmModal
@@ -531,48 +477,28 @@ export default function CheckoutPage() {
         }}
       />
 
-      {/* Panel: Payment Successful / Method Confirmed */}
+      {/* Panel: Payment Successful */}
       {paidOrderId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 rounded-3xl p-8 w-full max-w-md text-center shadow-2xl border border-white/20">
-            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30">
-              <span className="text-white text-3xl font-black">✓</span>
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="glass rounded-3xl p-9 w-full max-w-md text-center">
+            <div className="w-20 h-20 mx-auto mb-6 btn-lux rounded-full flex items-center justify-center text-3xl">
+              ✓
             </div>
-            <h2 className="text-2xl font-extrabold mb-2 text-white">Order Updated</h2>
-            <p className="text-white/70 mb-6">Your order #{paidOrderId} has been processed.</p>
-
+            <h2 className="font-serif text-3xl text-white mb-2">Order Updated</h2>
+            <p className="text-luxury-mut mb-7">Your order #{paidOrderId} has been processed.</p>
             <div className="flex flex-col sm:flex-row gap-3">
               <button
-                onClick={async () => {
-                  try {
-                    const res = await http.get(`orders/${paidOrderId}/receipt-pdf/`, {
-                      responseType: "blob",
-                    });
-                    const blob = new Blob([res.data], { type: "application/pdf" });
-                    const url = window.URL.createObjectURL(blob);
-                    const link = document.createElement("a");
-                    link.href = url;
-                    link.download = `order_${paidOrderId}.pdf`;
-                    document.body.appendChild(link);
-                    link.click();
-                    link.remove();
-                    setTimeout(() => window.URL.revokeObjectURL(url), 10000);
-                  } catch (err) {
-                    console.error("Failed to download PDF:", err);
-                    alert("Unable to download PDF. Please try again.");
-                  }
-                }}
-                className="flex-1 py-3 rounded-xl font-semibold bg-white/10 text-white border border-white/20 hover:bg-white/20 transition"
+                onClick={() => downloadPdf(paidOrderId, "order")}
+                className="flex-1 py-3 rounded-full border border-white/15 text-luxury-text hover:border-luxury-gold/40 transition"
               >
                 Download PDF
               </button>
-
               <button
                 onClick={() => {
                   setPaidOrderId(null);
                   navigate("/orders?tab=TO_SHIP");
                 }}
-                className="flex-1 py-3 rounded-xl font-semibold bg-gradient-to-r from-sky-500 to-cyan-500 text-white hover:opacity-95 transition"
+                className="btn-lux flex-1 py-3 rounded-full text-[12px] font-medium label uppercase"
               >
                 OK
               </button>
@@ -583,49 +509,28 @@ export default function CheckoutPage() {
 
       {/* Panel: Pay Later (invoice) */}
       {invoiceOrderId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 rounded-3xl p-8 w-full max-w-md text-center shadow-2xl border border-white/20">
-            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30">
-              <span className="text-white text-3xl font-black">★</span>
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="glass rounded-3xl p-9 w-full max-w-md text-center">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full border border-luxury-gold/40 text-luxury-gold2 flex items-center justify-center text-3xl">
+              ★
             </div>
-            <h2 className="text-2xl font-extrabold mb-2 text-white">Order Placed</h2>
-            <p className="text-white/70 mb-6">
-              Your order #{invoiceOrderId} has been created. You can pay later with any
-              available payment method.
+            <h2 className="font-serif text-3xl text-white mb-2">Order Placed</h2>
+            <p className="text-luxury-mut mb-7">
+              Your order #{invoiceOrderId} has been created. You can pay later with any available payment method.
             </p>
-
             <div className="flex flex-col sm:flex-row gap-3">
               <button
-                onClick={async () => {
-                  try {
-                    const res = await http.get(`orders/${invoiceOrderId}/receipt-pdf/`, {
-                      responseType: "blob",
-                    });
-                    const blob = new Blob([res.data], { type: "application/pdf" });
-                    const url = window.URL.createObjectURL(blob);
-                    const link = document.createElement("a");
-                    link.href = url;
-                    link.download = `invoice_order_${invoiceOrderId}.pdf`;
-                    document.body.appendChild(link);
-                    link.click();
-                    link.remove();
-                    setTimeout(() => window.URL.revokeObjectURL(url), 10000);
-                  } catch (err) {
-                    console.error("Failed to download invoice:", err);
-                    alert("Unable to download invoice. Please try again.");
-                  }
-                }}
-                className="flex-1 py-3 rounded-xl font-semibold bg-white/10 text-white border border-white/20 hover:bg-white/20 transition"
+                onClick={() => downloadPdf(invoiceOrderId, "invoice_order")}
+                className="flex-1 py-3 rounded-full border border-white/15 text-luxury-text hover:border-luxury-gold/40 transition"
               >
                 Download Invoice
               </button>
-
               <button
                 onClick={() => {
                   setInvoiceOrderId(null);
                   navigate("/orders?tab=TO_PAY");
                 }}
-                className="flex-1 py-3 rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:opacity-95 transition"
+                className="btn-lux flex-1 py-3 rounded-full text-[12px] font-medium label uppercase"
               >
                 OK
               </button>

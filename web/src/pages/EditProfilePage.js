@@ -64,7 +64,7 @@ export default function EditProfilePage() {
   // Guest view
   if (!isAuthed) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 flex flex-col items-center justify-center text-white px-6">
+      <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-luxury-gold to-slate-900 flex flex-col items-center justify-center text-white px-6">
         <h1 className="text-3xl font-bold mb-4">Not logged in</h1>
         <p className="mb-6 text-white/70">Please log in to edit your profile.</p>
       </div>
@@ -73,7 +73,7 @@ export default function EditProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 text-white p-6">
+      <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-luxury-gold to-slate-900 text-white p-6">
         Loading profile...
       </div>
     );
@@ -92,13 +92,13 @@ export default function EditProfilePage() {
 
   return (
     <div
-      className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900
+      className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-luxury-gold to-slate-900
                  relative overflow-hidden px-4 sm:px-6 md:px-10 lg:px-16"
     >
       {/* Decorative blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-luxury-gold/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-cyan-400/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-luxury-gold/10 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-0 w-64 h-64 bg-white/5 rounded-full blur-2xl" />
       </div>
 
@@ -345,7 +345,7 @@ function Modal({ title, onClose, children, footer }) {
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
       <div
         className="w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl
-                   bg-gradient-to-br from-[#0c1a3a] via-[#0b1733] to-[#0c1a3a]
+                   bg-gradient-to-br from-[#070B14] via-[#0b1733] to-[#070B14]
                    border border-luxury-gold/20
                    max-h-[85vh] sm:max-h-[90vh] flex flex-col"
       >

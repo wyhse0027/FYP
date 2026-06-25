@@ -215,7 +215,7 @@ export default function AdminAboutPage() {
   // MAIN UI
   // ─────────────────────────────
   return (
-    <div className="min-h-screen bg-[#0c1a3a] text-white px-6 md:px-12 lg:px-24 py-10">
+    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-24 py-10">
       <div className="max-w-[1200px] mx-auto">
         <PageHeader title="Edit About Page" />
 
@@ -224,10 +224,10 @@ export default function AdminAboutPage() {
           <div
             className={`fixed top-6 right-6 z-[9999] px-4 py-2 rounded-lg shadow-lg transition-all duration-300 ${
               message.type === "success"
-                ? "bg-green-600"
+                ? "bg-luxury-gold"
                 : message.type === "error"
                 ? "bg-red-600"
-                : "bg-blue-600"
+                : "bg-luxury-gold"
             }`}
           >
             {message.text}
@@ -400,7 +400,7 @@ export default function AdminAboutPage() {
                     onClick={() =>
                       document.getElementById(`icon-input-${key}`).click()
                     }
-                    className="px-2 py-1 bg-blue-500/60 hover:bg-blue-600 rounded text-sm"
+                    className="px-2 py-1 bg-luxury-gold/60 hover:bg-luxury-gold rounded text-sm"
                   >
                     Change Icon
                   </button>
@@ -455,7 +455,7 @@ export default function AdminAboutPage() {
             <button
               onClick={saveChanges}
               disabled={saving}
-              className="px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white disabled:opacity-50"
+              className="px-6 py-2 bg-luxury-gold hover:bg-luxury-gold rounded-lg text-white disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save Changes"}
             </button>
@@ -556,7 +556,7 @@ export default function AdminAboutPage() {
               </button>
               <button
                 onClick={addSocialLink}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+                className="px-4 py-2 bg-luxury-gold hover:bg-luxury-gold rounded-lg"
               >
                 Add
               </button>

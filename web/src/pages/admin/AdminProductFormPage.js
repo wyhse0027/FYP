@@ -30,7 +30,7 @@ function Modal({
           )}
           <button
             onClick={onConfirm}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded font-semibold"
+            className="px-4 py-2 bg-luxury-gold hover:bg-luxury-gold rounded font-semibold"
           >
             {confirmText}
           </button>
@@ -46,7 +46,7 @@ function Toast({ show, message, success = true, onClose }) {
 
   const base =
     "fixed inset-0 flex items-center justify-center z-50 px-4 py-4";
-  const color = success ? "bg-green-600" : "bg-red-600";
+  const color = success ? "bg-luxury-gold" : "bg-red-600";
 
   return (
     <div className={base}>
@@ -255,13 +255,13 @@ export default function AdminProductFormPage() {
 
   /* ---------------- UI ---------------- */
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0c1a3a] px-6 py-10 text-white">
+    <div className="min-h-screen flex items-center justify-center bg-[#070B14] px-6 py-10 text-white">
       <div className="bg-[#112355] w-full max-w-3xl rounded-2xl shadow-2xl p-8">
         {/* Header Row: back icon + title */}
         <div className="flex items-center justify-center mb-8 relative">
           <button
             onClick={() => navigate(-1)}
-            className="absolute left-0 text-3xl hover:text-yellow-400 transition-transform hover:-translate-x-1"
+            className="absolute left-0 text-3xl hover:text-luxury-gold transition-transform hover:-translate-x-1"
             aria-label="Go Back"
           >
             ❮
@@ -280,7 +280,7 @@ export default function AdminProductFormPage() {
               value={form.name || ""}
               onChange={handleChange}
               placeholder="Enter product name"
-              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-luxury-gold"
               required
             />
           </div>
@@ -293,7 +293,7 @@ export default function AdminProductFormPage() {
               value={form.category || ""}
               onChange={handleChange}
               placeholder="Enter category"
-              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-luxury-gold"
               required
             />
           </div>
@@ -305,7 +305,7 @@ export default function AdminProductFormPage() {
               name="target"
               value={form.target || "UNISEX"}
               onChange={handleChange}
-              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 appearance-none focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 appearance-none focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-luxury-gold"
             >
               <option className="bg-[#0c1f3f] text-white" value="MEN">
                 Men
@@ -329,7 +329,7 @@ export default function AdminProductFormPage() {
               value={form.price || ""}
               onChange={handleChange}
               placeholder="Enter price"
-              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-luxury-gold"
               required
             />
           </div>
@@ -343,7 +343,7 @@ export default function AdminProductFormPage() {
               value={form.stock || ""}
               onChange={handleChange}
               placeholder="Enter stock quantity"
-              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-luxury-gold"
               required
             />
           </div>
@@ -356,7 +356,7 @@ export default function AdminProductFormPage() {
               value={form.description || ""}
               onChange={handleChange}
               placeholder="Write product description"
-              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 h-32 resize-none focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 h-32 resize-none focus:outline-none focus:ring-2 focus:ring-luxury-gold"
             />
           </div>
 
@@ -482,7 +482,7 @@ export default function AdminProductFormPage() {
             <button
               disabled={loading}
               type="submit"
-              className="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 rounded font-semibold"
+              className="px-6 py-2 bg-luxury-gold hover:bg-luxury-gold rounded font-semibold"
             >
               {loading
                 ? "Saving…"

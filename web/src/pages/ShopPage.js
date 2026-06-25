@@ -3,30 +3,32 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import http from "../lib/http";
-import PageHeader from "../components/PageHeader";
-import { useCart } from "../context/CartContext";
-import {
-  IoBagHandleOutline,
-  IoSwapHorizontalOutline,
-  IoChevronForward,
-  IoSparklesOutline,
-  IoFilterOutline,
-  IoCloseOutline,
-} from "react-icons/io5";
+import { Chip, Dropdown } from "../components/ui";
 
 const MAX_PRIMARY_CATEGORIES = 5;
+
+const SORT_OPTIONS = [
+  { value: "featured", label: "Featured" },
+  { value: "price-asc", label: "Price · Low to High" },
+  { value: "price-desc", label: "Price · High to Low" },
+  { value: "name", label: "Name · A–Z" },
+];
+
+const targetLabel = (t) =>
+  t === "MEN" ? "Men" : t === "WOMEN" ? "Women" : "Unisex";
+
+const cardImg = (p) =>
+  p?.card_image || p?.promo_image || p?.media_gallery?.[0]?.file || null;
 
 const ShopPage = () => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedGenders, setSelectedGenders] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const { itemCount } = useCart();
+  const [sort, setSort] = useState("featured");
 
   useEffect(() => {
     let alive = true;
-
     http
       .get("products/")
       .then((res) => {
@@ -36,7 +38,6 @@ const ShopPage = () => {
       })
       .catch((err) => console.error("Error fetching products:", err))
       .finally(() => alive && setLoading(false));
-
     return () => {
       alive = false;
     };
@@ -54,410 +55,245 @@ const ShopPage = () => {
     { label: "Unisex", value: "UNISEX" },
   ];
 
-  const toggleCategory = (cat) => {
+  const toggleCategory = (cat) =>
     setSelectedCategories((prev) =>
       prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
     );
-  };
 
-  const toggleGender = (value) => {
+  const toggleGender = (value) =>
     setSelectedGenders((prev) =>
       prev.includes(value) ? prev.filter((g) => g !== value) : [...prev, value]
     );
-  };
 
   const clearAll = () => {
     setSelectedCategories([]);
     setSelectedGenders([]);
   };
 
-  const hasAnyFilter = selectedCategories.length > 0 || selectedGenders.length > 0;
+  const hasAnyFilter =
+    selectedCategories.length > 0 || selectedGenders.length > 0;
 
   const overflowHasActive = categories.some(
     (cat, i) => i >= MAX_PRIMARY_CATEGORIES && selectedCategories.includes(cat)
   );
 
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+    const list = products.filter((product) => {
       const categoryActive = selectedCategories.length > 0;
       const genderActive = selectedGenders.length > 0;
-
       const productCategory = String(product.category || "").trim();
-      const matchesCategory = !categoryActive || selectedCategories.includes(productCategory);
-
+      const matchesCategory =
+        !categoryActive || selectedCategories.includes(productCategory);
       const target = String(product.target || "").toUpperCase();
       const matchesGender = !genderActive || selectedGenders.includes(target);
-
       return matchesCategory && matchesGender;
     });
-  }, [products, selectedCategories, selectedGenders]);
 
-  // Ratings
-  const getRatingAvg = (p) => {
-    const v =
-      p?.rating_avg ??
-      p?.avg_rating ??
-      p?.average_rating ??
-      p?.ratingAverage ??
-      0;
-    return Number(v) || 0;
-  };
-
-  const renderStars = (avg = 0) => {
-    const rounded = Math.round(Number(avg) || 0);
-    return Array(5)
-      .fill(0)
-      .map((_, i) => (
-        <span key={i} className={i < rounded ? "text-luxury-gold" : "text-white/25"}>
-          ★
-        </span>
-      ));
-  };
-
-  // Quick tools (remove Cart; keep Compare + Quiz)
-  const quickTools = [
-    {
-      to: "/compare",
-      icon: IoSwapHorizontalOutline,
-      label: "Compare",
-      accent: "border-sky-500/30 hover:border-sky-300/60",
-      iconBg: "bg-sky-400/10",
-      iconBorder: "border-sky-400/25",
-    },
-    {
-      to: "/quiz",
-      icon: IoSparklesOutline,
-      label: "Find Your Scent",
-      accent: "border-pink-500/30 hover:border-pink-300/60",
-      iconBg: "bg-pink-400/10",
-      iconBorder: "border-pink-400/25",
-    },
-  ];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0c1a3a] flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-          className="w-14 h-14 border-2 border-sky-300/80 border-t-transparent rounded-full"
-        />
-      </div>
-    );
-  }
+    const sorted = [...list];
+    if (sort === "price-asc")
+      sorted.sort((a, b) => Number(a.price) - Number(b.price));
+    else if (sort === "price-desc")
+      sorted.sort((a, b) => Number(b.price) - Number(a.price));
+    else if (sort === "name")
+      sorted.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    return sorted;
+  }, [products, selectedCategories, selectedGenders, sort]);
 
   return (
-    <div className="min-h-screen bg-[#0c1a3a]">
-      {/* Decorative background glow */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-[620px] h-[620px] bg-sky-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-[520px] h-[520px] bg-pink-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-      </div>
+    <div className="relative">
+      {/* Glow */}
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(60% 40% at 50% 0%,rgba(212,175,55,0.12),transparent 60%)",
+        }}
+      />
 
-      <div className="relative z-10 w-full px-4 sm:px-6 md:px-12 lg:px-16">
-        <div className="mx-auto w-full max-w-screen-2xl py-6 text-[18px] md:text-[19px] lg:text-[20px]">
-          {/* Top bar: cart icon on the right (md+ double size) */}
-          <PageHeader
-            title="SHOP"
-            right={
-              <Link
-                to="/cart"
-                aria-label="Cart"
-                className="
-                  relative inline-flex items-center justify-center
-                  w-10 h-10 md:w-20 md:h-20
-                  rounded-full bg-white/5 border border-white/10
-                  hover:bg-white/10 transition
-                "
+      <main className="relative z-10 max-w-screen-2xl mx-auto px-6 sm:px-8 py-12 md:py-14">
+        {/* Title */}
+        <div className="text-center mb-9 md:mb-10">
+          <p className="label uppercase text-[11px] text-luxury-gold2 mb-4">
+            The Maison
+          </p>
+          <h1 className="font-serif text-5xl sm:text-6xl text-white mb-3">Shop</h1>
+          <p className="font-cormorant italic text-xl sm:text-2xl text-luxury-champagne/75">
+            Each fragrance, a chapter of the house.
+          </p>
+        </div>
+
+        {/* Filters + sort */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 mb-9 md:mb-10">
+          <div className="flex flex-wrap items-center gap-2.5 md:gap-3 text-xs label uppercase">
+            <Chip active={!hasAnyFilter} onClick={clearAll}>
+              All
+            </Chip>
+            {categories.slice(0, MAX_PRIMARY_CATEGORIES).map((cat) => (
+              <Chip
+                key={`cat-${cat}`}
+                active={selectedCategories.includes(cat)}
+                onClick={() => toggleCategory(cat)}
               >
-                <IoBagHandleOutline className="text-white/90 text-[22px] md:text-[44px]" />
-                {itemCount > 0 && (
-                  <span
-                    className="
-                      absolute -top-1 -right-1
-                      inline-flex items-center justify-center
-                      min-w-[22px] h-[22px] px-1.5
-                      md:min-w-[28px] md:h-[28px] md:px-2
-                      rounded-full bg-luxury-gold text-[#0c1a3a]
-                      text-[12px] md:text-[13px] font-extrabold leading-none
-                      shadow
-                    "
-                  >
-                    {itemCount > 99 ? "99+" : itemCount}
-                  </span>
-                )}
-              </Link>
-            }
-          />
+                {cat}
+              </Chip>
+            ))}
 
-          {/* Products first */}
-          <div className="flex items-center justify-between mb-3 mt-4">
-            <p className="text-white/60 text-sm">
-              Showing{" "}
-              <span className="text-sky-200 font-semibold">{filteredProducts.length}</span>{" "}
-              fragrances
-            </p>
-
-            {hasAnyFilter && (
-              <button
-                onClick={clearAll}
-                className="flex items-center gap-1 text-sm text-white/80 hover:text-white transition"
-              >
-                <IoCloseOutline />
-                Clear
-              </button>
+            {categories.length > MAX_PRIMARY_CATEGORIES && (
+              <details className="group relative inline-block">
+                <summary
+                  className={`list-none px-6 py-2.5 rounded-full border cursor-pointer select-none transition-all duration-300 text-xs label uppercase
+                    ${
+                      overflowHasActive
+                        ? "bg-luxury-gold/20 text-luxury-champagne border-luxury-gold/70"
+                        : "bg-transparent text-luxury-champagne/90 border-white/15 group-hover:border-luxury-gold/50"
+                    }`}
+                >
+                  More
+                </summary>
+                <div className="absolute mt-3 left-0 min-w-[220px] glass rounded-2xl p-3 z-30">
+                  {categories.slice(MAX_PRIMARY_CATEGORIES).map((cat) => {
+                    const active = selectedCategories.includes(cat);
+                    return (
+                      <button
+                        key={`more-${cat}`}
+                        onClick={() => toggleCategory(cat)}
+                        className={`w-full text-left px-4 py-3 rounded-xl text-xs mb-1.5 transition-all duration-200 label uppercase
+                          ${
+                            active
+                              ? "bg-luxury-gold/20 text-luxury-champagne"
+                              : "bg-transparent text-luxury-champagne/80 hover:bg-white/10"
+                          }`}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
+                </div>
+              </details>
             )}
+
+            <span className="hidden md:inline-block w-px h-5 bg-white/15 mx-1" />
+
+            {genderFilters.map((g) => (
+              <Chip
+                key={`gender-${g.value}`}
+                active={selectedGenders.includes(g.value)}
+                onClick={() => toggleGender(g.value)}
+              >
+                {g.label}
+              </Chip>
+            ))}
           </div>
 
-          {/* Filters */}
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="mb-5">
-            <div className="flex items-center gap-3 mb-3">
-              <IoFilterOutline className="text-sky-200 text-xl" />
-              <h2 className="text-white font-semibold tracking-wide">Filters</h2>
-            </div>
+          <div className="flex items-center gap-3 text-[11px] label uppercase text-luxury-mut">
+            <span>Sort</span>
+            <Dropdown
+              value={sort}
+              onChange={setSort}
+              options={SORT_OPTIONS}
+              align="right"
+              className="glass rounded-full px-5 py-2.5 min-w-[12rem] text-[11px] label uppercase text-luxury-text"
+              optionClassName="text-[11px] label uppercase"
+            />
+          </div>
+        </div>
 
-            <div className="flex flex-wrap md:flex-nowrap items-center gap-2 md:gap-4 md:overflow-x-auto md:whitespace-nowrap pb-2 md:pb-4 md:scrollbar-thin md:scrollbar-thumb-slate-600/70 text-[14px] sm:text-[15px] font-semibold">
-              <button
-                onClick={clearAll}
-                className={`px-4 py-2 md:px-7 md:py-3 rounded-full border-2 transition-all duration-200 shadow-sm
-                  ${
-                    !hasAnyFilter
-                      ? "bg-white text-blue-900 border-white shadow-white/40"
-                      : "bg-transparent text-sky-200 border-sky-500/50 hover:bg-sky-500/20 hover:text-white"
-                  }`}
-              >
-                All
-              </button>
-
-              {categories.slice(0, MAX_PRIMARY_CATEGORIES).map((cat) => {
-                const active = selectedCategories.includes(cat);
-                return (
-                  <button
-                    key={`cat-${cat}`}
-                    onClick={() => toggleCategory(cat)}
-                    className={`px-4 py-2 md:px-7 md:py-3 rounded-full border-2 transition-all duration-200 shadow-sm
-                      ${
-                        active
-                          ? "bg-sky-400 text-blue-900 border-sky-300 shadow-sky-400/40"
-                          : "bg-transparent text-sky-200 border-sky-500/50 hover:bg-sky-500/20 hover:text-white"
-                      }`}
-                  >
-                    {cat}
-                  </button>
-                );
-              })}
-
-              {genderFilters.map((g) => {
-                const active = selectedGenders.includes(g.value);
-                return (
-                  <button
-                    key={`gender-${g.value}`}
-                    onClick={() => toggleGender(g.value)}
-                    className={`px-4 py-2 md:px-7 md:py-3 rounded-full border-2 transition-all duration-200 shadow-sm
-                      ${
-                        active
-                          ? "bg-pink-400 text-blue-900 border-pink-300 shadow-pink-400/40"
-                          : "bg-transparent text-pink-200 border-pink-500/50 hover:bg-pink-500/20 hover:text-white"
-                      }`}
-                  >
-                    {g.label}
-                  </button>
-                );
-              })}
-
-              {categories.length > MAX_PRIMARY_CATEGORIES && (
-                <div className="relative inline-block">
-                  <details className="group">
-                    <summary
-                      className={`list-none px-4 py-2 md:px-7 md:py-3 rounded-full border-2 cursor-pointer select-none transition-all duration-200 shadow-sm
-                        ${
-                          overflowHasActive
-                            ? "bg-sky-400 text-blue-900 border-sky-300 shadow-sky-400/40"
-                            : "bg-transparent text-sky-200 border-sky-500/50 group-hover:bg-sky-500/20 group-hover:text-white"
-                        }`}
-                    >
-                      More
-                    </summary>
-
-                    <div className="absolute mt-2 right-0 min-w-[200px] bg-[#071426] border border-sky-500/40 rounded-2xl p-2 z-30 shadow-2xl">
-                      {categories.slice(MAX_PRIMARY_CATEGORIES).map((cat) => {
-                        const active = selectedCategories.includes(cat);
-                        return (
-                          <button
-                            key={`more-${cat}`}
-                            onClick={() => toggleCategory(cat)}
-                            className={`w-full text-left px-3 py-2 rounded-xl text-sm mb-1 transition
-                              ${
-                                active
-                                  ? "bg-sky-500/90 text-blue-950 font-semibold"
-                                  : "bg-transparent text-sky-100 hover:bg-sky-500/20"
-                              }`}
-                          >
-                            {cat}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </details>
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Products grid */}
+        {/* Grid */}
+        {loading ? (
+          <div className="flex flex-wrap justify-center gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] max-w-[360px] rounded-2xl glass p-5">
+                <div className="skel rounded-xl aspect-[4/5] mb-5" />
+                <div className="skel h-3 w-16 mb-3 rounded" />
+                <div className="skel h-6 w-32 rounded" />
+              </div>
+            ))}
+          </div>
+        ) : (
           <AnimatePresence mode="popLayout">
-            {filteredProducts.length === 0 ? (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
-                <p className="text-white/60 text-lg">No products found for this filter.</p>
-              </motion.div>
-            ) : (
-              <motion.div
-                layout
-                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5 md:gap-6 auto-rows-fr"
-              >
-                {filteredProducts.map((product, idx) => {
-                  const avg = getRatingAvg(product);
-
-                  return (
-                    <motion.div
-                      key={product.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.96 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.96 }}
-                      transition={{ delay: idx * 0.02 }}
-                    >
-                      <Link to={`/product/${product.id}`} className="block h-full group">
-                        <div className="relative h-full rounded-2xl border border-white/10 overflow-hidden bg-gradient-to-br from-white/10 to-white/5 hover:border-sky-300/40 transition-all duration-500">
-                          {/* Image */}
-                          <div className="aspect-[4/5] p-2 sm:p-3 md:p-4 flex items-center justify-center bg-gradient-to-b from-transparent to-black/20">
-                            <motion.img
-                              src={
-                                product.card_image ||
-                                product.promo_image ||
-                                product.media_gallery?.[0]?.file ||
-                                "/placeholder.png"
-                              }
-                              alt={product.name}
-                              className="w-full h-full object-contain group-hover:scale-[1.06] transition-transform duration-700"
-                              loading="lazy"
-                            />
-                          </div>
-
-                          {/* Info
-                              IMPORTANT FIX for your "dark blue cutting" issue:
-                              - remove bg-gradient-to-t block background here
-                              - keep it transparent + consistent padding
-                          */}
-                          <div className="relative p-3 sm:p-4 flex flex-col gap-2 min-w-0">
-                            {/* Category */}
-                            {product.category && (
-                              <span className="inline-block px-2.5 py-1 text-[10px] uppercase tracking-wider text-luxury-gold bg-luxury-panel/60 rounded-full border border-luxury-gold/25 w-fit">
-                                {String(product.category).trim()}
-                              </span>
-                            )}
-
-                            <h3 className="text-white font-bold text-[13px] sm:text-[14px] md:text-base leading-snug line-clamp-2 group-hover:text-sky-200 transition-colors">
-                              {product.name}
-                            </h3>
-
-                            {/* Target */}
-                            {product.target && (
-                              <span className="inline-block px-3 py-1 rounded-full text-[9px] bg-blue-900/70 text-sky-300 uppercase tracking-wide w-fit">
-                                {String(product.target).toUpperCase() === "MEN"
-                                  ? "For Men"
-                                  : String(product.target).toUpperCase() === "WOMEN"
-                                  ? "For Women"
-                                  : "Unisex"}
-                              </span>
-                            )}
-
-                            {/* ✅ Rating: stars only (no digits) */}
-                            <div className="flex items-center gap-2 min-w-0">
-                              <div className="flex text-base leading-none flex-none">
-                                {renderStars(avg)}
-                              </div>
-                            </div>
-
-                            {/* Price row */}
-                            <div className="flex items-center justify-between gap-3 mt-1">
-                              <p className="text-white font-extrabold text-lg sm:text-xl leading-none">
-                                RM {product.price}
-                              </p>
-
-                              <div className="flex-none w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:bg-white group-hover:border-white transition-all duration-300">
-                                <IoChevronForward className="text-white group-hover:text-blue-900 text-xl transition-colors" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Quick tools (no cart) */}
-          <div className="mt-10 pb-10">
-            <h3 className="text-white/80 font-semibold tracking-wide mb-3">Quick tools</h3>
-
-            {/* Mobile: icons only */}
-            <div className="grid grid-cols-2 gap-3 md:hidden">
-              {quickTools.map((tool) => (
-                <Link
-                  key={tool.to}
-                  to={tool.to}
-                  className={`relative rounded-2xl border bg-white/5 ${tool.accent} transition-all duration-300 overflow-hidden`}
-                  aria-label={tool.label}
-                >
-                  <div className="p-4 flex items-center justify-center">
-                    <div
-                      className={`w-12 h-12 rounded-2xl flex items-center justify-center ${tool.iconBg} border ${tool.iconBorder}`}
-                    >
-                      <tool.icon className="text-[24px] text-white/90" />
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-            {/* Desktop: full with labels */}
-            <div className="hidden md:grid grid-cols-2 gap-4">
-              {quickTools.map((tool, idx) => (
+            <motion.div
+              layout
+              className="flex flex-wrap justify-center gap-6"
+            >
+              {filteredProducts.map((product, idx) => (
                 <motion.div
-                  key={tool.to}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.06 }}
+                  key={product.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.97 }}
+                  transition={{ delay: idx * 0.03 }}
+                  className="w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] max-w-[360px]"
                 >
                   <Link
-                    to={tool.to}
-                    className={`block rounded-2xl border bg-gradient-to-br from-white/10 to-white/5 ${tool.accent}
-                      transition-all duration-300 overflow-hidden`}
+                    to={`/product/${product.id}`}
+                    className="card block rounded-2xl glass p-5 h-full"
                   >
-                    <div className="p-5 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-11 h-11 rounded-xl flex items-center justify-center ${tool.iconBg} border ${tool.iconBorder}`}
-                        >
-                          <tool.icon className="text-[22px] text-white/90" />
+                    <div className="rounded-xl overflow-hidden aspect-[4/5] mb-5 bg-luxury-panel2 relative">
+                      {product.target && (
+                        <span className="absolute top-3 left-3 z-10 px-3 py-1 rounded-full text-[9px] label uppercase bg-luxury-bg/80 border border-white/10 text-luxury-champagne">
+                          {targetLabel(String(product.target).toUpperCase())}
+                        </span>
+                      )}
+                      {cardImg(product) ? (
+                        <img
+                          src={cardImg(product)}
+                          alt={product.name}
+                          className="w-full h-full object-cover transition-transform duration-700"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white/30 text-sm">
+                          No Image
                         </div>
-                        <p className="text-white/90 font-semibold tracking-wide">{tool.label}</p>
-                      </div>
-
-                      <div className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                        <IoChevronForward className="text-white/70 text-xl" />
-                      </div>
+                      )}
+                    </div>
+                    {product.category && (
+                      <p className="label uppercase text-[10px] text-luxury-gold/90 mb-1">
+                        {String(product.category).trim()}
+                      </p>
+                    )}
+                    <h3 className="font-serif text-xl sm:text-2xl text-white line-clamp-1">
+                      {product.name}
+                    </h3>
+                    <div className="flex items-center justify-between mt-3">
+                      <span className="font-cormorant text-xl text-luxury-champagne">
+                        RM {product.price}
+                      </span>
+                      <span className="text-luxury-gold2 text-sm">✦</span>
                     </div>
                   </Link>
                 </motion.div>
               ))}
-            </div>
+
+              {/* Quiz card */}
+              <Link
+                to="/quiz"
+                className="card flex flex-col items-center justify-center text-center rounded-2xl glass p-5 border-dashed w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] max-w-[360px]"
+              >
+                <div className="w-14 h-14 rounded-full border border-luxury-gold/40 flex items-center justify-center mb-4 text-luxury-gold2 text-2xl">
+                  ✦
+                </div>
+                <h3 className="font-serif text-xl text-white mb-1">
+                  Not sure where to start?
+                </h3>
+                <p className="text-sm text-luxury-mut mb-4">Take the scent quiz.</p>
+                <span className="px-6 py-2.5 rounded-full text-[11px] label uppercase border border-luxury-gold/45 text-luxury-champagne">
+                  Find your scent
+                </span>
+              </Link>
+            </motion.div>
+          </AnimatePresence>
+        )}
+
+        {!loading && filteredProducts.length === 0 && (
+          <div className="text-center py-16">
+            <p className="font-cormorant italic text-2xl text-luxury-champagne/70">
+              No fragrances found for this selection.
+            </p>
           </div>
-        </div>
-      </div>
+        )}
+      </main>
     </div>
   );
 };

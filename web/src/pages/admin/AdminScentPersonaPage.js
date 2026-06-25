@@ -199,7 +199,7 @@ export default function AdminScentPersonaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0c1a3a] text-white px-4 md:px-8 lg:px-12 py-8 relative">
+    <div className="min-h-screen bg-[#070B14] text-white px-4 md:px-8 lg:px-12 py-8 relative">
       <div className="max-w-6xl mx-auto">
         <PageHeader title="Scent Persona Management" />
 
@@ -213,13 +213,13 @@ export default function AdminScentPersonaPage() {
           <div className="flex gap-2">
             <button
               onClick={handleStartNew}
-              className="bg-pink-500 hover:bg-pink-600 transition px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm"
+              className="bg-luxury-gold hover:bg-luxury-gold transition px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm"
             >
               <IoAdd /> New Persona
             </button>
             <button
               onClick={fetchPersonas}
-              className="bg-sky-600 hover:bg-sky-700 transition px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm"
+              className="bg-luxury-gold hover:bg-luxury-gold transition px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm"
             >
               <IoRefresh /> Refresh
             </button>
@@ -248,7 +248,7 @@ export default function AdminScentPersonaPage() {
                     key={p.id}
                     className={`px-3 py-2 rounded-lg text-xs cursor-pointer flex items-start justify-between gap-2 border ${
                       active
-                        ? "bg-pink-500/30 border-pink-400"
+                        ? "bg-luxury-gold/30 border-luxury-gold"
                         : "bg-white/5 border-white/10 hover:bg-white/10"
                     }`}
                     onClick={() => handleSelectPersona(p)}
@@ -296,7 +296,7 @@ export default function AdminScentPersonaPage() {
                   <label className="text-xs text-gray-300">Persona Name</label>
                   <input
                     name="persona_name"
-                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-sky-400"
+                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-luxury-gold"
                     placeholder="e.g. The Fresh Explorer"
                     value={formData.persona_name}
                     onChange={handleChange}
@@ -307,7 +307,7 @@ export default function AdminScentPersonaPage() {
                   <label className="text-xs text-gray-300">Category</label>
                     <select
                         name="category"
-                        className="dark-select w-full px-3 py-2 rounded-lg border border-white/10 bg-[#101a3a] text-gray-100 text-sm outline-none focus:ring-2 focus:ring-sky-400 uppercase"
+                        className="dark-select w-full px-3 py-2 rounded-lg border border-white/10 bg-[#101a3a] text-gray-100 text-sm outline-none focus:ring-2 focus:ring-luxury-gold uppercase"
                         value={formData.category}
                         onChange={handleChange}
                     >
@@ -328,7 +328,7 @@ export default function AdminScentPersonaPage() {
                   <label className="text-xs text-gray-300">Description / Tagline</label>
                   <textarea
                     name="description"
-                    className="w-full min-h-[100px] px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-sky-400"
+                    className="w-full min-h-[100px] px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-luxury-gold"
                     placeholder="Short story of this persona (mood, lifestyle, scent vibe)..."
                     value={formData.description}
                     onChange={handleChange}
@@ -341,7 +341,7 @@ export default function AdminScentPersonaPage() {
                   </label>
                   <input
                     name="scent_notes_text"
-                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-sky-400"
+                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-luxury-gold"
                     placeholder="e.g. citrus, bergamot, marine accord"
                     value={formData.scent_notes_text}
                     onChange={handleChange}
@@ -354,7 +354,7 @@ export default function AdminScentPersonaPage() {
                   </label>
                   <input
                     name="occasions_text"
-                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-sky-400"
+                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-luxury-gold"
                     placeholder="e.g. daily work, date night, weekend brunch"
                     value={formData.occasions_text}
                     onChange={handleChange}
@@ -423,7 +423,7 @@ export default function AdminScentPersonaPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-5 py-2 rounded-lg text-sm font-semibold bg-green-500 hover:bg-green-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="px-5 py-2 rounded-lg text-sm font-semibold bg-luxury-gold hover:bg-luxury-gold disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading
                     ? "Saving..."
@@ -470,7 +470,7 @@ export default function AdminScentPersonaPage() {
         <div
           className={`fixed bottom-5 right-5 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50 ${
             toast.type === "success"
-              ? "bg-green-500 text-white"
+              ? "bg-luxury-gold text-white"
               : "bg-red-500 text-white"
           }`}
         >

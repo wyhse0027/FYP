@@ -36,7 +36,7 @@ export default function TagsInput({ tags, setTags }) {
         {tags.map((tag, i) => (
           <span
             key={i}
-            className="bg-blue-700/60 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1"
+            className="bg-luxury-gold/60 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1"
           >
             {tag}
             <button

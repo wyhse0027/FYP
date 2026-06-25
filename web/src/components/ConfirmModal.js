@@ -33,7 +33,7 @@ export default function ConfirmModal({
 
   const confirmBtnClass =
     variant === "danger"
-      ? "bg-gradient-to-r from-rose-500 to-rose-400 hover:from-rose-400 hover:to-rose-500 text-white shadow-lg shadow-rose-500/20"
+      ? "bg-gradient-to-r from-luxury-gold to-luxury-gold hover:from-luxury-gold hover:to-luxury-gold text-white shadow-lg shadow-luxury-gold/20"
       : "bg-gradient-to-r from-luxury-gold to-luxury-gold-light hover:from-luxury-gold-light hover:to-luxury-gold text-slate-900 shadow-lg shadow-luxury-gold/20";
 
   return (
@@ -58,7 +58,7 @@ export default function ConfirmModal({
             exit={{ opacity: 0, scale: 0.92, y: 18 }}
             transition={{ type: "spring", duration: 0.5 }}
             className="relative w-full max-w-md rounded-2xl overflow-hidden
-                       bg-gradient-to-br from-[#0c1a3a] via-[#0b1733] to-[#0c1a3a]
+                       bg-gradient-to-br from-[#070B14] via-[#0b1733] to-[#070B14]
                        border border-luxury-gold/20 shadow-2xl"
           >
             {/* Corner accents */}

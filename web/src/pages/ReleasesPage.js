@@ -1,14 +1,19 @@
 // src/pages/ReleasesPage.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import http from "../lib/http";
 
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination, EffectCoverflow } from "swiper/modules";
+const targetLabel = (t) =>
+  t === "MEN" ? "Men" : t === "WOMEN" ? "Women" : t === "UNISEX" ? "Unisex" : "";
 
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/effect-coverflow";
+const slideImg = (p) => p?.card_image || p?.promo_image || p?.media_gallery?.[0]?.file;
+
+const fmtDate = (s) => {
+  if (!s) return null;
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+};
 
 export default function ReleasesPage() {
   const [products, setProducts] = useState([]);
@@ -20,139 +25,143 @@ export default function ReleasesPage() {
       .then((res) => {
         const items = Array.isArray(res.data) ? res.data : res.data.results || [];
         setProducts(items);
-        setLoading(false);
       })
-      .catch((err) => {
-        console.error("Error fetching products:", err);
-        setLoading(false);
-      });
+      .catch((err) => console.error("Error fetching products:", err))
+      .finally(() => setLoading(false));
   }, []);
+
+  // Newest first — this is the "release journal" order.
+  const drops = useMemo(
+    () =>
+      [...products].sort(
+        (a, b) =>
+          new Date(b.created_at || 0) - new Date(a.created_at || 0) ||
+          (b.id || 0) - (a.id || 0)
+      ),
+    [products]
+  );
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full bg-[#0c1a3a] flex items-center justify-center">
-        <p className="text-white text-center">Loading releases...</p>
+      <div className="relative min-h-[70vh] flex items-center justify-center">
+        <div className="w-14 h-14 border-2 border-luxury-gold/80 border-t-transparent rounded-full animate-spin-gold" />
       </div>
     );
   }
 
-  if (!products.length) {
+  if (!drops.length) {
     return (
-      <div className="min-h-screen w-full bg-[#0c1a3a] flex items-center justify-center">
-        <p className="text-white text-center">No releases found.</p>
+      <div className="relative min-h-[60vh] flex items-center justify-center">
+        <p className="font-cormorant italic text-2xl text-luxury-champagne/70">No releases found.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0c1a3a] text-white flex flex-col items-center">
-      {/* Top Header (no overlap + allow 2 lines, no "...") */}
-      <div className="w-full border-b border-white/10 bg-[#0c1a3a]">
-        <div className="mx-auto w-full max-w-[1600px] px-4 md:px-10 py-4 md:py-6">
-          <div className="grid grid-cols-[44px_1fr_44px] items-center">
-            <Link
-              to="/"
-              aria-label="Back"
-              className="h-10 w-10 grid place-items-center rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition"
-            >
-              <span className="text-2xl leading-none">‹</span>
-            </Link>
+    <div className="relative">
+      <div
+        className="fixed inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(55% 40% at 50% 0%,rgba(212,175,55,0.14),transparent 60%)" }}
+      />
 
-            {/* Allow wrapping up to 2 lines, centered */}
-            <h1 className="text-center text-lg sm:text-xl md:text-3xl font-extrabold uppercase tracking-wide text-white px-2 leading-snug">
-              <span className="block line-clamp-2 break-words">
-                GERAIN CHAN RELEASES
-              </span>
-            </h1>
+      <main className="relative z-10 max-w-6xl mx-auto px-6 sm:px-8 py-14">
+        {/* Header */}
+        <div className="text-center mb-14 md:mb-16">
+          <p className="label uppercase text-[11px] text-luxury-gold2 mb-4">New &amp; Limited</p>
+          <h1 className="font-serif text-5xl sm:text-6xl text-white mb-3">The Release Journal</h1>
+          <p className="font-cormorant italic text-xl sm:text-2xl text-luxury-champagne">
+            Every drop, in the order it arrived.
+          </p>
+        </div>
 
-            {/* spacer keeps title perfectly centered */}
-            <div className="h-10 w-10" />
+        {/* Timeline */}
+        <div className="relative pl-14 sm:pl-20">
+          {/* vertical rail */}
+          <div
+            className="absolute left-5 sm:left-7 top-2 bottom-24 w-px"
+            style={{ background: "linear-gradient(180deg,rgba(212,175,55,0.5),rgba(212,175,55,0.12))" }}
+          />
+
+          {drops.map((p, i) => {
+            const odd = i % 2 === 1;
+            const date = fmtDate(p.created_at);
+            const eyebrow = [p.category && String(p.category).trim(), targetLabel(String(p.target || "").toUpperCase())]
+              .filter(Boolean)
+              .join(" · ");
+            return (
+              <article key={p.id} className="relative mb-14 md:mb-16">
+                <span className="absolute -left-[2.15rem] sm:-left-[3.05rem] top-1 w-9 h-9 rounded-full bg-luxury-panel2 border border-luxury-gold/50 text-luxury-gold2 flex items-center justify-center text-[11px] label">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+
+                <p className="label uppercase text-[10px] text-luxury-mut mb-3">
+                  {date || "Latest"}
+                  {i === 0 ? " · Just Landed" : ""}
+                </p>
+
+                <div className="glass rounded-3xl overflow-hidden grid sm:grid-cols-2">
+                  <div
+                    className={`aspect-[4/3] sm:aspect-auto sm:min-h-[20rem] overflow-hidden bg-luxury-panel2 ${
+                      odd ? "sm:order-2" : ""
+                    }`}
+                  >
+                    {slideImg(p) ? (
+                      <img src={slideImg(p)} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-luxury-mut">{p.name}</div>
+                    )}
+                  </div>
+
+                  <div className={`p-8 flex flex-col justify-center ${odd ? "sm:order-1" : ""}`}>
+                    {i === 0 && (
+                      <div className="mb-3">
+                        <span className="px-3 py-1 rounded-full text-[9px] label uppercase border border-luxury-gold/40 text-luxury-gold2">
+                          New
+                        </span>
+                      </div>
+                    )}
+                    {eyebrow && (
+                      <p className="label uppercase text-[10px] text-luxury-gold2 mb-2">{eyebrow}</p>
+                    )}
+                    <h2 className="font-serif text-4xl text-white mb-3">{p.name}</h2>
+                    {p.description && (
+                      <p className="font-cormorant italic text-xl text-luxury-champagne leading-relaxed mb-6 line-clamp-3">
+                        {p.description}
+                      </p>
+                    )}
+                    <Link
+                      to={`/product/${p.id}`}
+                      className="ghost self-start px-7 py-3 rounded-full text-[11px] label uppercase"
+                    >
+                      Discover
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+
+          {/* Next drop */}
+          <div className="relative">
+            <span className="absolute -left-[2.15rem] sm:-left-[3.05rem] top-1 w-9 h-9 rounded-full bg-luxury-panel2 border border-dashed border-luxury-gold/40 text-luxury-gold2 flex items-center justify-center">
+              ✦
+            </span>
+            <div className="glass rounded-3xl p-10 text-center border-dashed">
+              <p className="label uppercase text-[11px] text-luxury-gold2 mb-3">Coming Soon</p>
+              <h3 className="font-serif text-3xl text-white mb-3">The next chapter is in composition</h3>
+              <p className="text-luxury-mut mb-7 max-w-md mx-auto">
+                Be the first to know when the next fragrance is released.
+              </p>
+              <a
+                href="mailto:hello@gerainchan.com?subject=Notify%20me%20about%20the%20next%20release"
+                className="btn-lux inline-block px-9 py-4 rounded-full text-[12px] font-medium label uppercase"
+              >
+                Notify Me
+              </a>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Content */}
-      <div className="w-full max-w-[1600px] flex-1 px-4 md:px-10 py-6 md:py-12">
-        {/* ✅ MOBILE: vertical listings */}
-        <div className="md:hidden flex flex-col gap-5">
-          {products.map((p) => (
-            <Link
-              key={p.id}
-              to={`/product/${p.id}`}
-              className="block rounded-2xl overflow-hidden border border-white/10 bg-white/5 shadow-2xl"
-            >
-              <div className="relative w-full">
-                <img
-                  src={p.promo_image}
-                  alt={p.name}
-                  className="w-full h-auto object-cover"
-                  loading="lazy"
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                  <h2 className="text-lg font-semibold line-clamp-1">{p.name}</h2>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* ✅ PC (md+): keep your current Swiper design */}
-        <div className="hidden md:flex items-center">
-          <Swiper
-            modules={[Autoplay, Pagination, EffectCoverflow]}
-            effect="coverflow"
-            grabCursor={true}
-            centeredSlides={true}
-            loop={true}
-            slidesPerView={1}
-            breakpoints={{
-              768: { slidesPerView: 1 },
-              1024: { slidesPerView: 1 },
-            }}
-            coverflowEffect={{
-              rotate: 25,
-              stretch: 0,
-              depth: 250,
-              modifier: 1,
-              slideShadows: true,
-            }}
-            autoplay={{
-              delay: 5000,
-              disableOnInteraction: false,
-            }}
-            pagination={{ clickable: true }}
-            className="w-full"
-          >
-            {products.map((p) => (
-              <SwiperSlide key={p.id}>
-                <Link to={`/product/${p.id}`}>
-                  <div className="relative w-full flex justify-center">
-                    <img
-                      src={p.promo_image}
-                      alt={p.name}
-                      className="
-                        max-w-full
-                        w-auto
-                        max-h-[80vh]
-                        object-contain
-                        rounded-2xl
-                        shadow-2xl
-                        border border-white/10
-                      "
-                      loading="lazy"
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 md:p-6">
-                      <h2 className="text-xl md:text-2xl font-semibold line-clamp-1">
-                        {p.name}
-                      </h2>
-                    </div>
-                  </div>
-                </Link>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
