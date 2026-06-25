@@ -400,7 +400,7 @@ export default function ARViewer() {
         mindar-image={`imageTargetSrc: ${data.marker_mind}; autoStart: false; uiScanning: true; uiError: true;`}
         gltf-model={`dracoDecoderPath: ${DRACO_DECODER_PATH}`}
         color-space="sRGB"
-        renderer="colorManagement: true, physicallyCorrectLights"
+        renderer="colorManagement: true"
         vr-mode-ui="enabled: false"
         device-orientation-permission-ui="enabled: true"
         embedded
