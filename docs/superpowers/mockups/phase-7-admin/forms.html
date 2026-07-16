@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maison Admin — Editor Pages Mockup</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script>
+  tailwind.config = { theme: { extend: { colors: { luxury: {
+    bg:"#070B14", panel:"#0B1222", panel2:"#0E1830", line:"#1C2740",
+    gold:"#D4AF37", gold2:"#F3D37A", champagne:"#F7E7CE", text:"#ECE7DD", mut:"#A9B0BE"
+  } }, fontFamily: { serif:['"Playfair Display"','Georgia','serif'], sans:['Inter','system-ui','sans-serif'] } } } }
+</script>
+<style>
+  body{background:#070B14;color:#ECE7DD;font-family:Inter,system-ui,sans-serif}
+  h1,h2,h3,h4{font-family:"Playfair Display",Georgia,serif;letter-spacing:-.01em}
+  .label{letter-spacing:.34em}
+  .glass{background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.02));backdrop-filter:blur(16px);border:1px solid rgba(212,175,55,.16)}
+  .glass2{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07)}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,.55),transparent)}
+  .btn-lux{display:inline-flex;align-items:center;justify-content:center;position:relative;overflow:hidden;color:#070B14;background:linear-gradient(110deg,#D4AF37,#F3D37A 45%,#D4AF37);background-size:220% 100%;box-shadow:0 10px 34px rgba(212,175,55,.28)}
+  .ghost{border:1px solid rgba(212,175,55,.45);color:#F7E7CE;transition:.3s;background:transparent}
+  .ghost:hover{border-color:#D4AF37;background:rgba(212,175,55,.08)}
+  .danger{border:1px solid rgba(239,68,68,.45);color:#FCA5A5;transition:.3s;background:transparent}
+  .danger:hover{background:rgba(239,68,68,.1)}
+  .fld{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:#ECE7DD}
+  .fld:focus{outline:none;border-color:rgba(212,175,55,.6);background:rgba(255,255,255,.07)}
+  .lbl{letter-spacing:.34em;text-transform:uppercase;font-size:10px;color:#A9B0BE;display:block;margin-bottom:.5rem}
+  .listrow{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);transition:.2s}
+  .listrow:hover{background:rgba(255,255,255,.04)}
+  .listrow.active{border-color:rgba(212,175,55,.6);background:rgba(212,175,55,.12)}
+  .chip{border:1px solid rgba(169,176,190,.4);color:#A9B0BE;transition:.2s}
+  .chip.on{border-color:rgba(212,175,55,.6);background:rgba(212,175,55,.15);color:#F7E7CE}
+  .pill{display:inline-flex;align-items:center;gap:.4em;padding:.15rem .55rem;border-radius:999px;font-size:11px}
+  .pill-pos{background:#F7E7CE;color:#070B14;font-weight:600}
+  .pill-neu{border:1px solid rgba(169,176,190,.4);color:#A9B0BE}
+  .pill-gold{border:1px solid rgba(212,175,55,.5);color:#F3D37A}
+  .sectionlabel{color:#D4AF37;font-size:11px;letter-spacing:.34em;text-transform:uppercase}
+  .selwrap{position:relative}
+  .selwrap::after{content:"▾";position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#F3D37A;pointer-events:none}
+  input[type=file].fld{padding:.55rem .75rem;font-size:12px;color:#A9B0BE}
+  .page{max-width:1200px;margin:0 auto}
+</style>
+</head>
+<body class="antialiased">
+<div class="px-6 sm:px-10 py-10 space-y-16">
+
+<!-- ══════════ 1 · SCENT PERSONA (master-detail) ══════════ -->
+<section class="page">
+  <p class="sectionlabel mb-2">Editor page 1</p>
+  <!-- top bar -->
+  <div class="flex items-center justify-between gap-4 mb-6">
+    <div class="flex items-center gap-4">
+      <button class="ghost w-9 h-9 rounded-full flex items-center justify-center">
+        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
+      <h1 class="font-serif text-2xl text-white">Scent Personas</h1>
+    </div>
+    <div class="flex gap-3">
+      <button class="ghost rounded-full px-5 py-2.5 text-[11px] label uppercase">Refresh</button>
+      <button class="btn-lux rounded-full px-6 py-2.5 text-[11px] label uppercase font-medium">New Persona</button>
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-[1.3fr_2.7fr] gap-5">
+    <!-- master list -->
+    <div class="glass rounded-2xl p-4 flex flex-col">
+      <div class="flex items-center justify-between mb-3 px-1">
+        <p class="label uppercase text-[10px] text-luxury-mut">Personas</p>
+        <span class="text-[11px] text-luxury-mut">4 total</span>
+      </div>
+      <div class="space-y-2 overflow-y-auto max-h-[440px] pr-1">
+        <div class="listrow active rounded-xl px-4 py-3 cursor-pointer flex items-start justify-between gap-3">
+          <div>
+            <p class="font-serif text-lg text-white leading-tight">The Fresh Explorer</p>
+            <p class="label uppercase text-[9px] text-luxury-gold2 mt-1">Eau Fraîche</p>
+            <p class="text-xs text-luxury-mut mt-1 line-clamp-1">Bright citrus and marine air for the restless.</p>
+          </div>
+          <button class="text-red-300/70 hover:text-red-300 mt-1"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M9 7V5h6v2m-8 0 1 12h8l1-12"/></svg></button>
+        </div>
+        <div class="listrow rounded-xl px-4 py-3 cursor-pointer">
+          <p class="font-serif text-lg text-white leading-tight">The Midnight Sensualist</p>
+          <p class="label uppercase text-[9px] text-luxury-mut mt-1">Eau de Parfum</p>
+          <p class="text-xs text-luxury-mut mt-1 line-clamp-1">Oud, rose and leather after dark.</p>
+        </div>
+        <div class="listrow rounded-xl px-4 py-3 cursor-pointer">
+          <p class="font-serif text-lg text-white leading-tight">The Quiet Minimalist</p>
+          <p class="label uppercase text-[9px] text-luxury-mut mt-1">Cologne</p>
+          <p class="text-xs text-luxury-mut mt-1 line-clamp-1">Clean musk, soft woods, nothing loud.</p>
+        </div>
+        <div class="listrow rounded-xl px-4 py-3 cursor-pointer">
+          <p class="font-serif text-lg text-white leading-tight">The Golden Romantic</p>
+          <p class="label uppercase text-[9px] text-luxury-mut mt-1">Eau de Parfum</p>
+          <p class="text-xs text-luxury-mut mt-1 line-clamp-1">Amber, vanilla and warm florals.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- detail editor -->
+    <div class="glass rounded-2xl flex flex-col">
+      <div class="px-6 pt-6 pb-4">
+        <p class="label uppercase text-[10px] text-luxury-gold/80 mb-1">Editing</p>
+        <h2 class="font-serif text-2xl text-white">The Fresh Explorer</h2>
+      </div>
+      <div class="rule mx-6"></div>
+      <div class="p-6 space-y-5">
+        <div class="grid md:grid-cols-2 gap-5">
+          <div>
+            <span class="lbl">Persona Name <span class="text-luxury-gold2">*</span></span>
+            <input class="fld w-full rounded-lg px-4 py-3 text-sm" value="The Fresh Explorer" />
+          </div>
+          <div>
+            <span class="lbl">Category <span class="text-luxury-gold2">*</span></span>
+            <div class="selwrap"><button class="fld w-full rounded-lg px-4 py-3 text-sm text-left">Eau Fraîche</button></div>
+            <p class="text-[11px] text-luxury-mut mt-1.5">Uses existing Product.category values so quiz + persona mapping stays consistent.</p>
+          </div>
+        </div>
+        <div>
+          <span class="lbl">Description / Tagline</span>
+          <textarea rows="3" class="fld w-full rounded-lg px-4 py-3 text-sm resize-none">Bright citrus and marine air for the restless — a scent for open windows and early departures.</textarea>
+        </div>
+        <div class="grid md:grid-cols-2 gap-5">
+          <div>
+            <span class="lbl">Scent Notes</span>
+            <input class="fld w-full rounded-lg px-4 py-3 text-sm" value="citrus, bergamot, marine accord" />
+            <p class="text-[11px] text-luxury-mut mt-1.5">Comma separated.</p>
+          </div>
+          <div>
+            <span class="lbl">Occasions</span>
+            <input class="fld w-full rounded-lg px-4 py-3 text-sm" value="daily work, weekend brunch" />
+            <p class="text-[11px] text-luxury-mut mt-1.5">Comma separated.</p>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-5">
+          <div>
+            <span class="lbl">Persona Image</span>
+            <input type="file" class="fld w-full rounded-lg" />
+          </div>
+          <div>
+            <span class="lbl">Cover Image</span>
+            <input type="file" class="fld w-full rounded-lg" />
+          </div>
+        </div>
+      </div>
+      <!-- sticky-style save bar -->
+      <div class="glass rounded-b-2xl px-6 py-4 flex justify-end gap-3 border-t border-luxury-gold/15">
+        <button class="ghost rounded-full px-5 py-2.5 text-[11px] label uppercase">Clear</button>
+        <button class="btn-lux rounded-full px-7 py-2.5 text-[11px] label uppercase font-medium">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="rule page"></div>
+
+<!-- ══════════ 2 · QUIZ MANAGEMENT (3-col console) ══════════ -->
+<section class="page">
+  <p class="sectionlabel mb-2">Editor page 2</p>
+  <div class="flex items-center gap-4 mb-6">
+    <button class="ghost w-9 h-9 rounded-full flex items-center justify-center">
+      <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <h1 class="font-serif text-2xl text-white">Quizzes</h1>
+  </div>
+
+  <!-- add-quiz bar -->
+  <div class="glass rounded-2xl p-4 mb-5 grid md:grid-cols-[2fr_1.5fr_1fr_auto_auto] gap-3 items-center">
+    <input class="fld rounded-lg px-4 py-2.5 text-sm" placeholder="Quiz title" />
+    <input class="fld rounded-lg px-4 py-2.5 text-sm" placeholder="Label (optional, e.g. For Women)" />
+    <div class="selwrap"><button class="fld w-full rounded-lg px-4 py-2.5 text-sm text-left">Any</button></div>
+    <button class="btn-lux rounded-full px-5 py-2.5 text-[11px] label uppercase font-medium">Add</button>
+    <button class="ghost rounded-full px-5 py-2.5 text-[11px] label uppercase">Refresh</button>
+  </div>
+
+  <div class="grid lg:grid-cols-[1.2fr_2fr_2fr] gap-5">
+    <!-- col 1: quiz list -->
+    <div class="glass rounded-2xl p-4">
+      <div class="flex items-center justify-between mb-3 px-1">
+        <p class="label uppercase text-[10px] text-luxury-mut">Quizzes</p>
+        <span class="text-[11px] text-luxury-mut">3 total</span>
+      </div>
+      <div class="space-y-2">
+        <div class="listrow active rounded-xl px-4 py-3 cursor-pointer flex items-start justify-between gap-2">
+          <div>
+            <p class="font-serif text-base text-white">Find Your Signature</p>
+            <div class="flex flex-wrap items-center gap-1.5 mt-1.5 text-[10px] text-luxury-mut">
+              <span>For Everyone</span><span>·</span>
+              <span class="pill pill-gold">Any</span><span>·</span><span>All products</span>
+            </div>
+          </div>
+          <button class="text-red-300/70 hover:text-red-300"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M9 7V5h6v2m-8 0 1 12h8l1-12"/></svg></button>
+        </div>
+        <div class="listrow rounded-xl px-4 py-3 cursor-pointer">
+          <p class="font-serif text-base text-white">The Feminine Edit</p>
+          <div class="flex flex-wrap items-center gap-1.5 mt-1.5 text-[10px] text-luxury-mut">
+            <span>For Women</span><span>·</span><span class="pill pill-gold">Women</span><span>·</span><span>6 products</span>
+          </div>
+        </div>
+        <div class="listrow rounded-xl px-4 py-3 cursor-pointer">
+          <p class="font-serif text-base text-white">Gentleman's Guide</p>
+          <div class="flex flex-wrap items-center gap-1.5 mt-1.5 text-[10px] text-luxury-mut">
+            <span>For Men</span><span>·</span><span class="pill pill-gold">Men</span><span>·</span><span>4 products</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- col 2: quiz details + whitelist -->
+    <div class="glass rounded-2xl p-5 space-y-5">
+      <p class="label uppercase text-[10px] text-luxury-mut">Quiz Details</p>
+      <div class="space-y-3">
+        <div><span class="lbl">Title</span><input class="fld w-full rounded-lg px-4 py-2.5 text-sm" value="Find Your Signature" /></div>
+        <div><span class="lbl">Label</span><input class="fld w-full rounded-lg px-4 py-2.5 text-sm" placeholder="e.g. For Women" /></div>
+        <div><span class="lbl">Audience</span><div class="selwrap"><button class="fld w-full rounded-lg px-4 py-2.5 text-sm text-left">Any</button></div></div>
+      </div>
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="lbl mb-0">Allowed Products <span class="normal-case tracking-normal text-luxury-mut">(whitelist, optional)</span></span>
+          <span class="text-[10px] text-luxury-mut">All products</span>
+        </div>
+        <div class="glass2 rounded-xl p-3 grid sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+          <span class="chip on rounded-lg px-3 py-1.5 text-xs cursor-pointer flex items-center gap-2"><span class="text-luxury-gold2">✓</span> ELEGANZA Noir</span>
+          <span class="chip rounded-lg px-3 py-1.5 text-xs cursor-pointer">PROJECT N Fruity</span>
+          <span class="chip on rounded-lg px-3 py-1.5 text-xs cursor-pointer flex items-center gap-2"><span class="text-luxury-gold2">✓</span> ELEGANZA Bold</span>
+          <span class="chip rounded-lg px-3 py-1.5 text-xs cursor-pointer">PROJECT K Fresh</span>
+          <span class="chip rounded-lg px-3 py-1.5 text-xs cursor-pointer">Aurora Intense</span>
+          <span class="chip on rounded-lg px-3 py-1.5 text-xs cursor-pointer flex items-center gap-2"><span class="text-luxury-gold2">✓</span> Velvet Rose</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- col 3: questions | answers -->
+    <div class="glass rounded-2xl p-5 flex flex-col">
+      <p class="label uppercase text-[10px] text-luxury-mut mb-3">Questions &amp; Answers</p>
+      <div class="flex gap-2 mb-4">
+        <input class="fld flex-1 rounded-lg px-3 py-2.5 text-sm" placeholder="Enter new question" />
+        <button class="btn-lux rounded-full px-4 py-2.5 text-[11px] label uppercase font-medium">Add</button>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <!-- questions -->
+        <div class="glass2 rounded-xl p-2.5">
+          <p class="text-[10px] text-luxury-mut mb-2 px-1">3 questions</p>
+          <div class="space-y-2">
+            <div class="listrow active rounded-lg px-3 py-2 text-xs cursor-pointer flex justify-between gap-2"><span>What's your mood?</span></div>
+            <div class="listrow rounded-lg px-3 py-2 text-xs cursor-pointer flex justify-between gap-2"><span>Day or night?</span></div>
+            <div class="listrow rounded-lg px-3 py-2 text-xs cursor-pointer flex justify-between gap-2"><span>Preferred intensity?</span></div>
+          </div>
+        </div>
+        <!-- answers -->
+        <div class="glass2 rounded-xl p-2.5 flex flex-col">
+          <p class="text-[10px] text-luxury-mut mb-2 px-1 line-clamp-1">Q: What's your mood?</p>
+          <div class="space-y-2 mb-3">
+            <input class="fld w-full rounded-lg px-3 py-2 text-xs" placeholder="Enter answer text" />
+            <div class="flex gap-2">
+              <div class="selwrap flex-1"><button class="fld w-full rounded-lg px-3 py-2 text-xs text-left">Category</button></div>
+              <button class="btn-lux rounded-full px-3 py-2 text-[10px] label uppercase font-medium">Add</button>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <div class="glass2 rounded-lg px-3 py-2 text-xs flex justify-between items-center"><span>Fresh &amp; bright <span class="text-luxury-mut">(Cologne)</span></span><button class="text-red-300/70">✕</button></div>
+            <div class="glass2 rounded-lg px-3 py-2 text-xs flex justify-between items-center"><span>Warm &amp; deep <span class="text-luxury-mut">(EDP)</span></span><button class="text-red-300/70">✕</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="rule page"></div>
+
+<!-- ══════════ 3 · RETAILERS (card grid + modal) ══════════ -->
+<section class="page">
+  <p class="sectionlabel mb-2">Editor page 3</p>
+  <div class="flex items-center justify-between gap-4 mb-6">
+    <div class="flex items-center gap-4">
+      <button class="ghost w-9 h-9 rounded-full flex items-center justify-center">
+        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
+      <h1 class="font-serif text-2xl text-white">Retailers</h1>
+    </div>
+    <button class="btn-lux rounded-full px-6 py-2.5 text-[11px] label uppercase font-medium">Add Retailer</button>
+  </div>
+
+  <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div class="glass rounded-2xl p-5">
+      <div class="w-full h-48 rounded-xl mb-5 bg-luxury-panel2 border border-luxury-line flex items-center justify-center text-luxury-mut/40 text-sm">Boutique image</div>
+      <h3 class="font-serif text-2xl text-white">Pavilion KL</h3>
+      <p class="text-sm text-luxury-mut mt-2">Lot 6.01.00, Bukit Bintang, Kuala Lumpur</p>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="pill pill-neu">10:00–22:00</span>
+        <span class="pill pill-neu">Tel: +60 3-2118 8833</span>
+      </div>
+      <a class="inline-block text-sm text-luxury-gold2 hover:text-luxury-champagne mt-3">View on Google Maps</a>
+      <div class="flex justify-end gap-2 pt-4">
+        <button class="ghost rounded-full px-4 py-1.5 text-[11px] label uppercase">Edit</button>
+        <button class="danger rounded-full px-4 py-1.5 text-[11px] label uppercase">Delete</button>
+      </div>
+    </div>
+    <div class="glass rounded-2xl p-5">
+      <div class="w-full h-48 rounded-xl mb-5 bg-luxury-panel2 border border-luxury-line flex items-center justify-center text-luxury-mut/40 text-sm">Boutique image</div>
+      <h3 class="font-serif text-2xl text-white">Gurney Plaza</h3>
+      <p class="text-sm text-luxury-mut mt-2">Persiaran Gurney, George Town, Penang</p>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="pill pill-pos">Open 24 Hours</span>
+        <span class="pill pill-neu">Tel: +60 4-228 8811</span>
+      </div>
+      <a class="inline-block text-sm text-luxury-gold2 hover:text-luxury-champagne mt-3">View on Google Maps</a>
+      <div class="flex justify-end gap-2 pt-4">
+        <button class="ghost rounded-full px-4 py-1.5 text-[11px] label uppercase">Edit</button>
+        <button class="danger rounded-full px-4 py-1.5 text-[11px] label uppercase">Delete</button>
+      </div>
+    </div>
+    <button class="glass rounded-2xl border-dashed flex flex-col items-center justify-center gap-3 py-20 text-luxury-gold2 hover:bg-white/[.03] transition">
+      <span class="text-3xl font-serif leading-none">＋</span>
+      <span class="label uppercase text-[11px]">Add Retailer</span>
+    </button>
+  </div>
+
+  <!-- modal form (open state) -->
+  <p class="text-[11px] text-luxury-mut mt-6 mb-2 label uppercase">Add / Edit modal</p>
+  <div class="relative rounded-2xl overflow-hidden" style="background:rgba(0,0,0,.5)">
+    <div class="glass rounded-2xl p-6 sm:p-8 max-w-2xl mx-auto my-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-serif text-xl text-white">Edit Retailer</h3>
+        <button class="text-luxury-mut hover:text-white">✕</button>
+      </div>
+      <div class="rule mb-5"></div>
+      <div class="space-y-5">
+        <div class="grid md:grid-cols-2 gap-5">
+          <div><span class="lbl">Name <span class="text-luxury-gold2">*</span></span><input class="fld w-full rounded-lg px-4 py-3 text-sm" value="Pavilion KL" /></div>
+          <div><span class="lbl">Phone</span><input class="fld w-full rounded-lg px-4 py-3 text-sm" value="+60 3-2118 8833" /></div>
+        </div>
+        <div><span class="lbl">Address <span class="text-luxury-gold2">*</span></span><textarea rows="2" class="fld w-full rounded-lg px-4 py-3 text-sm resize-none">Lot 6.01.00, Bukit Bintang, Kuala Lumpur</textarea></div>
+        <div class="grid md:grid-cols-2 gap-5">
+          <div><span class="lbl">Opening Time</span><input type="time" value="10:00" class="fld w-full rounded-lg px-4 py-3 text-sm" /></div>
+          <div><span class="lbl">Closing Time</span><input type="time" value="22:00" class="fld w-full rounded-lg px-4 py-3 text-sm" /></div>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="w-10 h-6 rounded-full p-0.5 bg-white/10 flex"><span class="block w-5 h-5 rounded-full bg-white"></span></span>
+          <span class="text-sm text-luxury-text">Open 24 Hours</span>
+        </div>
+        <div><span class="lbl">Google Maps URL</span><input class="fld w-full rounded-lg px-4 py-3 text-sm" placeholder="https://maps.google.com/..." /></div>
+        <div><span class="lbl">Image</span><input type="file" class="fld w-full rounded-lg" /></div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button class="ghost rounded-full px-5 py-2.5 text-[11px] label uppercase">Cancel</button>
+          <button class="btn-lux rounded-full px-6 py-2.5 text-[11px] label uppercase font-medium">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="rule page"></div>
+
+<!-- ══════════ 4 · ABOUT (single editor + sticky save) ══════════ -->
+<section class="page">
+  <p class="sectionlabel mb-2">Editor page 4</p>
+  <div class="flex items-center gap-4 mb-6">
+    <button class="ghost w-9 h-9 rounded-full flex items-center justify-center">
+      <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <h1 class="font-serif text-2xl text-white">About Page</h1>
+  </div>
+
+  <div class="glass rounded-2xl p-6 sm:p-8 space-y-6">
+    <div><span class="lbl">Title</span><input class="fld w-full rounded-lg px-4 py-3 text-sm" value="About GÉRAIN CHAN" /></div>
+    <div><span class="lbl">Intro Text</span><input class="fld w-full rounded-lg px-4 py-3 text-sm" value="A modern maison of scent, story and technology." /></div>
+    <div><span class="lbl">Main Body</span><textarea rows="6" class="fld w-full rounded-lg px-4 py-3 text-sm resize-none">Founded in 2026, GÉRAIN CHAN blends traditional perfumery with augmented reality...</textarea></div>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div><span class="lbl">Mission</span><textarea rows="3" class="fld w-full rounded-lg px-4 py-3 text-sm resize-none"></textarea></div>
+      <div><span class="lbl">Vision</span><textarea rows="3" class="fld w-full rounded-lg px-4 py-3 text-sm resize-none"></textarea></div>
+    </div>
+    <div>
+      <span class="lbl">Hero Image</span>
+      <input type="file" class="fld w-full rounded-lg mb-3" />
+      <div class="w-full h-40 rounded-xl bg-luxury-panel2 border border-luxury-line flex items-center justify-center text-luxury-mut/40 text-sm">Current hero preview</div>
+    </div>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div><span class="lbl">Contact Email</span><input class="fld w-full rounded-lg px-4 py-3 text-sm" value="hello@gerainchan.com" /></div>
+      <div><span class="lbl">Contact Phone</span><input class="fld w-full rounded-lg px-4 py-3 text-sm" value="+60 3-0000 0000" /></div>
+    </div>
+    <div><span class="lbl">Address</span><input class="fld w-full rounded-lg px-4 py-3 text-sm" value="Kuala Lumpur, Malaysia" /></div>
+
+    <!-- social links -->
+    <div>
+      <div class="flex items-end justify-between mb-3">
+        <div>
+          <span class="lbl mb-1">Social Links</span>
+          <p class="text-sm text-luxury-mut">Manage name, URL, and icon for each platform.</p>
+        </div>
+        <button class="ghost rounded-full px-4 py-2 text-[11px] label uppercase">Add Social Link</button>
+      </div>
+      <div class="space-y-4">
+        <div class="rule"></div>
+        <div class="flex flex-col xl:flex-row xl:items-center gap-3">
+          <input readonly value="instagram" class="fld rounded-lg px-4 py-2.5 text-sm text-luxury-mut xl:w-44" />
+          <div class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded bg-white/90"></span>
+            <button class="ghost rounded-full px-3 py-1.5 text-[11px] label uppercase">Change Icon</button>
+          </div>
+          <input value="https://instagram.com/gerainchan" class="fld flex-1 rounded-lg px-4 py-2.5 text-sm" />
+          <button class="danger rounded-full px-3 py-1.5 text-[11px] label uppercase">Remove</button>
+        </div>
+        <div class="rule"></div>
+        <div class="flex flex-col xl:flex-row xl:items-center gap-3">
+          <input readonly value="tiktok" class="fld rounded-lg px-4 py-2.5 text-sm text-luxury-mut xl:w-44" />
+          <div class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded bg-white/90"></span>
+            <button class="ghost rounded-full px-3 py-1.5 text-[11px] label uppercase">Change Icon</button>
+          </div>
+          <input value="https://tiktok.com/@gerainchan" class="fld flex-1 rounded-lg px-4 py-2.5 text-sm" />
+          <button class="danger rounded-full px-3 py-1.5 text-[11px] label uppercase">Remove</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- sticky save bar -->
+    <div class="glass rounded-2xl px-4 py-3 flex justify-between items-center sticky bottom-4">
+      <button class="danger rounded-full px-5 py-2 text-[11px] label uppercase">Reset</button>
+      <button class="btn-lux rounded-full px-6 py-2 text-[11px] label uppercase font-medium">Save Changes</button>
+    </div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
