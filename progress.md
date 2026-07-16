@@ -5,6 +5,45 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 7 — Admin UI redesign — Tasks 1–16 (foundation + table/list pages)
+
+**Date:** 2026-07-16
+**Requirement ref:** NFR UI/branding consistency — extend the Phase 6 "Liquid Glass" system
+to `/admin/*`. Spec `docs/superpowers/specs/2026-07-16-admin-ui-redesign-design.md`; plan
+`docs/superpowers/plans/2026-07-16-admin-ui-redesign.md`. Branch `phase-7-admin-ui`.
+**Execution:** Codex implemented per pasted per-task prompts; Claude verified each
+independently (read file, re-ran test/build, byte + off-palette scans) and did all git.
+
+- **Tasks 1–9 (foundation, TDD, automated):** `context/AdminChromeContext.js`
+  (`useAdminChrome`); `components/admin/AdminShell.js` + nested `admin` layout route in
+  `App.js`; primitives `AdminToast`, `AdminModal`, `AdminConfirm`, `StatusPill`, `DataTable`,
+  `Toolbar`, `fields` (`AdminField`/`AdminToggle`/`adminInput`/`adminTextarea`) + barrel
+  `index.js`. **Test evidence:** `src/components/admin` suite = **8 suites / 11 tests pass**;
+  `CI=false npm run build` compiles (warnings only). `StatusPill` bucket map verified against
+  `server/shop/models.py` (Order + Payment `STATUS_CHOICES`; `PAID` omitted — not in backend;
+  payment methods fall to neutral).
+- **Task 10:** `AdminDashboardPage` moved onto the shell (inline sidebar/glow removed). Fixed
+  Codex mojibake (`…`/`✦` had been written as Latin-1) on disk.
+- **Tasks 11–16 (visual-only page migrations, manual gate pending):** Orders, Products,
+  Payments, Users, AR Management → `DataTable`/`Toolbar`/`StatusPill`/`AdminConfirm`/
+  `AdminToast`/`Dropdown`; Reviews → **card-list reskin** (reclassified 2026-07-16 — not a
+  table; keeps summary/aggregate + expandable review cards). Every endpoint, handler,
+  navigate target, and page-specific action preserved verbatim (verified by reading each
+  file). Per-page: build compiles; mojibake + off-palette (`bg-white/*`, `bg-[#…]`,
+  `bg-red-600`, `<select>`, `z-[9999]`) scans clean.
+
+**Decision captured:** `AdminReviewPage` is a card/list UI, not a table — reskinned in place
+(Toolbar + Dropdown filter, glass summary/cards, ★/☆ stars), documented in the plan's Task 15.
+
+**Still pending (before phase merge / Task 24):**
+- **Live manual QA** (`CLAUDE.md` §5.2) — staff-login walkthrough of all admin pages against
+  real data (list load, view/detail modal, create/edit/delete + confirm, toast success+error,
+  filter/search, status change, receipt download, AR enable toggle). **Not yet run** — the
+  above is build + source verification only.
+- Form/editor pages (Tasks 17–23) and cleanup+review+merge+tag (Task 24).
+- Carried follow-up (unchanged): hardcoded `127.0.0.1` media fallback in `AboutPage.js` /
+  `AdminAboutPage.js` — to be reflagged when Task 18 migrates `AdminAboutPage`.
+
 ## Phase 5 — Tasks 4–6: OAuth origins, verification, review, merge + tag — PHASE COMPLETE
 
 **Date:** 2026-06-23
