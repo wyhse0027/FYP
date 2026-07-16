@@ -1,78 +1,17 @@
 // src/pages/admin/AdminReviewPage.jsx
 import { useEffect, useMemo, useState } from "react";
 import http from "../../lib/http";
-import PageHeader from "../../components/PageHeader";
-import { IoClose, IoAlertCircle, IoCheckmarkCircle } from "react-icons/io5";
+import { useAdminChrome } from "../../context/AdminChromeContext";
+import { AdminConfirm, AdminToast, Toolbar } from "../../components/admin";
+import Dropdown from "../../components/ui/Dropdown";
 
 function Stars({ value }) {
   const n = Math.round(Number(value) || 0);
   return (
-    <span className="text-luxury-gold">
+    <span className="text-luxury-gold2 tracking-[0.18em]" aria-label={`${n} out of 5 stars`}>
       {"★".repeat(n)}
       {"☆".repeat(5 - n)}
     </span>
-  );
-}
-
-// ─────────────────────────────────────────────
-// Toast (bottom-right)
-// ─────────────────────────────────────────────
-function Toast({ message, type = "success", onClose }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 3000);
-    return () => clearTimeout(t);
-  }, [onClose]);
-
-  const color =
-    type === "error"
-      ? "bg-red-600/90 border-red-400"
-      : "bg-luxury-gold/90 border-luxury-gold";
-
-  return (
-    <div
-      className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg text-white ${color}`}
-    >
-      {type === "error" ? (
-        <IoAlertCircle size={22} />
-      ) : (
-        <IoCheckmarkCircle size={22} />
-      )}
-      <p className="font-medium">{message}</p>
-      <button
-        onClick={onClose}
-        className="ml-3 opacity-80 hover:opacity-100"
-      >
-        <IoClose size={18} />
-      </button>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────
-// Confirm modal
-// ─────────────────────────────────────────────
-function Confirm({ message, onConfirm, onCancel }) {
-  return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
-      <div className="bg-[#10214f] text-white w-full max-w-md rounded-2xl p-6 shadow-2xl">
-        <h3 className="text-lg font-semibold mb-3">Confirm Deletion</h3>
-        <p className="text-white/80 mb-6">{message}</p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 rounded-lg bg-gray-500 hover:bg-gray-600 font-semibold"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 font-semibold"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -86,6 +25,8 @@ export default function AdminReviewPage() {
 
   const [confirmAction, setConfirmAction] = useState(null);
   const [toast, setToast] = useState(null);
+
+  useAdminChrome({ title: "Reviews", actions: null, backTo: "/admin/dashboard" });
 
   // Load products for dropdown
   useEffect(() => {
@@ -119,6 +60,14 @@ export default function AdminReviewPage() {
   useEffect(() => {
     fetchReviews();
   }, []);
+
+  const productOptions = useMemo(
+    () => [
+      { value: "", label: "All Products" },
+      ...products.map((p) => ({ value: p.name, label: p.name })),
+    ],
+    [products]
+  );
 
   // Aggregates
   const { totalReviews, avgRating, perProduct } = useMemo(() => {
@@ -174,83 +123,75 @@ export default function AdminReviewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-16">
-      <div className="max-w-6xl mx-auto py-6">
-        <PageHeader title="Review Management" />
-
-        {/* Filter bar */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 mb-4">
-          <select
+    <div className="space-y-6">
+      <Toolbar
+        filters={
+          <Dropdown
             value={selectedProduct}
-            onChange={(e) => {
-              const val = e.target.value;
+            onChange={(val) => {
               setSelectedProduct(val);
               fetchReviews(val);
             }}
-            className="bg-[#10224e] text-white rounded-lg px-4 py-2 w-full sm:w-80 border border-white/20 outline-none focus:ring-2 focus:ring-luxury-gold transition"
-          >
-            <option value="">All Products</option>
-            {products.map((p) => (
-              <option key={p.id} value={p.name}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-
-          <div className="flex gap-3 w-full sm:w-auto">
+            options={productOptions}
+            className="fld min-w-full sm:min-w-[20rem] rounded-full px-4 py-3 text-sm"
+            align="right"
+          />
+        }
+        action={
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => fetchReviews(selectedProduct)}
-              className="px-5 py-2.5 bg-luxury-gold rounded-lg hover:bg-luxury-gold font-semibold text-white shadow-md transition w-full sm:w-auto"
+              className="btn-lux rounded-full px-5 py-3 text-[11px] label uppercase"
             >
               Apply Filter
             </button>
-
-            {/* Summary toggle */}
             <button
               onClick={() => setSummaryOpen((v) => !v)}
-              className="px-4 py-2 bg-white/10 hover:bg-white/15 rounded-lg text-white shadow-sm transition w-full sm:w-auto"
+              className="ghost rounded-full px-5 py-3 text-[11px] label uppercase"
               title={summaryOpen ? "Hide summary" : "Show summary"}
             >
               {summaryOpen ? "Hide Summary" : "Show Summary"}
             </button>
           </div>
-        </div>
+        }
+      />
 
-        {/* Summary (collapsible) */}
-        <div
-          className={`overflow-hidden transition-[max-height,opacity] duration-300 mb-2 ${
-            summaryOpen
-              ? "max-h-[600px] opacity-100"
-              : "max-h-0 opacity-0 pointer-events-none"
-          }`}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
-            <div className="bg-white/10 rounded-xl p-4">
-              <div className="text-sm opacity-80">Reviews in view</div>
-              <div className="text-3xl font-bold mt-1">{totalReviews}</div>
+      {/* Summary (collapsible) */}
+      <div
+        className={`overflow-hidden transition-[max-height,opacity] duration-300 ${
+          summaryOpen
+            ? "max-h-[700px] opacity-100"
+            : "max-h-0 opacity-0 pointer-events-none"
+        }`}
+      >
+        <div className="glass rounded-2xl p-6 space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="glass rounded-2xl p-5">
+              <div className="label uppercase text-[10px] text-luxury-mut">Reviews in view</div>
+              <div className="font-serif text-4xl text-white mt-2">{totalReviews}</div>
               {selectedProduct && (
-                <div className="text-xs opacity-70 mt-1">
-                  for <span className="font-semibold">{selectedProduct}</span>
+                <div className="text-xs text-luxury-mut mt-2">
+                  for <span className="text-luxury-text">{selectedProduct}</span>
                 </div>
               )}
             </div>
 
-            <div className="bg-white/10 rounded-xl p-4">
-              <div className="text-sm opacity-80">Average rating</div>
-              <div className="flex items-center gap-2 mt-1">
+            <div className="glass rounded-2xl p-5">
+              <div className="label uppercase text-[10px] text-luxury-mut">Average rating</div>
+              <div className="flex items-center gap-3 mt-3">
                 <Stars value={avgRating} />
-                <span className="text-2xl font-bold">
+                <span className="font-serif text-3xl text-white">
                   {avgRating.toFixed(1)}
                 </span>
               </div>
             </div>
 
-            <div className="bg-white/10 rounded-xl p-4">
-              <div className="text-sm opacity-80">Top product (by reviews)</div>
-              <div className="mt-1 text-lg font-semibold">
+            <div className="glass rounded-2xl p-5">
+              <div className="label uppercase text-[10px] text-luxury-mut">Top product by reviews</div>
+              <div className="font-serif text-xl text-white mt-2">
                 {perProduct[0]?.name || "—"}
               </div>
-              <div className="text-sm opacity-70">
+              <div className="text-sm text-luxury-mut mt-1">
                 {perProduct[0] ? `${perProduct[0].count} review(s)` : ""}
               </div>
             </div>
@@ -258,137 +199,130 @@ export default function AdminReviewPage() {
 
           {/* Per-product table (only when not filtering) */}
           {!selectedProduct && perProduct.length > 0 && (
-            <div className="mb-4 overflow-x-auto">
-              <table className="min-w-full bg-white/5 rounded-xl overflow-hidden">
-                <thead className="bg-white/10 text-left">
-                  <tr>
-                    <th className="px-4 py-3">Product</th>
-                    <th className="px-4 py-3">Reviews</th>
-                    <th className="px-4 py-3">Average</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {perProduct.map((p) => (
-                    <tr key={p.productId} className="border-t border-white/10">
-                      <td className="px-4 py-3">{p.name}</td>
-                      <td className="px-4 py-3">{p.count}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <Stars value={p.avg} />
-                          <span>{p.avg.toFixed(2)}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-2">
+              {perProduct.map((p) => (
+                <div
+                  key={p.productId}
+                  className="glass rounded-2xl px-4 py-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_7rem_10rem] sm:items-center"
+                >
+                  <div>
+                    <p className="label uppercase text-[10px] text-luxury-mut">Product</p>
+                    <p className="text-luxury-text mt-1">{p.name}</p>
+                  </div>
+                  <div>
+                    <p className="label uppercase text-[10px] text-luxury-mut">Reviews</p>
+                    <p className="font-serif text-xl text-white mt-1">{p.count}</p>
+                  </div>
+                  <div>
+                    <p className="label uppercase text-[10px] text-luxury-mut">Average</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Stars value={p.avg} />
+                      <span className="text-luxury-text">{p.avg.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
-
-        {/* Review list */}
-        {loading ? (
-          <p>Loading reviews...</p>
-        ) : (
-          <div className="space-y-4">
-            {reviews.length === 0 ? (
-              <p className="text-white/70">No reviews found.</p>
-            ) : (
-              reviews.map((r) => (
-                <div
-                  key={r.id}
-                  className="bg-gradient-to-br from-[#142d63] to-[#1a3a78] rounded-xl p-4 shadow-lg hover:shadow-xl transition"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="font-bold text-lg">
-                        {r.user?.username || "Unknown User"}{" "}
-                        <span className="ml-1">
-                          <Stars value={r.rating} />
-                        </span>
-                      </h3>
-                      <p className="text-sm text-white/70">
-                        Product:{" "}
-                        <span className="text-white">
-                          {r.product?.name || "N/A"}
-                        </span>{" "}
-                        | {new Date(r.created_at).toLocaleString()}
-                      </p>
-                    </div>
-
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() =>
-                          setExpanded(expanded === r.id ? null : r.id)
-                        }
-                        className={`px-3 py-1.5 rounded-md text-sm font-semibold transition shadow-sm ${
-                          expanded === r.id
-                            ? "bg-gray-600 hover:bg-gray-700 text-white"
-                            : "bg-luxury-gold hover:bg-luxury-gold text-white"
-                        }`}
-                      >
-                        {expanded === r.id ? "Hide" : "View"}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(r.id)}
-                        className="px-3 py-1.5 rounded-md text-sm font-semibold bg-red-600 hover:bg-red-700 text-white transition shadow-sm"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-
-                  {expanded === r.id && (
-                    <div className="mt-3 border-t border-white/20 pt-3 space-y-2">
-                      <p className="text-white/80">
-                        {r.comment || "(No comment)"}
-                      </p>
-
-                      {r.media_gallery?.length > 0 && (
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3">
-                          {r.media_gallery.map((m) => (
-                            <div
-                              key={m.id}
-                              className="relative w-full aspect-[4/3] bg-[#0b1b3a] rounded-lg overflow-hidden border border-white/10 shadow-sm"
-                            >
-                              {m.type === "IMAGE" ? (
-                                <img
-                                  src={m.file}
-                                  alt="Review media"
-                                  className="absolute inset-0 w-full h-full object-contain p-1"
-                                />
-                              ) : (
-                                <video
-                                  src={m.file}
-                                  controls
-                                  className="absolute inset-0 w-full h-full object-contain bg-black rounded-lg"
-                                />
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Confirm modal */}
+      {/* Review list */}
+      {loading ? (
+        <p className="text-sm text-luxury-mut">Loading reviews...</p>
+      ) : (
+        <div className="space-y-4">
+          {reviews.length === 0 ? (
+            <p className="text-sm text-luxury-mut">No reviews found.</p>
+          ) : (
+            reviews.map((r) => (
+              <div key={r.id} className="glass rounded-2xl p-5">
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="font-serif text-xl text-white">
+                        {r.user?.username || "Unknown User"}
+                      </h3>
+                      <Stars value={r.rating} />
+                    </div>
+                    <p className="text-sm text-luxury-mut mt-2">
+                      Product:{" "}
+                      <span className="text-luxury-text">
+                        {r.product?.name || "N/A"}
+                      </span>{" "}
+                      · {new Date(r.created_at).toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() =>
+                        setExpanded(expanded === r.id ? null : r.id)
+                      }
+                      className="ghost rounded-full px-3 py-1.5 text-[11px] label uppercase text-luxury-gold2"
+                    >
+                      {expanded === r.id ? "Hide" : "View"}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(r.id)}
+                      className="border border-red-500/50 text-red-300 hover:bg-red-500/10 rounded-full px-3 py-1.5 text-[11px] label uppercase"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+
+                {expanded === r.id && (
+                  <div className="mt-4 border-t border-luxury-line pt-4 space-y-4">
+                    <p className="text-sm text-luxury-text">
+                      {r.comment || "(No comment)"}
+                    </p>
+
+                    {r.media_gallery?.length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {r.media_gallery.map((m) => (
+                          <div
+                            key={m.id}
+                            className="relative w-full aspect-[4/3] glass rounded-xl overflow-hidden border border-luxury-line"
+                          >
+                            {m.type === "IMAGE" ? (
+                              <img
+                                src={m.file}
+                                alt="Review media"
+                                className="absolute inset-0 w-full h-full object-contain p-1"
+                              />
+                            ) : (
+                              <video
+                                src={m.file}
+                                controls
+                                className="absolute inset-0 w-full h-full object-contain bg-black rounded-xl"
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
       {confirmAction && (
-        <Confirm
+        <AdminConfirm
+          open
+          title="Delete Review"
           message={confirmAction.message}
+          confirmText="Delete"
           onConfirm={confirmAction.onConfirm}
           onCancel={() => setConfirmAction(null)}
         />
       )}
 
-      {/* Toast */}
       {toast && (
-        <Toast
+        <AdminToast
           message={toast.message}
           type={toast.type}
           onClose={() => setToast(null)}
