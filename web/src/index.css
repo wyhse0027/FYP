@@ -21,6 +21,7 @@ body {
 @layer components {
   /* Signature CTA: panning gold + sheen that sweeps and disappears on hover */
   .btn-lux {
+    display: inline-flex; align-items: center; justify-content: center;
     position: relative; overflow: hidden; color: #070B14;
     background: linear-gradient(110deg, #D4AF37, #F3D37A 45%, #D4AF37);
     background-size: 220% 100%; animation: lux-pan 7s linear infinite;
@@ -30,7 +31,7 @@ body {
   .btn-lux::after {
     content: ""; position: absolute; top: 0; left: -70%; width: 45%; height: 100%;
     background: linear-gradient(100deg, transparent, rgba(255,255,255,0.65), transparent);
-    transform: skewX(-20deg);
+    transform: skewX(-20deg); opacity: 0; pointer-events: none;
   }
   .btn-lux:hover::after { animation: lux-sweep 0.9s ease; }
   /* Shimmer skeleton (gold-tinted, replaces grey pulse) */
@@ -76,7 +77,7 @@ body {
    animate-* utility class is used in markup — these are referenced via
    raw `animation:` declarations, so they must live in plain CSS. */
 @keyframes lux-pan { 0% { background-position: 0 0; } 100% { background-position: 220% 0; } }
-@keyframes lux-sweep { 0% { left: -70%; } 100% { left: 130%; } }
+@keyframes lux-sweep { 0% { left: -70%; opacity: 1; } 100% { left: 130%; opacity: 1; } }
 @keyframes shimmer { 100% { transform: translateX(100%); } }
 
 @media (prefers-reduced-motion: reduce) {

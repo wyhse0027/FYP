@@ -1,7 +1,15 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import http from "../../lib/http";
-import { IoAdd, IoTrashOutline, IoRefresh, IoClose } from "react-icons/io5";
-import PageHeader from "../../components/PageHeader";
+import { IoRefresh, IoTrashOutline } from "react-icons/io5";
+import { useAdminChrome } from "../../context/AdminChromeContext";
+import {
+  AdminConfirm,
+  AdminField,
+  AdminToast,
+  adminInput,
+  adminTextarea,
+} from "../../components/admin";
+import Dropdown from "../../components/ui/Dropdown";
 
 export default function AdminScentPersonaPage() {
   const [personas, setPersonas] = useState([]);
@@ -18,13 +26,14 @@ export default function AdminScentPersonaPage() {
   const [imageFile, setImageFile] = useState(null);
   const [coverImageFile, setCoverImageFile] = useState(null);
 
-  const [categoryOptions, setCategoryOptions] = useState([]); // 🔹 available categories
+  const [categoryOptions, setCategoryOptions] = useState([]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [toast, setToast] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+  const actionHandlers = useRef({});
 
   useEffect(() => {
     fetchPersonas();
@@ -198,285 +207,278 @@ export default function AdminScentPersonaPage() {
     });
   }
 
-  return (
-    <div className="min-h-screen bg-[#070B14] text-white px-4 md:px-8 lg:px-12 py-8 relative">
-      <div className="max-w-6xl mx-auto">
-        <PageHeader title="Scent Persona Management" />
+  actionHandlers.current.handleStartNew = handleStartNew;
+  actionHandlers.current.fetchPersonas = fetchPersonas;
 
-        {/* Top bar */}
-        <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl mb-6 flex flex-wrap gap-3 items-center justify-between shadow-md">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-200 font-semibold">
-              {personas.length} persona{personas.length !== 1 ? "s" : ""}
-            </span>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleStartNew}
-              className="bg-luxury-gold hover:bg-luxury-gold transition px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm"
-            >
-              <IoAdd /> New Persona
-            </button>
-            <button
-              onClick={fetchPersonas}
-              className="bg-luxury-gold hover:bg-luxury-gold transition px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm"
-            >
-              <IoRefresh /> Refresh
-            </button>
-          </div>
+  const chromeActions = useMemo(
+    () => (
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={() => actionHandlers.current.fetchPersonas()}
+          className="ghost rounded-full px-5 py-2.5 text-[11px] label uppercase inline-flex items-center gap-2"
+        >
+          <IoRefresh />
+          Refresh
+        </button>
+        <button
+          type="button"
+          onClick={() => actionHandlers.current.handleStartNew()}
+          className="btn-lux rounded-full px-6 py-2.5 text-[11px] label uppercase font-medium"
+        >
+          New Persona
+        </button>
+      </div>
+    ),
+    []
+  );
+
+  useAdminChrome({
+    title: "Scent Personas",
+    backTo: "/admin/dashboard",
+    actions: chromeActions,
+  });
+
+  const categoryDropdownOptions = useMemo(
+    () => [
+      { value: "", label: "Select category" },
+      ...categoryOptions.map((cat) => ({ value: cat, label: cat })),
+    ],
+    [categoryOptions]
+  );
+
+  return (
+    <div className="grid lg:grid-cols-[1.3fr_2.7fr] gap-5">
+      <div className="glass rounded-2xl p-4 flex flex-col">
+        <div className="flex items-center justify-between mb-3 px-1">
+          <p className="label uppercase text-[10px] text-luxury-mut">Personas</p>
+          <span className="text-[11px] text-luxury-mut">
+            {personas.length} total
+          </span>
         </div>
 
-        {/* Main grid */}
-        <div className="grid gap-4 md:grid-cols-[1.5fr,2.5fr]">
-          {/* Left: list */}
-          <div className="bg-white/10 rounded-xl p-3 border border-white/10 h-[70vh] flex flex-col">
-            <h2 className="text-sm font-semibold tracking-wide uppercase text-gray-200 mb-2">
-              Scent Personas
-            </h2>
+        {personas.length === 0 && (
+          <p className="text-xs text-luxury-mut">
+            No scent personas yet. Create one on the right.
+          </p>
+        )}
 
-            {personas.length === 0 && (
-              <p className="text-xs text-gray-300">
-                No scent personas yet. Create one on the right.
-              </p>
-            )}
-
-            <div className="flex-1 overflow-y-auto space-y-2 mt-1">
-              {personas.map((p) => {
-                const active = p.id === selectedId;
-                return (
-                  <div
-                    key={p.id}
-                    className={`px-3 py-2 rounded-lg text-xs cursor-pointer flex items-start justify-between gap-2 border ${
-                      active
-                        ? "bg-luxury-gold/30 border-luxury-gold"
-                        : "bg-white/5 border-white/10 hover:bg-white/10"
-                    }`}
-                    onClick={() => handleSelectPersona(p)}
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-[13px]">
-                        {p.persona_name}
-                      </span>
-                      <span className="text-[10px] text-gray-300 uppercase tracking-wide">
-                        {p.category}
-                      </span>
-                      {p.description && (
-                        <span className="text-[10px] text-gray-400 mt-1 line-clamp-2">
-                          {p.description}
-                        </span>
-                      )}
-                    </div>
-                    <button
-                      className="text-red-400 hover:text-red-500 mt-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(p.id);
-                      }}
-                    >
-                      <IoTrashOutline size={16} />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Right: form */}
-          <div className="bg-white/10 rounded-xl p-4 border border-white/10 h-[70vh] flex flex-col">
-            <h2 className="text-sm font-semibold tracking-wide uppercase text-gray-200 mb-3">
-              {selectedId && isEditing ? "Edit Scent Persona" : "Create Scent Persona"}
-            </h2>
-
-            <form
-              onSubmit={handleSave}
-              className="flex-1 flex flex-col overflow-hidden"
-            >
-              <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-300">Persona Name</label>
-                  <input
-                    name="persona_name"
-                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-luxury-gold"
-                    placeholder="e.g. The Fresh Explorer"
-                    value={formData.persona_name}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-300">Category</label>
-                    <select
-                        name="category"
-                        className="dark-select w-full px-3 py-2 rounded-lg border border-white/10 bg-[#101a3a] text-gray-100 text-sm outline-none focus:ring-2 focus:ring-luxury-gold uppercase"
-                        value={formData.category}
-                        onChange={handleChange}
-                    >
-                    <option value="">-- Select category --</option>
-                    {categoryOptions.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-[10px] text-gray-400">
-                    Uses existing Product.category values so quiz + persona mapping stays
-                    consistent.
+        <div className="space-y-2 overflow-y-auto max-h-[440px] pr-1">
+          {personas.map((p) => {
+            const active = p.id === selectedId;
+            return (
+              <div
+                key={p.id}
+                className={`rounded-xl px-4 py-3 cursor-pointer flex items-start justify-between gap-3 border transition ${
+                  active
+                    ? "border-luxury-gold/60 bg-luxury-gold/12"
+                    : "border-white/[0.07] bg-white/[0.03] hover:bg-white/[0.04]"
+                }`}
+                onClick={() => handleSelectPersona(p)}
+              >
+                <div className="min-w-0">
+                  <p className="font-serif text-lg text-white leading-tight">
+                    {p.persona_name}
                   </p>
+                  <p className={`label uppercase text-[9px] mt-1 ${active ? "text-luxury-gold2" : "text-luxury-mut"}`}>
+                    {p.category}
+                  </p>
+                  {p.description && (
+                    <p className="text-xs text-luxury-mut mt-1 line-clamp-2">
+                      {p.description}
+                    </p>
+                  )}
                 </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-300">Description / Tagline</label>
-                  <textarea
-                    name="description"
-                    className="w-full min-h-[100px] px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-luxury-gold"
-                    placeholder="Short story of this persona (mood, lifestyle, scent vibe)..."
-                    value={formData.description}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-300">
-                    Scent Notes (comma separated)
-                  </label>
-                  <input
-                    name="scent_notes_text"
-                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-luxury-gold"
-                    placeholder="e.g. citrus, bergamot, marine accord"
-                    value={formData.scent_notes_text}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-300">
-                    Occasions (comma separated)
-                  </label>
-                  <input
-                    name="occasions_text"
-                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-luxury-gold"
-                    placeholder="e.g. daily work, date night, weekend brunch"
-                    value={formData.occasions_text}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-xs text-gray-300">Persona Image</label>
-                    <input
-                      type="file"
-                      name="image"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="block w-full text-xs text-gray-300"
-                    />
-                    {selectedPersona?.image_url && !imageFile && (
-                      <p className="text-[10px] text-gray-400">
-                        Current:{" "}
-                        <a
-                          href={selectedPersona.image_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="underline"
-                        >
-                          view image
-                        </a>
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-xs text-gray-300">Cover Image</label>
-                    <input
-                      type="file"
-                      name="cover_image"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="block w-full text-xs text-gray-300"
-                    />
-                    {selectedPersona?.cover_image_url && !coverImageFile && (
-                      <p className="text-[10px] text-gray-400">
-                        Current:{" "}
-                        <a
-                          href={selectedPersona.cover_image_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="underline"
-                        >
-                          view image
-                        </a>
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 flex justify-end gap-3 shrink-0">
                 <button
                   type="button"
-                  onClick={handleStartNew}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-500 hover:bg-gray-600"
+                  className="text-red-300/70 hover:text-red-300 mt-1 shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(p.id);
+                  }}
+                  aria-label={`Delete ${p.persona_name}`}
                 >
-                  Clear
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-5 py-2 rounded-lg text-sm font-semibold bg-luxury-gold hover:bg-luxury-gold disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {loading
-                    ? "Saving..."
-                    : selectedId && isEditing
-                    ? "Save Changes"
-                    : "Create Persona"}
+                  <IoTrashOutline size={16} />
                 </button>
               </div>
-            </form>
-          </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Confirm dialog */}
-      {confirmAction && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 text-center max-w-sm">
-            <h3 className="text-lg font-semibold mb-3">
-              {confirmAction.message}
-            </h3>
-            <div className="flex justify-center gap-4">
-              <button
-                className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold"
-                onClick={() => setConfirmAction(null)}
-              >
-                Cancel
-              </button>
-              <button
-                className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-semibold"
-                onClick={() => {
-                  confirmAction.onConfirm();
-                  setConfirmAction(null);
-                }}
-              >
-                Yes
-              </button>
+      <div className="glass rounded-2xl flex flex-col">
+        <div className="px-6 pt-6 pb-4">
+          <p className="label uppercase text-[10px] text-luxury-gold/80 mb-1">
+            {selectedId && isEditing ? "Editing" : "Creating"}
+          </p>
+          <h2 className="font-serif text-2xl text-white">
+            {selectedId && isEditing ? formData.persona_name || "Scent Persona" : "New Scent Persona"}
+          </h2>
+        </div>
+        <div className="rule mx-6" />
+
+        <form onSubmit={handleSave} className="flex flex-col">
+          <div className="p-6 space-y-5">
+            <div className="grid md:grid-cols-2 gap-5">
+              <AdminField label="Persona Name" required>
+                <input
+                  name="persona_name"
+                  className={adminInput}
+                  placeholder="e.g. The Fresh Explorer"
+                  value={formData.persona_name}
+                  onChange={handleChange}
+                />
+              </AdminField>
+
+              <AdminField label="Category" required>
+                <Dropdown
+                  value={formData.category}
+                  onChange={(value) =>
+                    handleChange({ target: { name: "category", value } })
+                  }
+                  options={categoryDropdownOptions}
+                  className="fld w-full rounded-lg px-4 py-3 text-sm"
+                  align="right"
+                />
+                <p className="text-[11px] text-luxury-mut mt-1.5">
+                  Uses existing Product.category values so quiz + persona mapping stays
+                  consistent.
+                </p>
+              </AdminField>
+            </div>
+
+            <AdminField label="Description / Tagline">
+              <textarea
+                name="description"
+                className={adminTextarea}
+                rows="3"
+                placeholder="Short story of this persona (mood, lifestyle, scent vibe)..."
+                value={formData.description}
+                onChange={handleChange}
+              />
+            </AdminField>
+
+            <div className="grid md:grid-cols-2 gap-5">
+              <AdminField label="Scent Notes">
+                <input
+                  name="scent_notes_text"
+                  className={adminInput}
+                  placeholder="e.g. citrus, bergamot, marine accord"
+                  value={formData.scent_notes_text}
+                  onChange={handleChange}
+                />
+                <p className="text-[11px] text-luxury-mut mt-1.5">
+                  Comma separated.
+                </p>
+              </AdminField>
+
+              <AdminField label="Occasions">
+                <input
+                  name="occasions_text"
+                  className={adminInput}
+                  placeholder="e.g. daily work, date night, weekend brunch"
+                  value={formData.occasions_text}
+                  onChange={handleChange}
+                />
+                <p className="text-[11px] text-luxury-mut mt-1.5">
+                  Comma separated.
+                </p>
+              </AdminField>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-5">
+              <AdminField label="Persona Image">
+                <input
+                  type="file"
+                  name="image"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className={adminInput}
+                />
+                {selectedPersona?.image_url && !imageFile && (
+                  <p className="text-[11px] text-luxury-mut mt-1.5">
+                    Current:{" "}
+                    <a
+                      href={selectedPersona.image_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-luxury-gold2 hover:text-luxury-champagne"
+                    >
+                      view image
+                    </a>
+                  </p>
+                )}
+              </AdminField>
+
+              <AdminField label="Cover Image">
+                <input
+                  type="file"
+                  name="cover_image"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className={adminInput}
+                />
+                {selectedPersona?.cover_image_url && !coverImageFile && (
+                  <p className="text-[11px] text-luxury-mut mt-1.5">
+                    Current:{" "}
+                    <a
+                      href={selectedPersona.cover_image_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-luxury-gold2 hover:text-luxury-champagne"
+                    >
+                      view image
+                    </a>
+                  </p>
+                )}
+              </AdminField>
             </div>
           </div>
-        </div>
+
+          <div className="glass rounded-b-2xl px-6 py-4 flex justify-end gap-3 border-t border-luxury-gold/15">
+            <button
+              type="button"
+              onClick={handleStartNew}
+              className="ghost rounded-full px-5 py-2.5 text-[11px] label uppercase"
+            >
+              Clear
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-lux rounded-full px-7 py-2.5 text-[11px] label uppercase font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading
+                ? "Saving..."
+                : selectedId && isEditing
+                ? "Save Changes"
+                : "Create Persona"}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {confirmAction && (
+        <AdminConfirm
+          open
+          title="Confirm Action"
+          message={confirmAction.message}
+          confirmText="Yes"
+          cancelText="Cancel"
+          onConfirm={() => {
+            confirmAction.onConfirm();
+            setConfirmAction(null);
+          }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
 
-      {/* Toast */}
       {toast && (
-        <div
-          className={`fixed bottom-5 right-5 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50 ${
-            toast.type === "success"
-              ? "bg-luxury-gold text-white"
-              : "bg-red-500 text-white"
-          }`}
-        >
-          <span>{toast.message}</span>
-          <IoClose className="cursor-pointer" onClick={() => setToast(null)} />
-        </div>
+        <AdminToast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

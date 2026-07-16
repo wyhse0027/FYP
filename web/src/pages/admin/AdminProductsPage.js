@@ -1,71 +1,39 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import http from "../../lib/http";
-import PageHeader from "../../components/PageHeader";
+import { useAdminChrome } from "../../context/AdminChromeContext";
+import {
+  AdminConfirm,
+  AdminModal,
+  AdminToast,
+  DataTable,
+  StatusPill,
+} from "../../components/admin";
+
+const COLUMNS = [
+  { label: "ID" },
+  { label: "Name" },
+  { label: "Category" },
+  { label: "Target" },
+  { label: "Price", align: "right" },
+  { label: "Stock", align: "right" },
+  { label: "Actions", align: "right" },
+];
+
+const addProductAction = (
+  <Link
+    to="/admin/products/new"
+    className="btn-lux px-6 py-3 rounded-full text-[11px] font-medium label uppercase"
+  >
+    Add Product
+  </Link>
+);
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "—";
   const d = new Date(dateStr);
   return d.toLocaleString();
 };
-
-// ✅ Toast component (bottom-right)
-function Toast({ message, type = "success", onClose }) {
-  const bg =
-    type === "error"
-      ? "bg-red-600/90 border-red-400"
-      : "bg-luxury-gold/90 border-luxury-gold";
-
-  useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  return (
-    <div
-      className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg text-white ${bg}`}
-    >
-      <span className="font-medium">{message}</span>
-      <button
-        onClick={onClose}
-        className="ml-2 text-white/80 hover:text-white"
-      >
-        ✕
-      </button>
-    </div>
-  );
-}
-
-// ✅ Confirm delete modal
-function ConfirmDelete({ product, onConfirm, onCancel }) {
-  if (!product) return null;
-  return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-4">
-      <div className="bg-[#10214f] text-white w-full max-w-md rounded-2xl p-6 shadow-2xl">
-        <h3 className="text-xl font-semibold mb-3">Delete Product</h3>
-        <p className="text-white/80 mb-6">
-          Are you sure you want to delete product{" "}
-          <span className="font-semibold">{product.name}</span> (ID:{" "}
-          {product.id})? This action cannot be undone.
-        </p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 rounded bg-gray-500 hover:bg-gray-600"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 font-semibold"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState([]);
@@ -76,6 +44,8 @@ export default function AdminProductsPage() {
   const [toast, setToast] = useState(null);
 
   const navigate = useNavigate();
+
+  useAdminChrome({ title: "Products", actions: addProductAction, backTo: "/admin/dashboard" });
 
   const showToast = (type, message) => {
     setToast({ type, message });
@@ -98,7 +68,7 @@ export default function AdminProductsPage() {
     fetchProducts();
   }, []);
 
-  // Real delete handler – called from confirm modal
+  // Real delete handler - called from confirm modal
   const handleDelete = async () => {
     if (!confirmProduct) return;
     try {
@@ -111,256 +81,226 @@ export default function AdminProductsPage() {
     }
   };
 
-  if (loading)
-    return <div className="p-6 text-white">Loading products…</div>;
-  if (err) return <div className="p-6 text-red-500">{err}</div>;
+  if (err) return <p className="text-red-300 text-sm">{err}</p>;
 
   return (
-    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-16">
-      <div className="max-w-6xl mx-auto py-6">
-        <PageHeader title="Products Management" />
-
-        <div className="flex justify-end mb-6">
-          <button
-            onClick={() => navigate("/admin/products/new")}
-            className="px-4 py-2 bg-luxury-gold rounded hover:bg-luxury-gold font-semibold"
-          >
-            + Add Product
-          </button>
-        </div>
-
-        <div className="overflow-x-auto bg-white/5 rounded-xl">
-          <table className="w-full text-left text-white">
-            <thead className="bg-white/10 text-sm">
-              <tr>
-                <th className="p-3">ID</th>
-                <th className="p-3">Name</th>
-                <th className="p-3">Category</th>
-                <th className="p-3">Target</th>
-                <th className="p-3">Price</th>
-                <th className="p-3">Stock</th>
-                <th className="p-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((p) => (
-                <tr key={p.id} className="border-b border-white/10">
-                  <td className="p-3">{p.id}</td>
-                  <td className="p-3">{p.name}</td>
-                  <td className="p-3">{p.category}</td>
-                  <td className="p-3">{p.target || "UNISEX"}</td>
-                  <td className="p-3">RM {p.price}</td>
-                  <td className="p-3">{p.stock}</td>
-                  <td className="p-3 space-x-2">
-                    <button
-                      onClick={() => setDetails(p)}
-                      className="px-3 py-1 bg-luxury-gold rounded hover:bg-luxury-gold text-sm"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={() =>
-                        navigate(`/admin/products/${p.id}/edit`)
-                      }
-                      className="px-3 py-1 bg-luxury-gold rounded hover:bg-luxury-gold text-sm"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => setConfirmProduct(p)}
-                      className="px-3 py-1 bg-red-600 rounded hover:bg-red-700 text-sm"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {products.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="p-4 text-center text-white/70 text-sm"
-                  >
-                    No products found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Details Modal */}
-        {details && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
-            <div className="bg-[#070B14] rounded-2xl p-6 sm:p-8 w-full max-w-5xl max-h-[85vh] overflow-y-auto">
-              <h2 className="text-xl sm:text-2xl font-bold text-center mb-6">
-                Product Details — {details.name}
-              </h2>
-
-              <div className="flex flex-col gap-6">
-                {/* Images */}
-                <div className="flex flex-wrap gap-6 justify-center">
-                  {details.promo_image && (
-                    <div className="text-center">
-                      <p className="text-sm text-gray-300 mb-2">
-                        Promo Image
-                      </p>
-                      <img
-                        src={details.promo_image}
-                        alt="Promo"
-                        className="rounded-lg border-4 border-white/20 max-h-80"
-                      />
-                    </div>
-                  )}
-                  {details.card_image && (
-                    <div className="text-center">
-                      <p className="text-sm text-gray-300 mb-2">
-                        Card Image
-                      </p>
-                      <img
-                        src={details.card_image}
-                        alt="Card"
-                        className="rounded-lg border-4 border-white/20 max-h-80"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Info grid */}
-                <div className="grid sm:grid-cols-2 gap-4 text-sm sm:text-base">
-                  <div>
-                    <p className="font-semibold">Category</p>
-                    <p className="text-gray-300">
-                      {details.category}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Target</p>
-                    <p className="text-gray-300">
-                      {details.target || "UNISEX"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Price</p>
-                    <p className="text-gray-300">
-                      RM {details.price}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Stock</p>
-                    <p className="text-gray-300">
-                      {details.stock}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Created At</p>
-                    <p className="text-gray-300">
-                      {formatDate(details.created_at)}
-                    </p>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <p className="font-semibold">Description</p>
-                    <p className="text-gray-300">
-                      {details.description || "No description"}
-                    </p>
-                  </div>
-
-                  {/* Tags */}
-                  {details.tags && (
-                    <div className="sm:col-span-2">
-                      <p className="font-semibold mb-2">Tags</p>
-                      <div className="flex flex-wrap gap-2">
-                        {(Array.isArray(details.tags)
-                          ? details.tags
-                          : (() => {
-                              if (typeof details.tags === "string") {
-                                try {
-                                  const parsed = JSON.parse(details.tags);
-                                  if (Array.isArray(parsed)) return parsed;
-                                } catch {
-                                  /* ignore */
-                                }
-                                return details.tags
-                                  .split(",")
-                                  .map((t) => t.trim());
-                              }
-                              return [];
-                            })()
-                        ).map((tag, i) => (
-                          <span
-                            key={i}
-                            className="bg-luxury-gold/60 text-white px-3 py-1 rounded-full text-sm"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Media gallery */}
-                {details.media_gallery?.length > 0 && (
-                  <div>
-                    <p className="font-semibold mb-2">
-                      Media Gallery
-                    </p>
-                    <div className="flex flex-wrap gap-4">
-                      {details.media_gallery.map((m) => (
-                        <div key={m.id} className="text-center">
-                          <p className="text-xs text-gray-400 mb-1">
-                            {m.type === "video" || m.type === "VIDEO"
-                              ? "Video"
-                              : "Image"}
-                          </p>
-                          {m.type === "video" || m.type === "VIDEO" ? (
-                            <video
-                              src={m.file}
-                              controls
-                              className="rounded-lg border-2 border-white/20 max-h-60"
-                            />
-                          ) : (
-                            <img
-                              src={m.file}
-                              alt="media"
-                              className="rounded-lg border-2 border-white/20 max-h-60"
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="text-center mt-8">
+    <div className="space-y-2">
+      <DataTable
+        columns={COLUMNS}
+        loading={loading}
+        isEmpty={!loading && products.length === 0}
+        empty="No products found."
+      >
+        {products.map((p) => (
+          <tr key={p.id} className="row">
+            <td className="px-6 py-4 text-luxury-mut">#{p.id}</td>
+            <td className="px-6 py-4 text-luxury-text">{p.name}</td>
+            <td className="px-6 py-4 text-luxury-mut">{p.category}</td>
+            <td className="px-6 py-4"><StatusPill status={p.target || "UNISEX"} /></td>
+            <td className="px-6 py-4 text-right text-luxury-champagne" style={{ fontVariantNumeric: "tabular-nums" }}>
+              RM {p.price}
+            </td>
+            <td className="px-6 py-4 text-right text-luxury-text" style={{ fontVariantNumeric: "tabular-nums" }}>
+              {p.stock}
+            </td>
+            <td className="px-6 py-4">
+              <div className="flex items-center justify-end gap-2">
                 <button
-                  onClick={() => setDetails(null)}
-                  className="px-6 py-2 bg-gray-600 rounded hover:bg-gray-700 font-semibold text-sm sm:text-base"
+                  onClick={() => setDetails(p)}
+                  className="ghost rounded-full px-3 py-1.5 text-[11px]"
                 >
-                  Close
+                  View
+                </button>
+                <button
+                  onClick={() => navigate(`/admin/products/${p.id}/edit`)}
+                  className="ghost rounded-full px-3 py-1.5 text-[11px]"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => setConfirmProduct(p)}
+                  className="border border-red-500/50 text-red-300 hover:bg-red-500/10 rounded-full px-3 py-1.5 text-[11px]"
+                >
+                  Delete
                 </button>
               </div>
-            </div>
-          </div>
-        )}
+            </td>
+          </tr>
+        ))}
+      </DataTable>
 
-        {/* Delete Confirm Modal */}
-        <ConfirmDelete
-          product={confirmProduct}
+      {details && (
+        <AdminModal
+          open
+          title={`Product Details — ${details.name}`}
+          onClose={() => setDetails(null)}
+          size="xl"
+        >
+          <div className="flex flex-col gap-6">
+            {/* Images */}
+            <div className="flex flex-wrap gap-6 justify-center">
+              {details.promo_image && (
+                <div className="text-center">
+                  <p className="label uppercase text-[10px] text-luxury-mut mb-2">
+                    Promo Image
+                  </p>
+                  <img
+                    src={details.promo_image}
+                    alt="Promo"
+                    className="rounded-lg border border-luxury-gold/20 max-h-80"
+                  />
+                </div>
+              )}
+              {details.card_image && (
+                <div className="text-center">
+                  <p className="label uppercase text-[10px] text-luxury-mut mb-2">
+                    Card Image
+                  </p>
+                  <img
+                    src={details.card_image}
+                    alt="Card"
+                    className="rounded-lg border border-luxury-gold/20 max-h-80"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Info grid */}
+            <div className="grid sm:grid-cols-2 gap-4 text-sm sm:text-base">
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">Category</p>
+                <p className="text-luxury-text">
+                  {details.category}
+                </p>
+              </div>
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">Target</p>
+                <p className="text-luxury-text">
+                  {details.target || "UNISEX"}
+                </p>
+              </div>
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">Price</p>
+                <p className="text-luxury-text">
+                  RM {details.price}
+                </p>
+              </div>
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">Stock</p>
+                <p className="text-luxury-text">
+                  {details.stock}
+                </p>
+              </div>
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">Created At</p>
+                <p className="text-luxury-text">
+                  {formatDate(details.created_at)}
+                </p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">Description</p>
+                <p className="text-luxury-text">
+                  {details.description || "No description"}
+                </p>
+              </div>
+
+              {/* Tags */}
+              {details.tags && (
+                <div className="sm:col-span-2">
+                  <p className="label uppercase text-[10px] text-luxury-mut mb-2">Tags</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(Array.isArray(details.tags)
+                      ? details.tags
+                      : (() => {
+                          if (typeof details.tags === "string") {
+                            try {
+                              const parsed = JSON.parse(details.tags);
+                              if (Array.isArray(parsed)) return parsed;
+                            } catch {
+                              /* ignore */
+                            }
+                            return details.tags
+                              .split(",")
+                              .map((t) => t.trim());
+                          }
+                          return [];
+                        })()
+                    ).map((tag, i) => (
+                      <span
+                        key={i}
+                        className="border border-luxury-gold/50 text-luxury-gold2 px-3 py-1 rounded-full text-sm"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Media gallery */}
+            {details.media_gallery?.length > 0 && (
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-2">
+                  Media Gallery
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  {details.media_gallery.map((m) => (
+                    <div key={m.id} className="text-center">
+                      <p className="text-xs text-luxury-mut mb-1">
+                        {m.type === "video" || m.type === "VIDEO"
+                          ? "Video"
+                          : "Image"}
+                      </p>
+                      {m.type === "video" || m.type === "VIDEO" ? (
+                        <video
+                          src={m.file}
+                          controls
+                          className="rounded-lg border border-luxury-gold/20 max-h-60"
+                        />
+                      ) : (
+                        <img
+                          src={m.file}
+                          alt="media"
+                          className="rounded-lg border border-luxury-gold/20 max-h-60"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="text-center mt-8">
+            <button
+              onClick={() => setDetails(null)}
+              className="ghost rounded-full px-6 py-2 text-sm"
+            >
+              Close
+            </button>
+          </div>
+        </AdminModal>
+      )}
+
+      {confirmProduct && (
+        <AdminConfirm
+          open
+          title="Delete Product"
+          message={`Are you sure you want to delete product ${confirmProduct.name} (ID: ${confirmProduct.id})? This action cannot be undone.`}
+          confirmText="Delete"
           onConfirm={handleDelete}
           onCancel={() => setConfirmProduct(null)}
         />
+      )}
 
-        {/* Toast */}
-        {toast && (
-          <Toast
-            type={toast.type}
-            message={toast.message}
-            onClose={() => setToast(null)}
-          />
-        )}
-      </div>
+      {toast && (
+        <AdminToast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

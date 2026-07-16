@@ -5,6 +5,75 @@ Append-only log of phases, tasks, decisions, and test evidence. One entry per ta
 
 ---
 
+## Phase 7 — Admin UI redesign — Tasks 1–16 (foundation + table/list pages)
+
+**Date:** 2026-07-16
+**Requirement ref:** NFR UI/branding consistency — extend the Phase 6 "Liquid Glass" system
+to `/admin/*`. Spec `docs/superpowers/specs/2026-07-16-admin-ui-redesign-design.md`; plan
+`docs/superpowers/plans/2026-07-16-admin-ui-redesign.md`. Branch `phase-7-admin-ui`.
+**Execution:** Codex implemented per pasted per-task prompts; Claude verified each
+independently (read file, re-ran test/build, byte + off-palette scans) and did all git.
+
+- **Tasks 1–9 (foundation, TDD, automated):** `context/AdminChromeContext.js`
+  (`useAdminChrome`); `components/admin/AdminShell.js` + nested `admin` layout route in
+  `App.js`; primitives `AdminToast`, `AdminModal`, `AdminConfirm`, `StatusPill`, `DataTable`,
+  `Toolbar`, `fields` (`AdminField`/`AdminToggle`/`adminInput`/`adminTextarea`) + barrel
+  `index.js`. **Test evidence:** `src/components/admin` suite = **8 suites / 11 tests pass**;
+  `CI=false npm run build` compiles (warnings only). `StatusPill` bucket map verified against
+  `server/shop/models.py` (Order + Payment `STATUS_CHOICES`; `PAID` omitted — not in backend;
+  payment methods fall to neutral).
+- **Task 10:** `AdminDashboardPage` moved onto the shell (inline sidebar/glow removed). Fixed
+  Codex mojibake (`…`/`✦` had been written as Latin-1) on disk.
+- **Tasks 11–16 (visual-only page migrations, manual gate pending):** Orders, Products,
+  Payments, Users, AR Management → `DataTable`/`Toolbar`/`StatusPill`/`AdminConfirm`/
+  `AdminToast`/`Dropdown`; Reviews → **card-list reskin** (reclassified 2026-07-16 — not a
+  table; keeps summary/aggregate + expandable review cards). Every endpoint, handler,
+  navigate target, and page-specific action preserved verbatim (verified by reading each
+  file). Per-page: build compiles; mojibake + off-palette (`bg-white/*`, `bg-[#…]`,
+  `bg-red-600`, `<select>`, `z-[9999]`) scans clean.
+
+**Decision captured:** `AdminReviewPage` is a card/list UI, not a table — reskinned in place
+(Toolbar + Dropdown filter, glass summary/cards, ★/☆ stars), documented in the plan's Task 15.
+
+## Phase 7 — Admin UI redesign — Tasks 17–24 (editor pages + cleanup) — IMPLEMENTATION COMPLETE
+
+**Date:** 2026-07-16
+**Requirement ref:** same as the Tasks 1–16 entry below.
+
+- **Tasks 17–23 (editor/form pages, visual-only):** Retailers (card-grid + modal CRUD),
+  About (single editor + social-links + sticky save), Scent Personas (master-detail),
+  Quiz Management (3-column console: quiz list · details+whitelist chips · questions|answers),
+  Product Form (routed create/edit + tags/media), AR Editor (presign→PUT→finalize big-file
+  flow + per-file deletes). Every endpoint, handler, form-state field, upload flow, and
+  navigate target preserved verbatim (verified by reading each file). Scent Persona / Retailers
+  used a stable-actions pattern (module const / useRef+useMemo) after a chrome-effect loop bug
+  was found and fixed in `useAdminChrome` (deps exclude the `actions` node).
+- **Task 23:** deleted dead `AddProductPage.js` + `EditProductPage.js` (unrouted duplicates of
+  `AdminProductFormPage`; owner approved).
+- **Task 24 (cleanup):** whole-`src/pages/admin` scan for off-palette / native `<select>` /
+  `PageHeader` / `z-[9999]` / mojibake → **CLEAN**; dashboard grid dividers moved to
+  `bg-luxury-line`. `src/components/admin` unit suite **8 suites / 11 tests pass**; build
+  compiles (warnings only).
+- **Editor-page mockups** approved by owner and committed at
+  `docs/superpowers/mockups/phase-7-admin/forms.html` (+ `admin.html` for shell/table archetypes).
+- **UX fixes during QA (committed):** btn-lux sheen now framed inside the pill (`.btn-lux` set to
+  `inline-flex` so `overflow:hidden` clips) + hover-only opacity gate; SVG back chevron (centered);
+  back button hidden on dashboard.
+
+**STILL PENDING before merge:**
+- **Live manual QA** (`CLAUDE.md` §5.2) — full staff-login walkthrough of all 14 admin pages +
+  dashboard against real data. Table pages + shell partially eyeballed; the editor pages
+  (personas, quiz, retailers, about, product form, AR editor) not yet clicked through live.
+- `/code-review` on the branch diff (Task 24 §5); then merge `--no-ff` + tag `phase-7-admin-ui`
+  + push (owner instruction required — no auto-merge/push).
+- Carried follow-up (unchanged, out of scope): hardcoded `127.0.0.1` social-icon URL fallback in
+  `AboutPage.js` / `AdminAboutPage.js` — dormant; fix by deriving origin from
+  `REACT_APP_API_BASE_URL` when convenient.
+
+---
+
+## Phase 7 — Admin UI redesign — Tasks 1–16 (foundation + table/list pages)
+
 ## Phase 5 — Tasks 4–6: OAuth origins, verification, review, merge + tag — PHASE COMPLETE
 
 **Date:** 2026-06-23

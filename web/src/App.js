@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminShell from "./components/admin/AdminShell";
 
 // Utility to lazy-load pages
 const page = (path) => lazy(() => import(`./pages/${path}`));
@@ -110,33 +111,31 @@ function App() {
             ))}
 
             {/* ─── Admin-only Pages ─── */}
-            {[
-              ["admin/dashboard", AdminDashboardPage],
-              ["admin/users", AdminUsersPage],
-              ["admin/products", AdminProductsPage],
-              ["admin/products/new", AdminProductFormPage],
-              ["admin/products/:id/edit", AdminProductFormPage],
-              ["admin/orders", AdminOrdersPage],
-              ["admin/payments", AdminPaymentsPage],         
-              ["admin/quiz-management", AdminQuizManagement],
-              ["admin/scent-personas", AdminScentPersonaPage],
-              ["admin/ar-management", AdminARManagement],
-              ["admin/ar-management/new", AdminAREditPage],
-              ["admin/ar-management/:id/edit", AdminAREditPage],
-              ["admin/reviews", AdminReviewPage],
-              ["admin/about", AdminAboutPage],
-              ["admin/retailers", AdminRetailersPage],
-            ].map(([path, Component]) => (
-              <Route
-                key={path}
-                path={path}
-                element={
-                  <ProtectedRoute adminOnly>
-                    <Component />
-                  </ProtectedRoute>
-                }
-              />
-            ))}
+            <Route
+              path="admin"
+              element={
+                <ProtectedRoute adminOnly>
+                  <AdminShell />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboardPage />} />
+              <Route path="users" element={<AdminUsersPage />} />
+              <Route path="products" element={<AdminProductsPage />} />
+              <Route path="products/new" element={<AdminProductFormPage />} />
+              <Route path="products/:id/edit" element={<AdminProductFormPage />} />
+              <Route path="orders" element={<AdminOrdersPage />} />
+              <Route path="payments" element={<AdminPaymentsPage />} />
+              <Route path="quiz-management" element={<AdminQuizManagement />} />
+              <Route path="scent-personas" element={<AdminScentPersonaPage />} />
+              <Route path="ar-management" element={<AdminARManagement />} />
+              <Route path="ar-management/new" element={<AdminAREditPage />} />
+              <Route path="ar-management/:id/edit" element={<AdminAREditPage />} />
+              <Route path="reviews" element={<AdminReviewPage />} />
+              <Route path="about" element={<AdminAboutPage />} />
+              <Route path="retailers" element={<AdminRetailersPage />} />
+            </Route>
 
             {/* ─── Redirects ─── */}
             <Route

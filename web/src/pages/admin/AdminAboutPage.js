@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import http from "../../lib/http";
-import PageHeader from "../../components/PageHeader";
-import ConfirmModal from "../../components/ConfirmModal";
+import { useAdminChrome } from "../../context/AdminChromeContext";
+import {
+  AdminConfirm,
+  AdminField,
+  AdminModal,
+  AdminToast,
+  adminInput,
+  adminTextarea,
+} from "../../components/admin";
 
 export default function AdminAboutPage() {
   const [data, setData] = useState(null);
@@ -14,19 +21,9 @@ export default function AdminAboutPage() {
   const [newSocial, setNewSocial] = useState({ platform: "", url: "" });
   const [socialIcons, setSocialIcons] = useState({});
 
-  // ─────────────────────────────
-  // Auto-hide toast
-  // ─────────────────────────────
-  useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => setMessage(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [message]);
+  useAdminChrome({ title: "About Page", actions: null, backTo: "/admin/dashboard" });
 
-  // ─────────────────────────────
   // Fetch About Data
-  // ─────────────────────────────
   useEffect(() => {
     const fetchAbout = async () => {
       try {
@@ -34,7 +31,7 @@ export default function AdminAboutPage() {
         if (Array.isArray(res.data) && res.data.length > 0) {
           const about = res.data[0];
 
-          // ✅ Parse social_icons if it's a JSON string
+          // Parse social_icons if it's a JSON string
           if (typeof about.social_icons === "string") {
             try {
               about.social_icons = JSON.parse(about.social_icons);
@@ -68,9 +65,6 @@ export default function AdminAboutPage() {
     fetchAbout();
   }, []);
 
-  // ─────────────────────────────
-  // Input Handlers
-  // ─────────────────────────────
   const handleChange = (field, value) => {
     setData((prev) => ({ ...prev, [field]: value }));
   };
@@ -80,7 +74,6 @@ export default function AdminAboutPage() {
     if (file) setData((prev) => ({ ...prev, hero_image: file }));
   };
 
-  // ✅ Handle social icon uploads (triggered by button)
   const handleSocialIconUpload = (platform, file) => {
     if (file) {
       setSocialIcons((prev) => ({ ...prev, [platform]: file }));
@@ -91,13 +84,10 @@ export default function AdminAboutPage() {
           [platform]: URL.createObjectURL(file), // show immediately
         },
       }));
-      setMessage({ type: "success", text: `✅ Updated icon for ${platform}` });
+      setMessage({ type: "success", text: `Updated icon for ${platform}` });
     }
   };
 
-  // ─────────────────────────────
-  // Save Changes
-  // ─────────────────────────────
   const saveChanges = async () => {
     if (!data) return;
     setSaving(true);
@@ -110,7 +100,7 @@ export default function AdminAboutPage() {
           if (
             key === "social_links" ||
             key === "gallery_images" ||
-            key === "social_icons" // ✅ ensure JSON stored properly
+            key === "social_icons" // ensure JSON stored properly
           ) {
             formData.append(key, JSON.stringify(value));
           } else {
@@ -119,7 +109,7 @@ export default function AdminAboutPage() {
         }
       }
 
-      // ✅ Append any new icons
+      // Append any new icons
       Object.entries(socialIcons).forEach(([platform, file]) => {
         if (file) formData.append(`social_icon_${platform}`, file);
       });
@@ -128,39 +118,36 @@ export default function AdminAboutPage() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-        let updated = res.data;
+      let updated = res.data;
 
-        // ✅ Parse social_icons if returned as string
-        if (typeof updated.social_icons === "string") {
+      // Parse social_icons if returned as string
+      if (typeof updated.social_icons === "string") {
         try {
-            updated.social_icons = JSON.parse(updated.social_icons);
+          updated.social_icons = JSON.parse(updated.social_icons);
         } catch {
-            updated.social_icons = {};
+          updated.social_icons = {};
         }
-        }
+      }
 
-        // ✅ Fix relative URLs
-        Object.keys(updated.social_icons || {}).forEach((k) => {
+      // Fix relative URLs
+      Object.keys(updated.social_icons || {}).forEach((k) => {
         const val = updated.social_icons[k];
         if (val && !val.startsWith("http")) {
-            updated.social_icons[k] = `http://127.0.0.1:8000${val}`;
+          updated.social_icons[k] = `http://127.0.0.1:8000${val}`;
         }
-        });
+      });
 
-        setData(updated);
-        setSocialIcons({});
-        setMessage({ type: "success", text: "✅ About page updated successfully!" });
+      setData(updated);
+      setSocialIcons({});
+      setMessage({ type: "success", text: "About page updated successfully!" });
     } catch (err) {
       console.error("Update failed:", err.response?.data || err);
-      setMessage({ type: "error", text: "❌ Failed to update About page." });
+      setMessage({ type: "error", text: "Failed to update About page." });
     } finally {
       setSaving(false);
     }
   };
 
-  // ─────────────────────────────
-  // Reset Handler
-  // ─────────────────────────────
   const resetContent = () => {
     setData({
       ...data,
@@ -175,12 +162,9 @@ export default function AdminAboutPage() {
       social_links: {},
     });
     setConfirmReset(false);
-    setMessage({ type: "info", text: "⚙️ All content has been reset." });
+    setMessage({ type: "info", text: "All content has been reset." });
   };
 
-  // ─────────────────────────────
-  // Add New Social Link
-  // ─────────────────────────────
   const addSocialLink = () => {
     const { platform, url, icon } = newSocial;
     if (!platform || !url) return;
@@ -201,272 +185,231 @@ export default function AdminAboutPage() {
 
     setNewSocial({ platform: "", url: "", icon: null });
     setShowAddSocial(false);
-    setMessage({ type: "success", text: `🌐 Added ${platform} link!` });
+    setMessage({ type: "success", text: `Added ${platform} link!` });
   };
 
-  // ─────────────────────────────
-  // UI Render States
-  // ─────────────────────────────
   if (loading)
-    return <div className="p-10 text-center text-white">Loading About content...</div>;
+    return <div className="p-10 text-center text-luxury-mut">Loading About content...</div>;
   if (error) return <div className="p-10 text-center text-red-400">{error}</div>;
 
-  // ─────────────────────────────
-  // MAIN UI
-  // ─────────────────────────────
   return (
-    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-24 py-10">
-      <div className="max-w-[1200px] mx-auto">
-        <PageHeader title="Edit About Page" />
+    <div className="space-y-6">
+      <div className="glass rounded-2xl p-6 sm:p-8 space-y-6">
+        <AdminField label="Title">
+          <input
+            type="text"
+            value={data?.title || ""}
+            onChange={(e) => handleChange("title", e.target.value)}
+            className={adminInput}
+          />
+        </AdminField>
 
-        {/* Toast Message */}
-        {message && (
-          <div
-            className={`fixed top-6 right-6 z-[9999] px-4 py-2 rounded-lg shadow-lg transition-all duration-300 ${
-              message.type === "success"
-                ? "bg-luxury-gold"
-                : message.type === "error"
-                ? "bg-red-600"
-                : "bg-luxury-gold"
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
+        <AdminField label="Intro Text">
+          <input
+            type="text"
+            value={data?.intro_text || ""}
+            onChange={(e) => handleChange("intro_text", e.target.value)}
+            className={adminInput}
+          />
+        </AdminField>
 
-        <div className="bg-white/10 p-8 rounded-2xl shadow-lg space-y-6">
-          {/* ─── Title ─── */}
-          <div>
-            <label className="block font-semibold mb-1">Title</label>
-            <input
-              type="text"
-              value={data?.title || ""}
-              onChange={(e) => handleChange("title", e.target.value)}
-              className="w-full rounded-lg px-3 py-2 bg-white/20 text-white"
-            />
-          </div>
+        <AdminField label="Main Body">
+          <textarea
+            rows={8}
+            value={data?.body_text || ""}
+            onChange={(e) => handleChange("body_text", e.target.value)}
+            className={adminTextarea}
+          />
+        </AdminField>
 
-          {/* ─── Intro ─── */}
-          <div>
-            <label className="block font-semibold mb-1">Intro Text</label>
-            <input
-              type="text"
-              value={data?.intro_text || ""}
-              onChange={(e) => handleChange("intro_text", e.target.value)}
-              className="w-full rounded-lg px-3 py-2 bg-white/20 text-white"
-            />
-          </div>
-
-          {/* ─── Body ─── */}
-          <div>
-            <label className="block font-semibold mb-1">Main Body</label>
+        <div className="grid md:grid-cols-2 gap-6">
+          <AdminField label="Mission">
             <textarea
-              rows={8}
-              value={data?.body_text || ""}
-              onChange={(e) => handleChange("body_text", e.target.value)}
-              className="w-full rounded-lg px-3 py-2 bg-white/20 text-white resize-none"
+              rows={4}
+              value={data?.mission || ""}
+              onChange={(e) => handleChange("mission", e.target.value)}
+              className={adminTextarea}
             />
-          </div>
+          </AdminField>
+          <AdminField label="Vision">
+            <textarea
+              rows={4}
+              value={data?.vision || ""}
+              onChange={(e) => handleChange("vision", e.target.value)}
+              className={adminTextarea}
+            />
+          </AdminField>
+        </div>
 
-          {/* ─── Mission & Vision ─── */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label className="block font-semibold mb-1">Mission</label>
-              <textarea
-                rows={4}
-                value={data?.mission || ""}
-                onChange={(e) => handleChange("mission", e.target.value)}
-                className="w-full rounded-lg px-3 py-2 bg-white/20 text-white resize-none"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold mb-1">Vision</label>
-              <textarea
-                rows={4}
-                value={data?.vision || ""}
-                onChange={(e) => handleChange("vision", e.target.value)}
-                className="w-full rounded-lg px-3 py-2 bg-white/20 text-white resize-none"
-              />
-            </div>
-          </div>
+        <AdminField label="Hero Image">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className={adminInput}
+          />
+          {data?.hero_image_url && (
+            <img
+              src={data.hero_image_url}
+              alt="Hero"
+              className="mt-4 w-full rounded-xl border border-luxury-line"
+              style={{ maxHeight: "none", objectFit: "contain" }}
+            />
+          )}
+        </AdminField>
 
-          {/* ─── Hero Image ─── */}
-          <div>
-            <label className="block font-semibold mb-1">Hero Image</label>
+        <div className="grid md:grid-cols-2 gap-6">
+          <AdminField label="Contact Email">
             <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="w-full text-white/80"
+              type="email"
+              value={data?.contact_email || ""}
+              onChange={(e) => handleChange("contact_email", e.target.value)}
+              className={adminInput}
             />
-            {data?.hero_image_url && (
-              <img
-                src={data.hero_image_url}
-                alt="Hero"
-                className="mt-3 w-full rounded-lg"
-                style={{ maxHeight: "none", objectFit: "contain" }}
-              />
-            )}
-          </div>
-
-          {/* ─── Contact Info ─── */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label className="block font-semibold mb-1">Contact Email</label>
-              <input
-                type="email"
-                value={data?.contact_email || ""}
-                onChange={(e) => handleChange("contact_email", e.target.value)}
-                className="w-full rounded-lg px-3 py-2 bg-white/20 text-white"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold mb-1">Contact Phone</label>
-              <input
-                type="text"
-                value={data?.contact_phone || ""}
-                onChange={(e) => handleChange("contact_phone", e.target.value)}
-                className="w-full rounded-lg px-3 py-2 bg-white/20 text-white"
-              />
-            </div>
-          </div>
-
-          {/* ─── Address ─── */}
-          <div>
-            <label className="block font-semibold mb-1">Address</label>
+          </AdminField>
+          <AdminField label="Contact Phone">
             <input
               type="text"
-              value={data?.address || ""}
-              onChange={(e) => handleChange("address", e.target.value)}
-              className="w-full rounded-lg px-3 py-2 bg-white/20 text-white"
+              value={data?.contact_phone || ""}
+              onChange={(e) => handleChange("contact_phone", e.target.value)}
+              className={adminInput}
             />
+          </AdminField>
+        </div>
+
+        <AdminField label="Address">
+          <input
+            type="text"
+            value={data?.address || ""}
+            onChange={(e) => handleChange("address", e.target.value)}
+            className={adminInput}
+          />
+        </AdminField>
+
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-3">
+            <div>
+              <p className="label uppercase text-[10px] text-luxury-mut">Social Links</p>
+              <p className="text-sm text-luxury-mut mt-1">
+                Manage name, URL, and icon for each platform.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAddSocial(true)}
+              className="ghost rounded-full px-4 py-2 text-[11px] label uppercase"
+            >
+              Add Social Link
+            </button>
           </div>
 
-          {/* ─── Social Links ─── */}
-          <div>
-            <label className="block font-semibold mb-1">Social Links</label>
-            <p className="text-sm text-white/60 mb-2">
-              Manage name, URL, and icon for each platform.
-            </p>
-
+          <div className="space-y-4">
             {Object.entries(data?.social_links || {}).map(([key, val]) => (
-              <div
-                key={key}
-                className="flex flex-col md:flex-row md:items-center gap-4 mb-4 border-b border-white/10 pb-4"
-              >
-                {/* Platform Name */}
-                <input
-                  type="text"
-                  value={key}
-                  readOnly
-                  className="md:w-1/5 rounded-lg px-3 py-2 bg-white/20 text-white/70"
-                />
+              <div key={key} className="space-y-4">
+                <div className="rule" />
+                <div className="flex flex-col xl:flex-row xl:items-center gap-4">
+                  <input
+                    type="text"
+                    value={key}
+                    readOnly
+                    className={`${adminInput} xl:w-48 text-luxury-mut`}
+                  />
 
-                {/* Icon Preview + Button */}
-                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3">
                     {socialIcons?.[key] ? (
-                    // 🔥 Show local preview for newly uploaded (unsaved) file
-                    <img
+                      <img
                         src={URL.createObjectURL(socialIcons[key])}
                         alt={key}
-                        className="w-8 h-8 rounded bg-white object-contain"
-                    />
+                        className="w-9 h-9 rounded bg-white object-contain"
+                      />
                     ) : data?.social_icons?.[key] ? (
-                    // ✅ Otherwise show the existing backend icon
-                    <img
+                      <img
                         src={
-                        data.social_icons[key]?.startsWith("http")
+                          data.social_icons[key]?.startsWith("http")
                             ? data.social_icons[key]
                             : `http://127.0.0.1:8000${data.social_icons[key]}`
                         }
                         alt={key}
-                        className="w-8 h-8 rounded bg-white object-contain"
-                    />
+                        className="w-9 h-9 rounded bg-white object-contain"
+                      />
                     ) : (
-                    <span className="text-xs text-white/50">No icon</span>
+                      <span className="text-xs text-luxury-mut">No icon</span>
                     )}
 
-                  {/* ✅ Hidden Input Triggered by Button */}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id={`icon-input-${key}`}
+                      style={{ display: "none" }}
+                      onChange={(e) =>
+                        handleSocialIconUpload(key, e.target.files[0])
+                      }
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        document.getElementById(`icon-input-${key}`).click()
+                      }
+                      className="ghost rounded-full px-3 py-1.5 text-[11px] label uppercase"
+                    >
+                      Change Icon
+                    </button>
+                  </div>
+
                   <input
-                    type="file"
-                    accept="image/*"
-                    id={`icon-input-${key}`}
-                    style={{ display: "none" }}
+                    type="url"
+                    value={val}
                     onChange={(e) =>
-                      handleSocialIconUpload(key, e.target.files[0])
+                      setData((prev) => ({
+                        ...prev,
+                        social_links: {
+                          ...prev.social_links,
+                          [key]: e.target.value,
+                        },
+                      }))
                     }
+                    className={`${adminInput} flex-1`}
                   />
+
                   <button
-                    onClick={() =>
-                      document.getElementById(`icon-input-${key}`).click()
-                    }
-                    className="px-2 py-1 bg-luxury-gold/60 hover:bg-luxury-gold rounded text-sm"
+                    type="button"
+                    onClick={() => {
+                      const updated = { ...data.social_links };
+                      delete updated[key];
+                      setData({ ...data, social_links: updated });
+                    }}
+                    className="border border-red-500/50 text-red-300 hover:bg-red-500/10 rounded-full px-3 py-1.5 text-[11px] label uppercase"
                   >
-                    Change Icon
+                    Remove
                   </button>
                 </div>
-
-                {/* URL */}
-                <input
-                  type="url"
-                  value={val}
-                  onChange={(e) =>
-                    setData((prev) => ({
-                      ...prev,
-                      social_links: {
-                        ...prev.social_links,
-                        [key]: e.target.value,
-                      },
-                    }))
-                  }
-                  className="flex-1 rounded-lg px-3 py-2 bg-white/20 text-white"
-                />
-
-                {/* Remove */}
-                <button
-                  onClick={() => {
-                    const updated = { ...data.social_links };
-                    delete updated[key];
-                    setData({ ...data, social_links: updated });
-                  }}
-                  className="text-red-400 hover:text-red-200 text-lg"
-                >
-                  ✕
-                </button>
               </div>
             ))}
-
-            <button
-              onClick={() => setShowAddSocial(true)}
-              className="mt-2 px-3 py-1 bg-white/20 rounded-lg hover:bg-white/30"
-            >
-              + Add Social Link
-            </button>
           </div>
+        </div>
 
-          {/* ─── Actions ─── */}
-          <div className="flex justify-between items-center mt-10">
-            <button
-              onClick={() => setConfirmReset(true)}
-              className="px-4 py-2 bg-red-500/70 hover:bg-red-500 rounded-lg text-white"
-            >
-              Reset
-            </button>
-            <button
-              onClick={saveChanges}
-              disabled={saving}
-              className="px-6 py-2 bg-luxury-gold hover:bg-luxury-gold rounded-lg text-white disabled:opacity-50"
-            >
-              {saving ? "Saving..." : "Save Changes"}
-            </button>
-          </div>
+        <div className="sticky bottom-4 z-10 glass rounded-2xl p-4 flex justify-between items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setConfirmReset(true)}
+            className="border border-red-500/50 text-red-300 hover:bg-red-500/10 rounded-full px-5 py-2 text-[11px] label uppercase"
+          >
+            Reset
+          </button>
+          <button
+            type="button"
+            onClick={saveChanges}
+            disabled={saving}
+            className="btn-lux rounded-full px-6 py-2 text-[11px] label uppercase disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
         </div>
       </div>
 
-      {/* Confirm Reset Modal */}
       {confirmReset && (
-        <ConfirmModal
-          open={confirmReset}
+        <AdminConfirm
+          open
           title="Reset Content"
           message="Are you sure you want to reset the About content?"
           confirmText="Reset"
@@ -476,93 +419,95 @@ export default function AdminAboutPage() {
         />
       )}
 
-      {/* Add Social Link Modal */}
-      {showAddSocial && (
-        <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-[10000]">
-          <div className="bg-[#142750] p-6 rounded-xl shadow-lg w-[420px] text-white space-y-5">
-            <h3 className="text-lg font-semibold">Add Social Link</h3>
+      <AdminModal
+        open={showAddSocial}
+        title="Add Social Link"
+        onClose={() => {
+          setNewSocial({ platform: "", url: "", icon: null });
+          setShowAddSocial(false);
+        }}
+        size="sm"
+      >
+        <div className="space-y-5">
+          <AdminField label="Platform">
+            <input
+              type="text"
+              placeholder="e.g. Instagram"
+              value={newSocial.platform}
+              onChange={(e) =>
+                setNewSocial((prev) => ({
+                  ...prev,
+                  platform: e.target.value,
+                }))
+              }
+              className={adminInput}
+            />
+          </AdminField>
 
-            {/* Platform */}
-            <div>
-              <label className="block text-sm mb-1 text-white/80">
-                Platform
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Instagram"
-                value={newSocial.platform}
-                onChange={(e) =>
-                  setNewSocial((prev) => ({
-                    ...prev,
-                    platform: e.target.value,
-                  }))
-                }
-                className="w-full p-2 rounded bg-white/10 border border-white/20"
-              />
-            </div>
+          <AdminField label="URL">
+            <input
+              type="url"
+              placeholder="https://instagram.com/gerainchan"
+              value={newSocial.url}
+              onChange={(e) =>
+                setNewSocial((prev) => ({ ...prev, url: e.target.value }))
+              }
+              className={adminInput}
+            />
+          </AdminField>
 
-            {/* URL */}
-            <div>
-              <label className="block text-sm mb-1 text-white/80">URL</label>
-              <input
-                type="url"
-                placeholder="https://instagram.com/gerainchan"
-                value={newSocial.url}
-                onChange={(e) =>
-                  setNewSocial((prev) => ({ ...prev, url: e.target.value }))
-                }
-                className="w-full p-2 rounded bg-white/10 border border-white/20"
-              />
-            </div>
+          <AdminField label="Upload Icon">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) setNewSocial((prev) => ({ ...prev, icon: file }));
+              }}
+              className={adminInput}
+            />
+            {newSocial.icon && (
+              <div className="mt-3 flex items-center gap-3">
+                <img
+                  src={URL.createObjectURL(newSocial.icon)}
+                  alt="preview"
+                  className="w-10 h-10 rounded bg-white object-contain"
+                />
+                <span className="text-sm text-luxury-mut">
+                  {newSocial.icon.name}
+                </span>
+              </div>
+            )}
+          </AdminField>
 
-            {/* Icon Upload */}
-            <div>
-              <label className="block text-sm mb-1 text-white/80">
-                Upload Icon (optional)
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files[0];
-                  if (file) setNewSocial((prev) => ({ ...prev, icon: file }));
-                }}
-                className="w-full text-sm text-white/80"
-              />
-              {newSocial.icon && (
-                <div className="mt-2 flex items-center gap-3">
-                  <img
-                    src={URL.createObjectURL(newSocial.icon)}
-                    alt="preview"
-                    className="w-10 h-10 rounded bg-white object-contain"
-                  />
-                  <span className="text-sm text-white/60">
-                    {newSocial.icon.name}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Buttons */}
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                onClick={() => {
-                  setNewSocial({ platform: "", url: "", icon: null });
-                  setShowAddSocial(false);
-                }}
-                className="px-4 py-2 bg-gray-500/60 hover:bg-gray-500 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={addSocialLink}
-                className="px-4 py-2 bg-luxury-gold hover:bg-luxury-gold rounded-lg"
-              >
-                Add
-              </button>
-            </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setNewSocial({ platform: "", url: "", icon: null });
+                setShowAddSocial(false);
+              }}
+              className="ghost rounded-full px-5 py-2 text-[11px] label uppercase"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={addSocialLink}
+              className="btn-lux rounded-full px-6 py-2 text-[11px] label uppercase"
+            >
+              Add
+            </button>
           </div>
         </div>
+      </AdminModal>
+
+      {message && (
+        <AdminToast
+          type={message.type}
+          message={message.text}
+          onClose={() => setMessage(null)}
+        />
       )}
     </div>
   );

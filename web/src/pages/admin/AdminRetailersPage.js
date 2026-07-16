@@ -1,78 +1,17 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import http from "../../lib/http";
+import { useAdminChrome } from "../../context/AdminChromeContext";
 import {
-  IoAddCircleOutline,
-  IoTrashOutline,
-  IoCreateOutline,
-  IoClose,
-  IoCheckmarkCircle,
-  IoAlertCircle,
-} from "react-icons/io5";
-import PageHeader from "../../components/PageHeader";
+  AdminConfirm,
+  AdminField,
+  AdminModal,
+  AdminToast,
+  AdminToggle,
+  StatusPill,
+  adminInput,
+  adminTextarea,
+} from "../../components/admin";
 
-// ─────────────────────────────────────────────
-// Toast component (for success/error messages)
-// ─────────────────────────────────────────────
-function Toast({ message, type = "success", onClose }) {
-  const color =
-    type === "error"
-      ? "bg-red-600/90 border-red-400"
-      : "bg-luxury-gold/90 border-luxury-gold";
-
-  useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  return (
-    <div
-      className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg text-white ${color}`}
-    >
-      {type === "error" ? (
-        <IoAlertCircle size={26} />
-      ) : (
-        <IoCheckmarkCircle size={26} />
-      )}
-      <p className="font-medium">{message}</p>
-      <button onClick={onClose} className="ml-3 opacity-80 hover:opacity-100">
-        <IoClose size={20} />
-      </button>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────
-// Confirm deletion modal
-// ─────────────────────────────────────────────
-function Confirm({ title, message, onConfirm, onCancel }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-[#10214f] text-white w-full max-w-lg rounded-2xl p-6 shadow-2xl">
-        <h3 className="text-2xl font-semibold mb-2">{title}</h3>
-        <p className="text-white/80 mb-6">{message}</p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 rounded bg-gray-500 hover:bg-gray-600"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 font-semibold"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────
-// Main component
-// ─────────────────────────────────────────────
 export default function AdminRetailersPage() {
   const [retailers, setRetailers] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -90,6 +29,35 @@ export default function AdminRetailersPage() {
     phone: "",
     map_url: "",
     image: null,
+  });
+
+  function openCreate() {
+    setEditing(null);
+    setForm({
+      name: "",
+      address: "",
+      opening_time: "10:00",
+      closing_time: "22:00",
+      is_open_24h: false,
+      phone: "",
+      map_url: "",
+      image: null,
+    });
+    setApiError("");
+    setShowForm(true);
+  }
+
+  useAdminChrome({
+    title: "Retailers",
+    actions: (
+      <button
+        onClick={openCreate}
+        className="btn-lux rounded-full px-6 py-3 text-[11px] font-medium label uppercase"
+      >
+        Add Retailer
+      </button>
+    ),
+    backTo: "/admin/dashboard",
   });
 
   useEffect(() => {
@@ -110,22 +78,6 @@ export default function AdminRetailersPage() {
     if (type === "checkbox") setForm((f) => ({ ...f, [name]: checked }));
     else if (type === "file") setForm((f) => ({ ...f, image: files?.[0] || null }));
     else setForm((f) => ({ ...f, [name]: value }));
-  }
-
-  function openCreate() {
-    setEditing(null);
-    setForm({
-      name: "",
-      address: "",
-      opening_time: "10:00",
-      closing_time: "22:00",
-      is_open_24h: false,
-      phone: "",
-      map_url: "",
-      image: null,
-    });
-    setApiError("");
-    setShowForm(true);
   }
 
   function openEdit(r) {
@@ -207,229 +159,202 @@ export default function AdminRetailersPage() {
     } catch (err) {
       console.error("Failed to delete retailer:", err?.response?.data || err);
       setToast({
-        message: "Failed to delete retailer. Make sure you’re logged in as admin.",
+        message: "Failed to delete retailer. Make sure you're logged in as admin.",
         type: "error",
       });
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-16 py-10">
-      <div className="max-w-7xl mx-auto">
-        {/* Unified Top Bar */}
-        <PageHeader title="Manage Retailers" />
+    <div className="space-y-6">
+      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+        {retailers.map((r) => (
+          <div key={r.id} className="card glass rounded-2xl p-5 group">
+            {r.image_url && (
+              <img
+                src={r.image_url}
+                alt={r.name}
+                className="w-full h-56 object-cover rounded-xl mb-5 border border-luxury-line"
+              />
+            )}
 
-        <div className="flex justify-end mb-8">
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 bg-luxury-gold hover:bg-luxury-gold px-5 py-3 rounded-xl font-semibold text-lg"
-          >
-            <IoAddCircleOutline size={28} />
-            Add Retailer
-          </button>
-        </div>
+            <div className="space-y-3">
+              <div>
+                <h3 className="font-serif text-2xl text-white">{r.name}</h3>
+                <p className="text-sm text-luxury-mut mt-2">{r.address}</p>
+              </div>
 
-        {/* Retailers Grid */}
-        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-8">
-          {retailers.map((r) => (
-            <div
-              key={r.id}
-              className="bg-white/10 rounded-2xl p-6 shadow-lg relative group hover:scale-[1.01] transition-transform"
-            >
-              {r.image_url && (
-                <img
-                  src={r.image_url}
-                  alt={r.name}
-                  className="w-full h-60 object-cover rounded-xl mb-5"
-                />
-              )}
-              <h3 className="text-2xl font-semibold">{r.name}</h3>
-              <p className="text-white/80 mt-2">{r.address}</p>
-              <p className="text-white/60 mt-2">
-                {r.is_open_24h
-                  ? "Open 24 Hours"
-                  : `Hours: ${r.opening_time?.slice(0, 5)}–${r.closing_time?.slice(
-                      0,
-                      5
-                    )}`}
-              </p>
-              {r.phone && <p className="text-white/60 mt-1">Tel: {r.phone}</p>}
+              <div className="flex flex-wrap items-center gap-2">
+                {r.is_open_24h ? (
+                  <StatusPill status="SUCCESS" label="Open 24 Hours" />
+                ) : (
+                  <StatusPill
+                    status="HOURS"
+                    label={`${r.opening_time?.slice(0, 5)}–${r.closing_time?.slice(0, 5)}`}
+                  />
+                )}
+                {r.phone && <StatusPill status="PHONE" label={`Tel: ${r.phone}`} />}
+              </div>
+
               {r.map_url && (
                 <a
                   href={r.map_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-luxury-gold hover:underline mt-2 inline-block"
+                  className="inline-block text-sm text-luxury-gold2 hover:text-luxury-champagne"
                 >
-                  View on Google Maps →
+                  View on Google Maps
                 </a>
               )}
 
-              <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+              <div className="flex justify-end gap-2 pt-3">
                 <button
                   onClick={() => openEdit(r)}
-                  className="p-2 bg-luxury-gold hover:bg-luxury-gold rounded-full"
-                  title="Edit"
+                  className="ghost rounded-full px-3 py-1.5 text-[11px] label uppercase"
                 >
-                  <IoCreateOutline size={18} />
+                  Edit
                 </button>
                 <button
                   onClick={() => setConfirmDelete(r)}
-                  className="p-2 bg-red-600 hover:bg-red-700 rounded-full"
-                  title="Delete"
+                  className="border border-red-500/50 text-red-300 hover:bg-red-500/10 rounded-full px-3 py-1.5 text-[11px] label uppercase"
                 >
-                  <IoTrashOutline size={18} />
+                  Delete
                 </button>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
-      {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <form
-            onSubmit={onSubmit}
-            className="bg-[#112255] p-8 rounded-2xl w-full max-w-3xl shadow-2xl space-y-5 text-white"
-          >
-            <h2 className="text-3xl font-bold">
-              {editing ? "Edit Retailer" : "Add Retailer"}
-            </h2>
-
-            {apiError && (
-              <div className="bg-red-600/15 border border-red-600 text-red-200 p-4 rounded-lg">
-                <p className="font-semibold mb-1">⚠️ Oops! Something went wrong.</p>
-                <p className="text-red-100">{apiError}</p>
-              </div>
-            )}
-
-            {/* Form Fields */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <label className="text-sm flex flex-col gap-2">
-                <span>Name</span>
-                <input
-                  name="name"
-                  value={form.name}
-                  onChange={onChange}
-                  placeholder="Retailer Name"
-                  className="w-full p-3 text-lg rounded bg-white/10 border border-white/20"
-                  required
-                />
-              </label>
-
-              <label className="text-sm flex flex-col gap-2">
-                <span>Phone</span>
-                <input
-                  name="phone"
-                  value={form.phone}
-                  onChange={onChange}
-                  placeholder="+60 ..."
-                  className="w-full p-3 text-lg rounded bg-white/10 border border-white/20"
-                />
-              </label>
+      <AdminModal
+        open={showForm}
+        title={editing ? "Edit Retailer" : "Add Retailer"}
+        onClose={() => setShowForm(false)}
+        size="lg"
+      >
+        <form onSubmit={onSubmit} className="space-y-5">
+          {apiError && (
+            <div className="glass border border-red-500/40 text-red-200 p-4 rounded-lg">
+              <p className="font-semibold mb-1">Something went wrong.</p>
+              <p className="text-red-100">{apiError}</p>
             </div>
+          )}
 
-            <label className="text-sm flex flex-col gap-2">
-              <span>Address</span>
-              <textarea
-                name="address"
-                value={form.address}
+          <div className="grid md:grid-cols-2 gap-5">
+            <AdminField label="Name" required>
+              <input
+                name="name"
+                value={form.name}
                 onChange={onChange}
-                placeholder="Full address"
-                className="w-full p-3 text-lg rounded bg-white/10 border border-white/20"
-                rows="3"
+                placeholder="Retailer Name"
+                className={adminInput}
                 required
               />
-            </label>
+            </AdminField>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <label className="text-sm flex flex-col gap-2">
-                <span>Opening Time</span>
-                <input
-                  type="time"
-                  name="opening_time"
-                  value={form.is_open_24h ? "" : form.opening_time}
-                  onChange={onChange}
-                  disabled={form.is_open_24h}
-                  className="p-3 text-lg rounded bg-white/10 border border-white/20"
-                />
-              </label>
-
-              <label className="text-sm flex flex-col gap-2">
-                <span>Closing Time</span>
-                <input
-                  type="time"
-                  name="closing_time"
-                  value={form.is_open_24h ? "" : form.closing_time}
-                  onChange={onChange}
-                  disabled={form.is_open_24h}
-                  className="p-3 text-lg rounded bg-white/10 border border-white/20"
-                />
-              </label>
-            </div>
-
-            <label className="flex items-center gap-2">
+            <AdminField label="Phone">
               <input
-                type="checkbox"
-                name="is_open_24h"
-                checked={form.is_open_24h}
+                name="phone"
+                value={form.phone}
                 onChange={onChange}
+                placeholder="+60 ..."
+                className={adminInput}
               />
-              <span className="text-lg">Open 24 Hours</span>
-            </label>
+            </AdminField>
+          </div>
 
-            <label className="text-sm flex flex-col gap-2">
-              <span>Google Maps URL</span>
+          <AdminField label="Address" required>
+            <textarea
+              name="address"
+              value={form.address}
+              onChange={onChange}
+              placeholder="Full address"
+              className={adminTextarea}
+              rows="3"
+              required
+            />
+          </AdminField>
+
+          <div className="grid md:grid-cols-2 gap-5">
+            <AdminField label="Opening Time">
               <input
-                name="map_url"
-                value={form.map_url}
+                type="time"
+                name="opening_time"
+                value={form.is_open_24h ? "" : form.opening_time}
                 onChange={onChange}
-                placeholder="https://maps.google.com/..."
-                className="w-full p-3 text-lg rounded bg-white/10 border border-white/20"
+                disabled={form.is_open_24h}
+                className={adminInput}
               />
-            </label>
+            </AdminField>
 
-            <label className="text-sm flex flex-col gap-2">
-              <span>Image</span>
+            <AdminField label="Closing Time">
               <input
-                type="file"
-                name="image"
+                type="time"
+                name="closing_time"
+                value={form.is_open_24h ? "" : form.closing_time}
                 onChange={onChange}
-                className="w-full text-sm"
+                disabled={form.is_open_24h}
+                className={adminInput}
               />
-            </label>
+            </AdminField>
+          </div>
 
-            <div className="flex justify-end gap-4 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="px-5 py-3 rounded-xl bg-gray-500 hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-5 py-3 rounded-xl bg-luxury-gold hover:bg-luxury-gold font-semibold"
-              >
-                {editing ? "Update" : "Save"}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+          <AdminToggle
+            checked={form.is_open_24h}
+            onChange={(checked) => setForm((f) => ({ ...f, is_open_24h: checked }))}
+            label="Open 24 Hours"
+          />
+
+          <AdminField label="Google Maps URL">
+            <input
+              name="map_url"
+              value={form.map_url}
+              onChange={onChange}
+              placeholder="https://maps.google.com/..."
+              className={adminInput}
+            />
+          </AdminField>
+
+          <AdminField label="Image">
+            <input
+              type="file"
+              name="image"
+              onChange={onChange}
+              className={adminInput}
+            />
+          </AdminField>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setShowForm(false)}
+              className="ghost rounded-full px-5 py-2 text-[11px] label uppercase"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn-lux rounded-full px-6 py-2 text-[11px] label uppercase"
+            >
+              {editing ? "Update" : "Save"}
+            </button>
+          </div>
+        </form>
+      </AdminModal>
 
       {confirmDelete && (
-        <Confirm
+        <AdminConfirm
+          open
           title="Delete Retailer"
           message={`Are you sure you want to delete "${confirmDelete.name}"?`}
+          confirmText="Delete"
           onConfirm={doDelete}
           onCancel={() => setConfirmDelete(null)}
         />
       )}
 
       {toast && (
-        <Toast
+        <AdminToast
           message={toast.message}
           type={toast.type}
           onClose={() => setToast(null)}

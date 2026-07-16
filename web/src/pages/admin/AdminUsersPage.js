@@ -1,72 +1,29 @@
 // src/pages/admin/AdminUsersPage.js
 import { useEffect, useState } from "react";
-import PageHeader from "../../components/PageHeader";
 import http from "../../lib/http";
+import { useAdminChrome } from "../../context/AdminChromeContext";
+import {
+  AdminConfirm,
+  AdminModal,
+  AdminToast,
+  DataTable,
+  StatusPill,
+} from "../../components/admin";
 
-// ✅ helper to format date
+// Helper to format date
 const formatDate = (dateStr) => {
   if (!dateStr) return "—";
   const d = new Date(dateStr);
   return d.toLocaleString();
 };
 
-// ✅ Toast component (bottom-right)
-function Toast({ message, type = "success", onClose }) {
-  const bg =
-    type === "error"
-      ? "bg-red-600/90 border-red-400"
-      : "bg-luxury-gold/90 border-luxury-gold";
-
-  useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  return (
-    <div
-      className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg text-white ${bg}`}
-    >
-      <span className="font-medium">{message}</span>
-      <button
-        onClick={onClose}
-        className="ml-2 text-white/80 hover:text-white"
-      >
-        ✕
-      </button>
-    </div>
-  );
-}
-
-// ✅ Confirm modal
-function ConfirmDelete({ user, onConfirm, onCancel }) {
-  if (!user) return null;
-  return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-4">
-      <div className="bg-[#10214f] text-white w-full max-w-md rounded-2xl p-6 shadow-2xl">
-        <h3 className="text-xl font-semibold mb-3">Delete User</h3>
-        <p className="text-white/80 mb-6">
-          Are you sure you want to delete user{" "}
-          <span className="font-semibold">{user.username}</span> (ID:{" "}
-          {user.id})? This action cannot be undone.
-        </p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 rounded bg-gray-500 hover:bg-gray-600"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 rounded bg-red-600 hover:bg-red-700 font-semibold"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+const COLUMNS = [
+  { label: "ID" },
+  { label: "Username" },
+  { label: "Email" },
+  { label: "Role" },
+  { label: "Actions", align: "right" },
+];
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
@@ -74,9 +31,11 @@ export default function AdminUsersPage() {
   const [err, setErr] = useState("");
   const [details, setDetails] = useState(null);
 
-  // ✅ confirmation + toast state
+  // Confirmation + toast state
   const [confirmUser, setConfirmUser] = useState(null);
   const [toast, setToast] = useState(null);
+
+  useAdminChrome({ title: "Users", actions: null, backTo: "/admin/dashboard" });
 
   const showToast = (type, message) => {
     setToast({ type, message });
@@ -113,175 +72,149 @@ export default function AdminUsersPage() {
     }
   };
 
-  if (loading) return <div className="p-6 text-white">Loading users…</div>;
-  if (err) return <div className="p-6 text-red-500">{err}</div>;
+  if (err) return <p className="text-red-300 text-sm">{err}</p>;
 
   return (
-    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-16">
-      <div className="max-w-6xl mx-auto py-6">
-        <PageHeader title="Users Management" />
-
-        <div className="overflow-x-auto bg-white/5 rounded-xl">
-          <table className="w-full text-left text-white">
-            <thead className="bg-white/10 text-sm">
-              <tr>
-                <th className="p-3">ID</th>
-                <th className="p-3">Username</th>
-                <th className="p-3">Email</th>
-                <th className="p-3">Role</th>
-                <th className="p-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.id} className="border-b border-white/10">
-                  <td className="p-3">{u.id}</td>
-                  <td className="p-3">{u.username}</td>
-                  <td className="p-3">{u.email}</td>
-                  <td className="p-3">
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        u.is_staff === true ? "bg-luxury-gold" : "bg-gray-600"
-                      }`}
-                    >
-                      {u.role}
-                    </span>
-                  </td>
-                  <td className="p-3 space-x-2">
-                    <button
-                      onClick={() => setDetails(u)}
-                      className="px-3 py-1 bg-luxury-gold rounded hover:bg-luxury-gold text-sm"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={() => setConfirmUser(u)}
-                      className="px-3 py-1 bg-red-600 rounded hover:bg-red-700 text-sm"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {users.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="p-4 text-center text-white/70 text-sm"
-                  >
-                    No users found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Details Modal */}
-        {details && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-40 px-4">
-            <div className="bg-[#070B14] rounded-2xl p-6 sm:p-8 w-full max-w-4xl max-h-[85vh] overflow-y-auto">
-              <h2 className="text-xl sm:text-2xl font-bold text-center mb-6">
-                User Profile — {details.username}
-              </h2>
-
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-10">
-                <div className="flex-shrink-0">
-                  {details.avatar ? (
-                    <img
-                      src={details.avatar}
-                      alt={details.username}
-                      className="w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover border-4 border-white/20"
-                    />
-                  ) : (
-                    <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gray-600 flex items-center justify-center text-3xl">
-                      {details.username?.[0]}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex-1 grid sm:grid-cols-2 gap-4 text-sm sm:text-base">
-                  <div>
-                    <p className="font-semibold">Email</p>
-                    <p className="text-gray-300">{details.email}</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Phone Number</p>
-                    <p className="text-gray-300">
-                      {details.phone || "Not provided"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Account Role</p>
-                    <p className="capitalize text-gray-300">{details.role}</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Street Address</p>
-                    <p className="text-gray-300">
-                      {details.address_line1 || "Not provided"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Postal Code</p>
-                    <p className="text-gray-300">
-                      {details.postal_code || "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">City</p>
-                    <p className="text-gray-300">{details.city || "—"}</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">State</p>
-                    <p className="text-gray-300">{details.state || "—"}</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Country</p>
-                    <p className="text-gray-300">{details.country || "—"}</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Date Joined</p>
-                    <p className="text-gray-300">
-                      {formatDate(details.date_joined)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Last Login</p>
-                    <p className="text-gray-300">
-                      {formatDate(details.last_login)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-center mt-8">
+    <div className="space-y-2">
+      <DataTable
+        columns={COLUMNS}
+        loading={loading}
+        isEmpty={!loading && users.length === 0}
+        empty="No users found."
+      >
+        {users.map((u) => (
+          <tr key={u.id} className="row">
+            <td className="px-6 py-4 text-luxury-mut">#{u.id}</td>
+            <td className="px-6 py-4 text-luxury-text">{u.username}</td>
+            <td className="px-6 py-4 text-luxury-mut">{u.email}</td>
+            <td className="px-6 py-4">
+              <StatusPill status={u.is_staff === true ? "ADMIN" : "USER"} label={u.role} />
+            </td>
+            <td className="px-6 py-4">
+              <div className="flex items-center justify-end gap-2">
                 <button
-                  onClick={() => setDetails(null)}
-                  className="px-6 py-2 bg-gray-600 rounded hover:bg-gray-700 font-semibold text-sm sm:text-base"
+                  onClick={() => setDetails(u)}
+                  className="ghost rounded-full px-3 py-1.5 text-[11px]"
                 >
-                  Close
+                  View
                 </button>
+                <button
+                  onClick={() => setConfirmUser(u)}
+                  className="border border-red-500/50 text-red-300 hover:bg-red-500/10 rounded-full px-3 py-1.5 text-[11px]"
+                >
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        ))}
+      </DataTable>
+
+      {details && (
+        <AdminModal
+          open
+          title={`User Profile — ${details.username}`}
+          onClose={() => setDetails(null)}
+          size="lg"
+        >
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-10">
+            <div className="flex-shrink-0">
+              {details.avatar ? (
+                <img
+                  src={details.avatar}
+                  alt={details.username}
+                  className="w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover border border-luxury-gold/30"
+                />
+              ) : (
+                <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full glass flex items-center justify-center text-3xl text-luxury-champagne">
+                  {details.username?.[0]}
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1 grid sm:grid-cols-2 gap-4 text-sm sm:text-base">
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">Email</p>
+                <p className="text-luxury-text">{details.email}</p>
+              </div>
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">Phone Number</p>
+                <p className="text-luxury-text">
+                  {details.phone || "Not provided"}
+                </p>
+              </div>
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">Account Role</p>
+                <p className="capitalize text-luxury-text">{details.role}</p>
+              </div>
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">Street Address</p>
+                <p className="text-luxury-text">
+                  {details.address_line1 || "Not provided"}
+                </p>
+              </div>
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">Postal Code</p>
+                <p className="text-luxury-text">
+                  {details.postal_code || "—"}
+                </p>
+              </div>
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">City</p>
+                <p className="text-luxury-text">{details.city || "—"}</p>
+              </div>
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">State</p>
+                <p className="text-luxury-text">{details.state || "—"}</p>
+              </div>
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">Country</p>
+                <p className="text-luxury-text">{details.country || "—"}</p>
+              </div>
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">Date Joined</p>
+                <p className="text-luxury-text">
+                  {formatDate(details.date_joined)}
+                </p>
+              </div>
+              <div>
+                <p className="label uppercase text-[10px] text-luxury-mut mb-1">Last Login</p>
+                <p className="text-luxury-text">
+                  {formatDate(details.last_login)}
+                </p>
               </div>
             </div>
           </div>
-        )}
 
-        {/* Delete Confirm Modal */}
-        <ConfirmDelete
-          user={confirmUser}
+          <div className="text-center mt-8">
+            <button
+              onClick={() => setDetails(null)}
+              className="ghost rounded-full px-6 py-2 text-sm"
+            >
+              Close
+            </button>
+          </div>
+        </AdminModal>
+      )}
+
+      {confirmUser && (
+        <AdminConfirm
+          open
+          title="Delete User"
+          message={`Are you sure you want to delete user ${confirmUser.username} (ID: ${confirmUser.id})? This action cannot be undone.`}
+          confirmText="Delete"
           onConfirm={handleDelete}
           onCancel={() => setConfirmUser(null)}
         />
+      )}
 
-        {/* Toast */}
-        {toast && (
-          <Toast
-            type={toast.type}
-            message={toast.message}
-            onClose={() => setToast(null)}
-          />
-        )}
-      </div>
+      {toast && (
+        <AdminToast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
