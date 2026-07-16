@@ -1,43 +1,35 @@
 // src/pages/admin/AdminARManagement.js
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import http from "../../lib/http";
-import PageHeader from "../../components/PageHeader";
-import { IoClose, IoAlertCircle, IoCheckmarkCircle } from "react-icons/io5";
+import { useAdminChrome } from "../../context/AdminChromeContext";
+import {
+  AdminConfirm,
+  AdminToast,
+  DataTable,
+  StatusPill,
+} from "../../components/admin";
 
-// ─────────────────────────────────────────────
-// Toast (bottom-right)
-// ─────────────────────────────────────────────
-function Toast({ message, type = "success", onClose }) {
-  useEffect(() => {
-    const t = setTimeout(onClose, 3000);
-    return () => clearTimeout(t);
-  }, [onClose]);
+const COLUMNS = [
+  { label: "#" },
+  { label: "Product" },
+  { label: "Type" },
+  { label: "Marker", align: "right" },
+  { label: "3D Model", align: "right" },
+  { label: "MindAR Target", align: "right" },
+  { label: "App Download" },
+  { label: "Enabled", align: "right" },
+  { label: "Actions", align: "right" },
+];
 
-  const color =
-    type === "error"
-      ? "bg-red-600/90 border-red-400"
-      : "bg-luxury-gold/90 border-luxury-gold";
-
-  return (
-    <div
-      className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg text-white ${color}`}
-    >
-      {type === "error" ? (
-        <IoAlertCircle size={22} />
-      ) : (
-        <IoCheckmarkCircle size={22} />
-      )}
-      <p className="font-medium">{message}</p>
-      <button
-        onClick={onClose}
-        className="ml-3 opacity-80 hover:opacity-100"
-      >
-        <IoClose size={18} />
-      </button>
-    </div>
-  );
-}
+const addARAction = (
+  <Link
+    to="/admin/ar-management/new"
+    className="btn-lux px-6 py-3 rounded-full text-[11px] font-medium label uppercase"
+  >
+    Add AR
+  </Link>
+);
 
 export default function AdminARManagement() {
   const [experiences, setExperiences] = useState([]);
@@ -45,9 +37,9 @@ export default function AdminARManagement() {
   const [error, setError] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [toast, setToast] = useState(null);
-  const navigate = useNavigate();
 
-  // ─── Fetch all AR experiences ────────────────────────
+  useAdminChrome({ title: "AR Experiences", actions: addARAction, backTo: "/admin/dashboard" });
+
   async function fetchAR() {
     try {
       const res = await http.get("/ar/");
@@ -65,7 +57,6 @@ export default function AdminARManagement() {
     fetchAR();
   }, []);
 
-  // ─── Toggle Enabled ─────────────────────────────────
   async function toggleEnabled(id, currentState) {
     try {
       await http.patch(`/ar/${id}/`, { enabled: !currentState });
@@ -87,7 +78,6 @@ export default function AdminARManagement() {
     }
   }
 
-  // ─── Delete AR Experience ────────────────────────────
   async function handleDelete(id) {
     try {
       await http.delete(`/ar/${id}/`);
@@ -106,164 +96,90 @@ export default function AdminARManagement() {
     }
   }
 
-  // ─── UI Rendering ───────────────────────────────────
-  if (loading)
-    return (
-      <div className="min-h-screen bg-[#070B14] text-white flex items-center justify-center">
-        <p>Loading AR experiences…</p>
-      </div>
-    );
-
-  if (error)
-    return (
-      <div className="min-h-screen bg-[#070B14] text-white flex items-center justify-center">
-        <p>{error}</p>
-      </div>
-    );
+  if (error) return <p className="text-red-300 text-sm">{error}</p>;
 
   return (
-    <div className="min-h-screen bg-[#070B14] text-white px-6 md:px-12 lg:px-16">
-      <div className="max-w-6xl mx-auto py-8">
-        <PageHeader title="AR Experience Management" />
-
-        <Link
-          to="/admin/ar-management/new"
-          className="px-5 py-2 bg-luxury-gold hover:bg-luxury-gold rounded-lg font-semibold transition"
-        >
-          + Add New AR
-        </Link>
-
-        {experiences.length === 0 ? (
-          <div className="text-center text-gray-300 py-20">
-            <p>No AR experiences found.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto mt-6">
-            <table className="w-full text-left border border-white/10 rounded-lg overflow-hidden">
-              <thead className="bg-white/10">
-                <tr>
-                  <th className="px-4 py-3">#</th>
-                  <th className="px-4 py-3">Product</th>
-                  <th className="px-4 py-3">Type</th>
-                  <th className="px-4 py-3 text-center">Marker</th>
-                  <th className="px-4 py-3 text-center">3D Model</th>
-                  <th className="px-4 py-3 text-center">MindAR Target</th>
-                  <th className="px-4 py-3">App Download (APK)</th>
-                  <th className="px-4 py-3 text-center">Enabled</th>
-                  <th className="px-4 py-3 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {experiences.map((exp, i) => (
-                  <tr
-                    key={exp.id}
-                    className="border-t border-white/10 hover:bg-white/5"
-                  >
-                    <td className="px-4 py-3">{i + 1}</td>
-                    <td className="px-4 py-3">{exp.product?.name || "—"}</td>
-                    <td className="px-4 py-3">{exp.type}</td>
-
-                    {/* Marker */}
-                    <td className="px-4 py-3 text-center">
-                      {exp.marker_image_url ? "✔️" : "❌"}
-                    </td>
-
-                    {/* 3D Model */}
-                    <td className="px-4 py-3 text-center">
-                      {exp.model_glb_url ? "✔️" : "❌"}
-                    </td>
-
-                    {/* MindAR */}
-                    <td className="px-4 py-3 text-center">
-                      {exp.marker_mind_url ? "✔️" : "❌"}
-                    </td>
-
-                    {/* App Download (APK) */}
-                    <td className="px-4 py-3">
-                      {exp.app_download_file_url ? (
-                        <a
-                          href={exp.app_download_file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-luxury-gold hover:underline"
-                        >
-                          Download
-                        </a>
-                      ) : (
-                        <span className="text-gray-400 italic">N/A</span>
-                      )}
-                    </td>
-
-                    {/* Enabled toggle */}
-                    <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => toggleEnabled(exp.id, exp.enabled)}
-                        className={`px-3 py-1 rounded-lg font-semibold ${
-                          exp.enabled
-                            ? "bg-luxury-gold hover:bg-luxury-gold"
-                            : "bg-gray-600 hover:bg-gray-700"
-                        }`}
-                      >
-                        {exp.enabled ? "Enabled" : "Disabled"}
-                      </button>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-4 py-3 text-center flex gap-2 justify-center">
-                      <Link
-                        to={`/admin/ar-management/${exp.id}/edit`}
-                        className="px-3 py-1 bg-luxury-gold hover:bg-luxury-gold rounded-lg font-semibold"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => setConfirmDelete(exp)}
-                        className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg font-semibold"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Confirmation Modal */}
-        {confirmDelete && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-            <div className="bg-[#1e293b] p-6 rounded-xl w-full max-w-sm text-white">
-              <h2 className="text-lg font-bold mb-3">Confirm Deletion</h2>
-              <p className="mb-6">
-                Are you sure you want to delete the AR experience for{" "}
-                <span className="font-semibold">
-                  {confirmDelete.product?.name || "this product"}
-                </span>
-                ?
-              </p>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setConfirmDelete(null)}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg"
+    <div className="space-y-2">
+      <DataTable
+        columns={COLUMNS}
+        loading={loading}
+        isEmpty={!loading && experiences.length === 0}
+        empty="No AR experiences found."
+        minWidth={1120}
+      >
+        {experiences.map((exp, i) => (
+          <tr key={exp.id} className="row">
+            <td className="px-6 py-4 text-luxury-mut">#{i + 1}</td>
+            <td className="px-6 py-4 text-luxury-text">{exp.product?.name || "—"}</td>
+            <td className="px-6 py-4 text-luxury-mut">{exp.type}</td>
+            <td className="px-6 py-4 text-right">
+              <StatusPill status={exp.marker_image_url ? "SUCCESS" : "FAILED"} label={exp.marker_image_url ? "Ready" : "Missing"} />
+            </td>
+            <td className="px-6 py-4 text-right">
+              <StatusPill status={exp.model_glb_url ? "SUCCESS" : "FAILED"} label={exp.model_glb_url ? "Ready" : "Missing"} />
+            </td>
+            <td className="px-6 py-4 text-right">
+              <StatusPill status={exp.marker_mind_url ? "SUCCESS" : "FAILED"} label={exp.marker_mind_url ? "Ready" : "Missing"} />
+            </td>
+            <td className="px-6 py-4">
+              {exp.app_download_file_url ? (
+                <a
+                  href={exp.app_download_file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-luxury-gold2 hover:text-luxury-champagne"
                 >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleDelete(confirmDelete.id)}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-semibold"
+                  Download
+                </a>
+              ) : (
+                <span className="text-luxury-mut italic">N/A</span>
+              )}
+            </td>
+            <td className="px-6 py-4 text-right">
+              <button
+                onClick={() => toggleEnabled(exp.id, exp.enabled)}
+                className={`rounded-full px-3 py-1.5 text-[11px] border ${
+                  exp.enabled
+                    ? "border-luxury-gold/50 text-luxury-gold2 hover:bg-luxury-gold/10"
+                    : "border-luxury-mut/40 text-luxury-mut hover:bg-luxury-panel2"
+                }`}
+              >
+                {exp.enabled ? "Enabled" : "Disabled"}
+              </button>
+            </td>
+            <td className="px-6 py-4">
+              <div className="flex items-center justify-end gap-2">
+                <Link
+                  to={`/admin/ar-management/${exp.id}/edit`}
+                  className="ghost rounded-full px-3 py-1.5 text-[11px]"
                 >
-                  Confirm
+                  Edit
+                </Link>
+                <button
+                  onClick={() => setConfirmDelete(exp)}
+                  className="border border-red-500/50 text-red-300 hover:bg-red-500/10 rounded-full px-3 py-1.5 text-[11px]"
+                >
+                  Delete
                 </button>
               </div>
-            </div>
-          </div>
-        )}
-      </div>
+            </td>
+          </tr>
+        ))}
+      </DataTable>
 
-      {/* Toast */}
+      {confirmDelete && (
+        <AdminConfirm
+          open
+          title="Confirm Deletion"
+          message={`Are you sure you want to delete the AR experience for ${confirmDelete.product?.name || "this product"}?`}
+          confirmText="Confirm"
+          onConfirm={() => handleDelete(confirmDelete.id)}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+
       {toast && (
-        <Toast
+        <AdminToast
           message={toast.message}
           type={toast.type}
           onClose={() => setToast(null)}
