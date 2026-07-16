@@ -1176,7 +1176,16 @@ Apply the Task 11 recipe. One task = one page = one commit. For each: **Read the
   - Read first; table of users + row actions. Commit: `feat(web): luxury redesign users management`.
 
 - [ ] **Task 15 — AdminReviewPage** (`web/src/pages/admin/AdminReviewPage.js`)
-  - Read first; moderation list/table. Commit: `feat(web): luxury redesign reviews management`.
+  - RECLASSIFIED (2026-07-16, found during execution): NOT a plain table. It is a
+    card/list UI — product filter (`GET /admin/products/`), review fetch
+    (`GET /admin/reviews/` and `?product=<name>`), `DELETE /admin/reviews/{id}/`, a
+    collapsible aggregate-summary panel, an optional per-product summary, and the main
+    list rendered as expandable review cards (comments + media gallery).
+  - Treatment: keep the existing structure; reskin only. Product filter → `Toolbar` +
+    `Dropdown`; summary panel + each review → `.glass` panels/cards; delete → `AdminConfirm`;
+    toast → `AdminToast`. Do NOT force it into `DataTable`. Preserve every endpoint,
+    handler, and the expand/collapse + summary logic verbatim.
+  - Commit: `feat(web): luxury redesign reviews management`.
 
 - [ ] **Task 16 — AdminARManagement** (`web/src/pages/admin/AdminARManagement.js`)
   - Read first; table + `navigate` to `/admin/ar-management/new` and `/:id/edit`. `actions`: Add AR button. Commit: `feat(web): luxury redesign AR management`.
