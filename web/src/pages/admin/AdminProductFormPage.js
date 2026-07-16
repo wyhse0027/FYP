@@ -2,68 +2,21 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import http from "../../lib/http";
 import TagsInput from "../../components/TagsInput";
+import { useAdminChrome } from "../../context/AdminChromeContext";
+import {
+  AdminConfirm,
+  AdminField,
+  AdminToast,
+  adminInput,
+  adminTextarea,
+} from "../../components/admin";
+import Dropdown from "../../components/ui/Dropdown";
 
-/* Simple reusable modal */
-function Modal({
-  show,
-  title,
-  message,
-  onConfirm,
-  onCancel,
-  confirmText = "OK",
-  cancelText = "Cancel",
-}) {
-  if (!show) return null;
-  return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
-      <div className="bg-[#112355] rounded-2xl shadow-xl w-full max-w-md p-6 text-center text-white">
-        <h2 className="text-xl font-semibold mb-3">{title}</h2>
-        <p className="text-gray-300 mb-6 whitespace-pre-line">{message}</p>
-        <div className="flex justify-center gap-3">
-          {onCancel && (
-            <button
-              onClick={onCancel}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded font-semibold"
-            >
-              {cancelText}
-            </button>
-          )}
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 bg-luxury-gold hover:bg-luxury-gold rounded font-semibold"
-          >
-            {confirmText}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* Success / Error popup */
-function Toast({ show, message, success = true, onClose }) {
-  if (!show) return null;
-
-  const base =
-    "fixed inset-0 flex items-center justify-center z-50 px-4 py-4";
-  const color = success ? "bg-luxury-gold" : "bg-red-600";
-
-  return (
-    <div className={base}>
-      <div
-        className={`${color} text-white px-6 py-3 rounded-xl text-center shadow-lg`}
-      >
-        <p className="font-semibold">{message}</p>
-        <button
-          onClick={onClose}
-          className="mt-2 px-4 py-1 bg-white/20 hover:bg-white/30 rounded"
-        >
-          OK
-        </button>
-      </div>
-    </div>
-  );
-}
+const TARGET_OPTIONS = [
+  { value: "MEN", label: "Men" },
+  { value: "WOMEN", label: "Women" },
+  { value: "UNISEX", label: "Unisex" },
+];
 
 export default function AdminProductFormPage() {
   const { id } = useParams();
@@ -99,6 +52,12 @@ export default function AdminProductFormPage() {
     success: true,
   });
 
+  useAdminChrome({
+    title: id ? "Edit Product" : "Add Product",
+    backTo: -1,
+    actions: null,
+  });
+
   /* ---------------- Load existing product when editing ---------------- */
   useEffect(() => {
     if (!id) return;
@@ -112,7 +71,7 @@ export default function AdminProductFormPage() {
           target: res.data.target || "UNISEX",
         });
       } catch (err) {
-        console.error("❌ Fetch error:", err);
+        console.error("Fetch error:", err);
         setToast({
           show: true,
           message: "Failed to load product",
@@ -153,9 +112,9 @@ export default function AdminProductFormPage() {
         try {
           await http.delete(`/admin/products/${id}/remove-promo/`);
           setForm((prev) => ({ ...prev, promo_image: null }));
-          showToastNow("Promo image removed ✅", true);
+          showToastNow("Promo image removed", true);
         } catch {
-          showToastNow("Failed to remove promo image ❌", false);
+          showToastNow("Failed to remove promo image", false);
         }
       }
     );
@@ -169,9 +128,9 @@ export default function AdminProductFormPage() {
         try {
           await http.delete(`/admin/products/${id}/remove-card/`);
           setForm((prev) => ({ ...prev, card_image: null }));
-          showToastNow("Card image removed ✅", true);
+          showToastNow("Card image removed", true);
         } catch {
-          showToastNow("Failed to remove card image ❌", false);
+          showToastNow("Failed to remove card image", false);
         }
       }
     );
@@ -191,9 +150,9 @@ export default function AdminProductFormPage() {
               (m) => m.id !== mediaId
             ),
           }));
-          showToastNow("Media removed ✅", true);
+          showToastNow("Media removed", true);
         } catch {
-          showToastNow("Failed to remove media ❌", false);
+          showToastNow("Failed to remove media", false);
         } finally {
           setDeleting(false);
         }
@@ -234,18 +193,18 @@ export default function AdminProductFormPage() {
             await http.patch(`/admin/products/${id}/`, fd, {
               headers: { "Content-Type": "multipart/form-data" },
             });
-            showToastNow("Product updated ✅", true);
+            showToastNow("Product updated", true);
           } else {
             await http.post(`/admin/products/`, fd, {
               headers: { "Content-Type": "multipart/form-data" },
             });
-            showToastNow("Product created ✅", true);
+            showToastNow("Product created", true);
           }
 
           setTimeout(() => navigate("/admin/products"), 800);
         } catch (err) {
-          console.error("❌ Submit error:", err.response?.data || err.message);
-          showToastNow("Failed to save product ❌", false);
+          console.error("Submit error:", err.response?.data || err.message);
+          showToastNow("Failed to save product", false);
         } finally {
           setLoading(false);
         }
@@ -255,73 +214,46 @@ export default function AdminProductFormPage() {
 
   /* ---------------- UI ---------------- */
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#070B14] px-6 py-10 text-white">
-      <div className="bg-[#112355] w-full max-w-3xl rounded-2xl shadow-2xl p-8">
-        {/* Header Row: back icon + title */}
-        <div className="flex items-center justify-center mb-8 relative">
-          <button
-            onClick={() => navigate(-1)}
-            className="absolute left-0 text-3xl hover:text-luxury-gold transition-transform hover:-translate-x-1"
-            aria-label="Go Back"
-          >
-            ❮
-          </button>
-          <h1 className="text-2xl font-bold text-center">
-            {id ? "Edit Product" : "Add Product"}
-          </h1>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name */}
-          <div>
-            <label className="block mb-1 font-semibold">Product Name</label>
+    <div className="glass rounded-2xl p-6 sm:p-8 space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid md:grid-cols-2 gap-5">
+          <AdminField label="Product Name" required>
             <input
               name="name"
               value={form.name || ""}
               onChange={handleChange}
               placeholder="Enter product name"
-              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-luxury-gold"
+              className={adminInput}
               required
             />
-          </div>
+          </AdminField>
 
-          {/* Category */}
-          <div>
-            <label className="block mb-1 font-semibold">Category</label>
+          <AdminField label="Category" required>
             <input
               name="category"
               value={form.category || ""}
               onChange={handleChange}
               placeholder="Enter category"
-              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-luxury-gold"
+              className={adminInput}
               required
             />
-          </div>
+          </AdminField>
+        </div>
 
-          {/* Target audience */}
-          <div>
-            <label className="block mb-1 font-semibold">Target Audience</label>
-            <select
-              name="target"
+        <div className="grid md:grid-cols-3 gap-5">
+          <AdminField label="Target Audience">
+            <Dropdown
               value={form.target || "UNISEX"}
-              onChange={handleChange}
-              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 appearance-none focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-luxury-gold"
-            >
-              <option className="bg-[#0c1f3f] text-white" value="MEN">
-                Men
-              </option>
-              <option className="bg-[#0c1f3f] text-white" value="WOMEN">
-                Women
-              </option>
-              <option className="bg-[#0c1f3f] text-white" value="UNISEX">
-                Unisex
-              </option>
-            </select>
-          </div>
+              onChange={(value) =>
+                handleChange({ target: { name: "target", value } })
+              }
+              options={TARGET_OPTIONS}
+              className="fld w-full rounded-lg px-4 py-3 text-sm"
+              align="right"
+            />
+          </AdminField>
 
-          {/* Price */}
-          <div>
-            <label className="block mb-1 font-semibold">Price (RM)</label>
+          <AdminField label="Price (RM)" required>
             <input
               name="price"
               type="number"
@@ -329,40 +261,36 @@ export default function AdminProductFormPage() {
               value={form.price || ""}
               onChange={handleChange}
               placeholder="Enter price"
-              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-luxury-gold"
+              className={adminInput}
               required
             />
-          </div>
+          </AdminField>
 
-          {/* Stock */}
-          <div>
-            <label className="block mb-1 font-semibold">Stock Quantity</label>
+          <AdminField label="Stock Quantity" required>
             <input
               name="stock"
               type="number"
               value={form.stock || ""}
               onChange={handleChange}
               placeholder="Enter stock quantity"
-              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-luxury-gold"
+              className={adminInput}
               required
             />
-          </div>
+          </AdminField>
+        </div>
 
-          {/* Description */}
-          <div>
-            <label className="block mb-1 font-semibold">Description</label>
-            <textarea
-              name="description"
-              value={form.description || ""}
-              onChange={handleChange}
-              placeholder="Write product description"
-              className="w-full p-2 rounded bg-[#0c1f3f] text-white border border-white/10 h-32 resize-none focus:outline-none focus:ring-2 focus:ring-luxury-gold"
-            />
-          </div>
+        <AdminField label="Description">
+          <textarea
+            name="description"
+            value={form.description || ""}
+            onChange={handleChange}
+            placeholder="Write product description"
+            className={`${adminTextarea} h-32`}
+          />
+        </AdminField>
 
-          {/* Tags */}
-          <div>
-            <label className="block mb-1 font-semibold">Tags</label>
+        <AdminField label="Tags">
+          <div className="rounded-xl bg-white/[0.03] border border-white/[0.07] p-3">
             <TagsInput
               tags={form.tags || []}
               setTags={(tags) =>
@@ -370,145 +298,148 @@ export default function AdminProductFormPage() {
               }
             />
           </div>
+        </AdminField>
 
-          {/* Promo Image */}
-          <div>
-            <label className="block mb-1 font-semibold">Promo Image (16:9)</label>
+        <div className="grid lg:grid-cols-2 gap-5">
+          <AdminField label="Promo Image (16:9)">
             <input
               type="file"
               name="promo_image"
               onChange={handleFileChange}
-              className="text-sm text-white"
+              className={adminInput}
             />
             {form.promo_image && !(form.promo_image instanceof File) && (
-              <div className="mt-2 relative w-fit">
+              <div className="mt-3 rounded-xl bg-white/[0.03] border border-luxury-line p-3">
                 <img
                   src={form.promo_image}
                   alt="Promo"
-                  className="w-32 h-32 object-cover rounded-lg"
+                  className="w-32 h-32 object-cover rounded-lg border border-luxury-line"
                 />
                 {id && (
                   <button
                     type="button"
                     onClick={removePromoImage}
-                    className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded"
+                    className="mt-3 border border-red-500/50 text-red-300 hover:bg-red-500/10 rounded-full px-3 py-1.5 text-[11px] label uppercase"
                   >
-                    ✕
+                    Remove
                   </button>
                 )}
               </div>
             )}
-          </div>
+          </AdminField>
 
-          {/* Card Image */}
-          <div>
-            <label className="block mb-1 font-semibold">Card Image</label>
+          <AdminField label="Card Image">
             <input
               type="file"
               name="card_image"
               onChange={handleFileChange}
-              className="text-sm text-white"
+              className={adminInput}
             />
             {form.card_image && !(form.card_image instanceof File) && (
-              <div className="mt-2 relative w-fit">
+              <div className="mt-3 rounded-xl bg-white/[0.03] border border-luxury-line p-3">
                 <img
                   src={form.card_image}
                   alt="Card"
-                  className="w-32 h-32 object-cover rounded-lg"
+                  className="w-32 h-32 object-cover rounded-lg border border-luxury-line"
                 />
                 {id && (
                   <button
                     type="button"
                     onClick={removeCardImage}
-                    className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded"
+                    className="mt-3 border border-red-500/50 text-red-300 hover:bg-red-500/10 rounded-full px-3 py-1.5 text-[11px] label uppercase"
                   >
-                    ✕
+                    Remove
                   </button>
                 )}
               </div>
             )}
-          </div>
+          </AdminField>
+        </div>
 
-          {/* Existing Media */}
-          {id && (form.media_gallery || []).length > 0 && (
-            <div>
-              <p className="font-semibold mb-2">Existing Media</p>
-              <div className="flex flex-wrap gap-3">
-                {form.media_gallery.map((m) => (
-                  <div
-                    key={m.id}
-                    className="relative w-24 h-24 bg-gray-700 rounded-lg overflow-hidden"
+        {id && (form.media_gallery || []).length > 0 && (
+          <AdminField label="Existing Media">
+            <div className="flex flex-wrap gap-3 rounded-xl bg-white/[0.03] border border-white/[0.07] p-3">
+              {form.media_gallery.map((m) => (
+                <div
+                  key={m.id}
+                  className="relative w-28 h-28 rounded-lg overflow-hidden border border-luxury-line bg-black/30"
+                >
+                  {m.type === "video" || m.type === "VIDEO" ? (
+                    <video
+                      src={m.file}
+                      controls
+                      className="w-full h-full object-cover bg-black"
+                    />
+                  ) : (
+                    <img
+                      src={m.file}
+                      alt="media"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    disabled={deleting}
+                    onClick={() => removeGalleryMedia(m.id)}
+                    className="absolute top-1 right-1 border border-red-500/50 text-red-300 hover:bg-red-500/10 rounded-full px-2 py-1 text-[10px] label uppercase bg-luxury-bg/80"
                   >
-                    {m.type === "video" || m.type === "VIDEO" ? (
-                      <video
-                        src={m.file}
-                        controls
-                        className="w-full h-full object-cover bg-black"
-                      />
-                    ) : (
-                      <img
-                        src={m.file}
-                        alt="media"
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                    <button
-                      type="button"
-                      disabled={deleting}
-                      onClick={() => removeGalleryMedia(m.id)}
-                      className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
+                    Remove
+                  </button>
+                </div>
+              ))}
             </div>
-          )}
+          </AdminField>
+        )}
 
-          {/* Upload new media */}
-          <div>
-            <label className="block mb-1 font-semibold">Add New Media</label>
-            <input
-              type="file"
-              multiple
-              onChange={handleNewMediaChange}
-              className="text-sm text-white"
-            />
-          </div>
+        <AdminField label="Add New Media">
+          <input
+            type="file"
+            multiple
+            onChange={handleNewMediaChange}
+            className={adminInput}
+          />
+        </AdminField>
 
-          {/* Submit */}
-          <div className="text-center pt-4">
-            <button
-              disabled={loading}
-              type="submit"
-              className="px-6 py-2 bg-luxury-gold hover:bg-luxury-gold rounded font-semibold"
-            >
-              {loading
-                ? "Saving…"
-                : id
-                ? "Update Product"
-                : "Create Product"}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div className="sticky bottom-4 z-10 glass rounded-2xl p-4 flex justify-between items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="ghost rounded-full px-5 py-2 text-[11px] label uppercase"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={loading}
+            type="submit"
+            className="btn-lux rounded-full px-6 py-2 text-[11px] label uppercase disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading
+              ? "Saving..."
+              : id
+              ? "Update Product"
+              : "Create Product"}
+          </button>
+        </div>
+      </form>
 
-      {/* Modals */}
-      <Modal
-        show={modal.show}
+      <AdminConfirm
+        open={modal.show}
         title={modal.title}
         message={modal.message}
+        confirmText="OK"
+        cancelText="Cancel"
+        tone="neutral"
         onConfirm={modal.onConfirm}
         onCancel={closeModal}
       />
 
-      <Toast
-        show={toast.show}
-        message={toast.message}
-        success={toast.success}
-        onClose={() => setToast((prev) => ({ ...prev, show: false }))}
-      />
+      {toast.show && (
+        <AdminToast
+          message={toast.message}
+          type={toast.success ? "success" : "error"}
+          onClose={() => setToast((prev) => ({ ...prev, show: false }))}
+        />
+      )}
     </div>
   );
 }
