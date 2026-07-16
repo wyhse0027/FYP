@@ -9,6 +9,7 @@ import {
   adminInput,
   adminTextarea,
 } from "../../components/admin";
+import { getImageUrl } from "../../lib/media";
 
 export default function AdminAboutPage() {
   const [data, setData] = useState(null);
@@ -129,11 +130,12 @@ export default function AdminAboutPage() {
         }
       }
 
-      // Fix relative URLs
+      // Resolve relative media URLs against the API host (derived from
+      // REACT_APP_API_BASE_URL), not a hardcoded localhost.
       Object.keys(updated.social_icons || {}).forEach((k) => {
         const val = updated.social_icons[k];
         if (val && !val.startsWith("http")) {
-          updated.social_icons[k] = `http://127.0.0.1:8000${val}`;
+          updated.social_icons[k] = getImageUrl(val);
         }
       });
 
@@ -327,7 +329,7 @@ export default function AdminAboutPage() {
                         src={
                           data.social_icons[key]?.startsWith("http")
                             ? data.social_icons[key]
-                            : `http://127.0.0.1:8000${data.social_icons[key]}`
+                            : getImageUrl(data.social_icons[key])
                         }
                         alt={key}
                         className="w-9 h-9 rounded bg-white object-contain"
