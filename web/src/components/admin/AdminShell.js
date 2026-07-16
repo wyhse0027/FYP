@@ -26,13 +26,26 @@ function TopBar() {
     <div className="sticky top-0 z-20 backdrop-blur-xl bg-luxury-bg/70 border-b border-luxury-gold/15">
       <div className="px-6 sm:px-8 h-20 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
-          <button
-            onClick={() => (backTo === -1 ? navigate(-1) : navigate(backTo))}
-            className="ghost w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-lg font-serif"
-            aria-label="Back"
-          >
-            ‹
-          </button>
+          {backTo !== null && (
+            <button
+              onClick={() => (backTo === -1 ? navigate(-1) : navigate(backTo))}
+              className="ghost w-9 h-9 shrink-0 rounded-full flex items-center justify-center"
+              aria-label="Back"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M15 6l-6 6 6 6" />
+              </svg>
+            </button>
+          )}
           <h1 className="font-serif text-2xl text-white truncate">{title}</h1>
         </div>
         {actions ? <div className="shrink-0">{actions}</div> : null}

@@ -17,7 +17,7 @@ export default function AdminDashboardPage() {
   });
   const [loading, setLoading] = useState(true);
 
-  useAdminChrome({ title: "Dashboard", actions: null, backTo: "/admin/dashboard" });
+  useAdminChrome({ title: "Dashboard", actions: null, backTo: null });
 
   useEffect(() => {
     let alive = true;
