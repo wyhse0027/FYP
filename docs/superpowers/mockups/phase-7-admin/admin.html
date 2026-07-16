@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maison Admin — Redesign Mockup</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script>
+  tailwind.config = {
+    theme: { extend: { colors: { luxury: {
+      bg:"#070B14", panel:"#0B1222", panel2:"#0E1830", line:"#1C2740",
+      gold:"#D4AF37", gold2:"#F3D37A", champagne:"#F7E7CE", text:"#ECE7DD", mut:"#A9B0BE"
+    } },
+    fontFamily: { serif:['"Playfair Display"','Georgia','serif'], sans:['Inter','system-ui','sans-serif'] } } }
+  }
+</script>
+<style>
+  body{background:#070B14;color:#ECE7DD;font-family:Inter,system-ui,sans-serif}
+  h1,h2,h3,h4{font-family:"Playfair Display",Georgia,serif;letter-spacing:-.01em}
+  .label{letter-spacing:.34em}
+  .glass{background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.02));backdrop-filter:blur(16px);border:1px solid rgba(212,175,55,.16)}
+  .rule{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,.55),transparent)}
+  .gold-text{background:linear-gradient(92deg,#F3D37A,#D4AF37 60%,#B8860B);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .btn-lux{position:relative;overflow:hidden;color:#070B14;background:linear-gradient(110deg,#D4AF37,#F3D37A 45%,#D4AF37);background-size:220% 100%;box-shadow:0 10px 34px rgba(212,175,55,.28)}
+  .ghost{border:1px solid rgba(212,175,55,.45);color:#F7E7CE;transition:.3s}
+  .ghost:hover{border-color:#D4AF37;background:rgba(212,175,55,.08)}
+  .danger{border:1px solid rgba(239,68,68,.45);color:#FCA5A5;transition:.3s}
+  .danger:hover{background:rgba(239,68,68,.1)}
+  .fld{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);transition:border-color .25s,background .25s;color:#ECE7DD}
+  .fld:focus{outline:none;border-color:rgba(212,175,55,.6);background:rgba(255,255,255,.07)}
+  .card{transition:transform .5s cubic-bezier(.2,.7,.2,1),border-color .4s,box-shadow .4s}
+  .card:hover{transform:translateY(-6px);border-color:rgba(212,175,55,.5);box-shadow:0 30px 70px -25px rgba(0,0,0,.8)}
+  .navlink{border-left:2px solid transparent;color:#A9B0BE;transition:.2s}
+  .navlink:hover{color:#fff}
+  .navlink.active{background:rgba(212,175,55,.12);color:#F7E7CE;border-left-color:#D4AF37}
+  .row{border-bottom:1px solid rgba(255,255,255,.06);transition:background .2s}
+  .row:hover{background:rgba(255,255,255,.03)}
+  /* StatusPill semantic buckets */
+  .pill{display:inline-flex;align-items:center;gap:.4em;padding:.2rem .6rem;border-radius:999px;font-size:11px;letter-spacing:.06em}
+  .pill-progress{border:1px solid rgba(212,175,55,.5);color:#F3D37A}
+  .pill-positive{background:#F7E7CE;color:#070B14;font-weight:600}
+  .pill-neutral{border:1px solid rgba(169,176,190,.4);color:#A9B0BE}
+  .pill-negative{border:1px solid rgba(239,68,68,.5);color:#FCA5A5}
+  .sectionlabel{color:#D4AF37;font-size:11px;letter-spacing:.34em}
+</style>
+</head>
+<body class="antialiased">
+
+<!-- ══════════════ SHELL ══════════════ -->
+<div class="relative flex min-h-screen">
+  <div class="fixed inset-0 pointer-events-none" style="background:radial-gradient(50% 30% at 82% 0%,rgba(212,175,55,.10),transparent 60%)"></div>
+
+  <!-- Sidebar -->
+  <aside class="hidden lg:flex flex-col w-64 border-r border-white/10 p-6 shrink-0 relative z-10">
+    <p class="font-serif text-lg tracking-[.25em] text-white mb-1">Maison</p>
+    <p class="sectionlabel uppercase mb-9">Admin</p>
+    <p class="label uppercase text-[10px] text-luxury-mut mb-3 px-3">Manage</p>
+    <nav class="space-y-1 text-sm">
+      <a class="navlink block px-3 py-2.5 rounded-r-lg">Dashboard</a>
+      <a class="navlink active block px-3 py-2.5 rounded-r-lg">Products</a>
+      <a class="navlink block px-3 py-2.5 rounded-r-lg">Orders</a>
+      <a class="navlink block px-3 py-2.5 rounded-r-lg">Payments</a>
+      <a class="navlink block px-3 py-2.5 rounded-r-lg">Users</a>
+      <a class="navlink block px-3 py-2.5 rounded-r-lg">Reviews</a>
+      <a class="navlink block px-3 py-2.5 rounded-r-lg">AR Experiences</a>
+      <a class="navlink block px-3 py-2.5 rounded-r-lg">Scent Personas</a>
+      <a class="navlink block px-3 py-2.5 rounded-r-lg">Quizzes</a>
+      <a class="navlink block px-3 py-2.5 rounded-r-lg">Retailers</a>
+      <a class="navlink block px-3 py-2.5 rounded-r-lg">About</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 relative z-10 min-w-0">
+
+    <!-- Top bar -->
+    <div class="sticky top-0 z-20 backdrop-blur-xl bg-luxury-bg/70 border-b border-luxury-gold/15">
+      <div class="px-6 sm:px-8 h-20 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4 min-w-0">
+          <button class="w-9 h-9 shrink-0 rounded-full ghost flex items-center justify-center text-lg font-serif" title="Back">‹</button>
+          <div class="min-w-0">
+            <p class="label uppercase text-[10px] text-luxury-mut">Admin · Catalogue</p>
+            <h1 class="font-serif text-2xl text-white truncate">Products</h1>
+          </div>
+        </div>
+        <button class="btn-lux px-6 py-3 rounded-full text-[11px] font-medium label uppercase shrink-0">Add Product</button>
+      </div>
+    </div>
+
+    <div class="px-6 sm:px-8 py-8 space-y-16 max-w-[1200px]">
+
+      <!-- ══ ARCHETYPE A · TABLE ══ -->
+      <section>
+        <p class="sectionlabel uppercase mb-2">Archetype A</p>
+        <h2 class="font-serif text-3xl text-white mb-1">Table page</h2>
+        <p class="text-sm text-luxury-mut mb-6">Users · Reviews · Products · Payments · Orders · AR Management</p>
+
+        <!-- Toolbar -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
+          <div class="relative flex-1">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-luxury-mut text-sm">⌕</span>
+            <input class="fld w-full rounded-full pl-10 pr-4 py-3 text-sm" placeholder="Search by order ID or customer…" />
+          </div>
+          <button class="fld rounded-full px-5 py-3 text-sm text-left flex items-center gap-3 min-w-[180px] justify-between">
+            <span>All statuses</span><span class="text-luxury-gold2">▾</span>
+          </button>
+        </div>
+
+        <!-- DataTable -->
+        <div class="glass rounded-2xl overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm min-w-[720px]">
+              <thead>
+                <tr class="label uppercase text-[10px] text-luxury-mut border-b border-white/10">
+                  <th class="px-6 py-4 font-normal">ID</th>
+                  <th class="px-6 py-4 font-normal">Customer</th>
+                  <th class="px-6 py-4 font-normal">Order status</th>
+                  <th class="px-6 py-4 font-normal">Payment</th>
+                  <th class="px-6 py-4 font-normal text-right">Total</th>
+                  <th class="px-6 py-4 font-normal text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="row">
+                  <td class="px-6 py-4 text-luxury-mut">#1042</td>
+                  <td class="px-6 py-4 text-luxury-text">amelia.k</td>
+                  <td class="px-6 py-4"><span class="pill pill-progress">To Ship</span></td>
+                  <td class="px-6 py-4"><span class="pill pill-positive">Paid · Card</span></td>
+                  <td class="px-6 py-4 text-right text-luxury-champagne" style="font-variant-numeric:tabular-nums">RM 480.00</td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center justify-end gap-2">
+                      <button class="ghost rounded-full px-3 py-1.5 text-[11px]">View</button>
+                      <button class="ghost rounded-full px-3 py-1.5 text-[11px]">Edit</button>
+                      <button class="danger rounded-full px-3 py-1.5 text-[11px]">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="row">
+                  <td class="px-6 py-4 text-luxury-mut">#1041</td>
+                  <td class="px-6 py-4 text-luxury-text">j.tan</td>
+                  <td class="px-6 py-4"><span class="pill pill-positive">Completed</span></td>
+                  <td class="px-6 py-4"><span class="pill pill-neutral">COD</span></td>
+                  <td class="px-6 py-4 text-right text-luxury-champagne" style="font-variant-numeric:tabular-nums">RM 260.00</td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center justify-end gap-2">
+                      <button class="ghost rounded-full px-3 py-1.5 text-[11px]">View</button>
+                      <button class="ghost rounded-full px-3 py-1.5 text-[11px]">Edit</button>
+                      <button class="danger rounded-full px-3 py-1.5 text-[11px]">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="row">
+                  <td class="px-6 py-4 text-luxury-mut">#1040</td>
+                  <td class="px-6 py-4 text-luxury-text">noor.f</td>
+                  <td class="px-6 py-4"><span class="pill pill-negative">Cancelled</span></td>
+                  <td class="px-6 py-4"><span class="pill pill-negative">Failed</span></td>
+                  <td class="px-6 py-4 text-right text-luxury-champagne" style="font-variant-numeric:tabular-nums">RM 0.00</td>
+                  <td class="px-6 py-4">
+                    <div class="flex items-center justify-end gap-2">
+                      <button class="ghost rounded-full px-3 py-1.5 text-[11px]">View</button>
+                      <button class="ghost rounded-full px-3 py-1.5 text-[11px]">Edit</button>
+                      <button class="danger rounded-full px-3 py-1.5 text-[11px]">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- StatusPill legend -->
+        <div class="flex flex-wrap items-center gap-3 mt-5 text-[11px] text-luxury-mut">
+          <span>StatusPill:</span>
+          <span class="pill pill-progress">In progress</span>
+          <span class="pill pill-positive">Positive / done</span>
+          <span class="pill pill-neutral">Neutral</span>
+          <span class="pill pill-negative">Negative</span>
+        </div>
+
+        <!-- Empty + loading states -->
+        <div class="grid sm:grid-cols-2 gap-4 mt-6">
+          <div class="glass rounded-2xl p-10 text-center">
+            <p class="font-serif text-xl text-white mb-1">No records yet</p>
+            <p class="text-sm text-luxury-mut">Empty state — one line of guidance + primary action.</p>
+          </div>
+          <div class="glass rounded-2xl p-6 space-y-3">
+            <div class="h-4 rounded bg-white/5"></div>
+            <div class="h-4 rounded bg-white/5 w-5/6"></div>
+            <div class="h-4 rounded bg-white/5 w-2/3"></div>
+            <p class="text-[11px] text-luxury-mut label uppercase pt-1">Skeleton loading</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="rule"></div>
+
+      <!-- ══ ARCHETYPE B · CARD-GRID CRUD ══ -->
+      <section>
+        <p class="sectionlabel uppercase mb-2">Archetype B</p>
+        <h2 class="font-serif text-3xl text-white mb-1">Card-grid CRUD</h2>
+        <p class="text-sm text-luxury-mut mb-6">Retailers</p>
+
+        <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+          <!-- retailer card -->
+          <div class="card glass rounded-2xl overflow-hidden">
+            <div class="aspect-[16/10] bg-luxury-panel2 flex items-center justify-center text-luxury-mut/40 text-sm">Boutique image</div>
+            <div class="p-6">
+              <h3 class="font-serif text-xl text-white">Pavilion KL</h3>
+              <p class="text-sm text-luxury-mut mt-1">Lot 6.01, Bukit Bintang</p>
+              <div class="flex items-center gap-2 mt-3 text-[12px] text-luxury-champagne">
+                <span class="pill pill-progress">10:00–22:00</span>
+              </div>
+              <div class="flex gap-2 mt-5">
+                <button class="ghost rounded-full px-4 py-2 text-[11px] flex-1">Edit</button>
+                <button class="danger rounded-full px-4 py-2 text-[11px] flex-1">Delete</button>
+              </div>
+            </div>
+          </div>
+          <div class="card glass rounded-2xl overflow-hidden">
+            <div class="aspect-[16/10] bg-luxury-panel2 flex items-center justify-center text-luxury-mut/40 text-sm">Boutique image</div>
+            <div class="p-6">
+              <h3 class="font-serif text-xl text-white">Gurney Plaza</h3>
+              <p class="text-sm text-luxury-mut mt-1">Persiaran Gurney, Penang</p>
+              <div class="flex items-center gap-2 mt-3 text-[12px]">
+                <span class="pill pill-positive">Open 24 Hours</span>
+              </div>
+              <div class="flex gap-2 mt-5">
+                <button class="ghost rounded-full px-4 py-2 text-[11px] flex-1">Edit</button>
+                <button class="danger rounded-full px-4 py-2 text-[11px] flex-1">Delete</button>
+              </div>
+            </div>
+          </div>
+          <!-- add card -->
+          <button class="glass rounded-2xl border-dashed flex flex-col items-center justify-center gap-3 py-16 text-luxury-gold2 hover:bg-white/[.03] transition">
+            <span class="text-3xl font-serif leading-none">＋</span>
+            <span class="label uppercase text-[11px]">Add Retailer</span>
+          </button>
+        </div>
+      </section>
+
+      <div class="rule"></div>
+
+      <!-- ══ ARCHETYPE C · EDITOR FORM ══ -->
+      <section>
+        <p class="sectionlabel uppercase mb-2">Archetype C</p>
+        <h2 class="font-serif text-3xl text-white mb-1">Editor form</h2>
+        <p class="text-sm text-luxury-mut mb-6">About · Add / Edit Product · Product Form · Scent Persona · AR Edit · Quiz Management</p>
+
+        <div class="glass rounded-2xl p-6 sm:p-8 space-y-6">
+          <div>
+            <label class="label uppercase text-[10px] text-luxury-mut block mb-2">Title</label>
+            <input class="fld w-full rounded-lg px-4 py-3 text-sm" value="About GÉRAIN CHAN" />
+          </div>
+          <div>
+            <label class="label uppercase text-[10px] text-luxury-mut block mb-2">Main body</label>
+            <textarea rows="4" class="fld w-full rounded-lg px-4 py-3 text-sm resize-none">A modern maison blending scent, storytelling and technology.</textarea>
+          </div>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <label class="label uppercase text-[10px] text-luxury-mut block mb-2">Mission</label>
+              <textarea rows="3" class="fld w-full rounded-lg px-4 py-3 text-sm resize-none"></textarea>
+            </div>
+            <div>
+              <label class="label uppercase text-[10px] text-luxury-mut block mb-2">Vision</label>
+              <textarea rows="3" class="fld w-full rounded-lg px-4 py-3 text-sm resize-none"></textarea>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <label class="label uppercase text-[10px] text-luxury-mut block mb-2">Category (Dropdown)</label>
+              <button class="fld w-full rounded-lg px-4 py-3 text-sm flex items-center justify-between">
+                <span>Eau de Parfum</span><span class="text-luxury-gold2">▾</span>
+              </button>
+            </div>
+            <div>
+              <label class="label uppercase text-[10px] text-luxury-mut block mb-2">Hero image</label>
+              <div class="fld rounded-lg px-4 py-3 text-sm text-luxury-mut">Choose file…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sticky save bar -->
+        <div class="glass rounded-full mt-4 px-5 py-3 flex items-center justify-between">
+          <button class="danger rounded-full px-5 py-2.5 text-[11px] label uppercase">Reset</button>
+          <div class="flex items-center gap-3">
+            <button class="ghost rounded-full px-5 py-2.5 text-[11px] label uppercase">Cancel</button>
+            <button class="btn-lux rounded-full px-7 py-2.5 text-[11px] label uppercase font-medium">Save Changes</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="rule"></div>
+
+      <!-- ══ SHARED PRIMITIVES ══ -->
+      <section>
+        <p class="sectionlabel uppercase mb-2">Shared primitives</p>
+        <h2 class="font-serif text-3xl text-white mb-6">Modal · Confirm · Toast</h2>
+
+        <div class="grid lg:grid-cols-3 gap-6 items-start">
+          <!-- AdminModal -->
+          <div>
+            <p class="label uppercase text-[10px] text-luxury-mut mb-3">AdminModal (detail)</p>
+            <div class="glass rounded-2xl p-6">
+              <div class="flex items-start justify-between mb-4">
+                <h3 class="font-serif text-xl text-white">Order #1042</h3>
+                <button class="text-luxury-mut hover:text-white text-lg">✕</button>
+              </div>
+              <div class="rule mb-4"></div>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between"><span class="text-luxury-mut">Customer</span><span>amelia.k</span></div>
+                <div class="flex justify-between"><span class="text-luxury-mut">Status</span><span class="pill pill-progress">To Ship</span></div>
+                <div class="flex justify-between"><span class="text-luxury-mut">Total</span><span class="text-luxury-champagne">RM 480.00</span></div>
+              </div>
+              <button class="ghost w-full rounded-full py-2.5 mt-5 text-[11px] label uppercase">Close</button>
+            </div>
+          </div>
+
+          <!-- AdminConfirm -->
+          <div>
+            <p class="label uppercase text-[10px] text-luxury-mut mb-3">AdminConfirm (destructive)</p>
+            <div class="glass rounded-2xl p-6">
+              <h3 class="font-serif text-xl text-white mb-2">Delete product</h3>
+              <p class="text-sm text-luxury-mut mb-6">Delete “ELEGANZA Noir Absolu” (ID 12)? This action cannot be undone.</p>
+              <div class="flex justify-end gap-3">
+                <button class="ghost rounded-full px-5 py-2 text-[11px] label uppercase">Cancel</button>
+                <button class="danger rounded-full px-5 py-2 text-[11px] label uppercase">Delete</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- AdminToast -->
+          <div>
+            <p class="label uppercase text-[10px] text-luxury-mut mb-3">AdminToast</p>
+            <div class="space-y-3">
+              <div class="glass rounded-xl px-4 py-3 flex items-center gap-3 text-sm border-l-2" style="border-left-color:#D4AF37">
+                <span class="text-luxury-gold2">✓</span><span>Product updated successfully.</span>
+              </div>
+              <div class="glass rounded-xl px-4 py-3 flex items-center gap-3 text-sm border-l-2" style="border-left-color:#EF4444">
+                <span class="text-red-400">!</span><span>Failed to update. Please retry.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+</body>
+</html>
