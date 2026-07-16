@@ -352,6 +352,7 @@ export default function AdminQuizManagement() {
               <div className="space-y-3">
                 <AdminField label="Title">
                   <input
+                    key={`title-${selectedQuiz.id}`}
                     className={adminInput}
                     defaultValue={selectedQuiz.title}
                     onBlur={(e) =>
@@ -364,6 +365,7 @@ export default function AdminQuizManagement() {
                 </AdminField>
                 <AdminField label="Label">
                   <input
+                    key={`label-${selectedQuiz.id}`}
                     className={adminInput}
                     placeholder="e.g. For Women, For Beginners"
                     defaultValue={selectedQuiz.label || ""}

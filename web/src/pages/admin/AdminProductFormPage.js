@@ -44,6 +44,8 @@ export default function AdminProductFormPage() {
     title: "",
     message: "",
     onConfirm: null,
+    tone: "neutral",
+    confirmText: "OK",
   });
 
   const [toast, setToast] = useState({
@@ -93,11 +95,18 @@ export default function AdminProductFormPage() {
   const handleNewMediaChange = (e) =>
     setNewMedia(Array.from(e.target.files || []));
 
-  const openModal = (title, message, onConfirm) =>
-    setModal({ show: true, title, message, onConfirm });
+  const openModal = (title, message, onConfirm, opts = {}) =>
+    setModal({
+      show: true,
+      title,
+      message,
+      onConfirm,
+      tone: opts.tone || "neutral",
+      confirmText: opts.confirmText || "OK",
+    });
 
   const closeModal = () =>
-    setModal({ show: false, title: "", message: "", onConfirm: null });
+    setModal({ show: false, title: "", message: "", onConfirm: null, tone: "neutral", confirmText: "OK" });
 
   const showToastNow = (message, success = true) =>
     setToast({ show: true, message, success });
@@ -116,7 +125,8 @@ export default function AdminProductFormPage() {
         } catch {
           showToastNow("Failed to remove promo image", false);
         }
-      }
+      },
+      { tone: "danger", confirmText: "Remove" }
     );
 
   const removeCardImage = () =>
@@ -132,7 +142,8 @@ export default function AdminProductFormPage() {
         } catch {
           showToastNow("Failed to remove card image", false);
         }
-      }
+      },
+      { tone: "danger", confirmText: "Remove" }
     );
 
   const removeGalleryMedia = (mediaId) =>
@@ -156,7 +167,8 @@ export default function AdminProductFormPage() {
         } finally {
           setDeleting(false);
         }
-      }
+      },
+      { tone: "danger", confirmText: "Remove" }
     );
 
   /* ---------------- Submit ---------------- */
@@ -426,9 +438,9 @@ export default function AdminProductFormPage() {
         open={modal.show}
         title={modal.title}
         message={modal.message}
-        confirmText="OK"
+        confirmText={modal.confirmText}
         cancelText="Cancel"
-        tone="neutral"
+        tone={modal.tone}
         onConfirm={modal.onConfirm}
         onCancel={closeModal}
       />
