@@ -60,12 +60,20 @@ independently (read file, re-ran test/build, byte + off-palette scans) and did a
   `inline-flex` so `overflow:hidden` clips) + hover-only opacity gate; SVG back chevron (centered);
   back button hidden on dashboard.
 
-**STILL PENDING before merge:**
-- **Live manual QA** (`CLAUDE.md` §5.2) — full staff-login walkthrough of all 14 admin pages +
-  dashboard against real data. Table pages + shell partially eyeballed; the editor pages
-  (personas, quiz, retailers, about, product form, AR editor) not yet clicked through live.
-- `/code-review` on the branch diff (Task 24 §5); then merge `--no-ff` + tag `phase-7-admin-ui`
-  + push (owner instruction required — no auto-merge/push).
+**MERGED, TAGGED, DEPLOYED (2026-07-16):**
+- Live manual QA — owner walked all admin pages, reported "all good".
+- `/code-review` (medium) run on the branch: 4 findings — 2 fixed (quiz detail inputs remount
+  per quiz via `key`; product-form image/media removes now use red `tone="danger"`), 2 justified
+  (latent `useAdminChrome` actions-staleness documented; payment-pill undefined-status cosmetic).
+- Merged to `main` `--no-ff` (commit 718c635) + annotated tag `phase-7-admin-ui`.
+- Post-merge fix: `AdminModal` + `AdminToast` now `createPortal` to `<body>` at `z-50` so
+  overlays layer above the sticky top nav (the View product-details modal title was hidden
+  behind the `z-40` nav because AdminShell `<main>` is a `z-10` stacking context).
+- **Deployed to production** `firebase deploy --only hosting --project eleganza-ar` →
+  https://eleganza-ar.web.app (verified HTTP 200, served `main.4d2f230f.js` matches build).
+
+**STILL PENDING:**
+- Push `main` + tag `phase-7-admin-ui` to origin (owner instruction required — not yet pushed).
 - Carried follow-up (unchanged, out of scope): hardcoded `127.0.0.1` social-icon URL fallback in
   `AboutPage.js` / `AdminAboutPage.js` — dormant; fix by deriving origin from
   `REACT_APP_API_BASE_URL` when convenient.
