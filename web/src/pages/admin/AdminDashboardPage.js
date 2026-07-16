@@ -75,7 +75,7 @@ export default function AdminDashboardPage() {
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/8">
           <h2 className="font-serif text-xl text-white">Management</h2>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-luxury-line">
           {manage.map((m) => (
             <Link
               key={m.label}
