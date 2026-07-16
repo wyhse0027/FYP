@@ -1,13 +1,14 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import http from "../../lib/http";
+import { IoAdd, IoRefresh, IoTrashOutline } from "react-icons/io5";
+import { useAdminChrome } from "../../context/AdminChromeContext";
 import {
-  IoAdd,
-  IoTrashOutline,
-  IoRefresh,
-  IoChevronDown,
-  IoClose,
-} from "react-icons/io5";
-import PageHeader from "../../components/PageHeader";
+  AdminConfirm,
+  AdminField,
+  AdminToast,
+  adminInput,
+} from "../../components/admin";
+import Dropdown from "../../components/ui/Dropdown";
 
 const AUDIENCE_OPTIONS = ["ANY", "MEN", "WOMEN", "UNISEX"];
 
@@ -31,6 +32,8 @@ export default function AdminQuizManagement() {
 
   const [confirmAction, setConfirmAction] = useState(null);
   const [toast, setToast] = useState(null);
+
+  useAdminChrome({ title: "Quizzes", backTo: "/admin/dashboard", actions: null });
 
   useEffect(() => {
     fetchAll();
@@ -69,7 +72,6 @@ export default function AdminQuizManagement() {
     setConfirmAction({ message, onConfirm });
   }
 
-  // ─── Derived helpers ─────────────────────
   const selectedQuiz = useMemo(
     () => quizzes.find((q) => q.id === selectedQuizId) || null,
     [quizzes, selectedQuizId]
@@ -90,7 +92,6 @@ export default function AdminQuizManagement() {
     [answers, selectedQuestionId]
   );
 
-  // ─── Quiz CRUD ───────────────────────────
   async function addQuiz() {
     if (!newQuizTitle.trim()) return;
     try {
@@ -138,7 +139,6 @@ export default function AdminQuizManagement() {
     });
   }
 
-  // ─── Question CRUD ───────────────────────
   async function addQuestion() {
     if (!selectedQuiz || !newQuestionText.trim()) return;
     try {
@@ -170,7 +170,6 @@ export default function AdminQuizManagement() {
     });
   }
 
-  // ─── Answer CRUD ─────────────────────────
   async function addAnswer() {
     if (!selectedQuestion || !newAnswerText.trim() || !selectedCategory.trim())
       return;
@@ -207,7 +206,6 @@ export default function AdminQuizManagement() {
     });
   }
 
-  // ─── Allowed products toggle ─────────────
   function toggleAllowedProduct(quiz, productId) {
     const current = quiz.allowed_products || [];
     const exists = current.includes(productId);
@@ -218,145 +216,143 @@ export default function AdminQuizManagement() {
     updateQuizField(quiz.id, { allowed_products: next });
   }
 
-  // Utility for audience label text
   function formatAudienceLabel(aud) {
     const a = (aud || "ANY").toUpperCase();
     if (a === "ANY") return "Any";
     return a.charAt(0) + a.slice(1).toLowerCase();
   }
 
+  const audienceDropdownOptions = useMemo(
+    () => AUDIENCE_OPTIONS.map((a) => ({ value: a, label: formatAudienceLabel(a) })),
+    []
+  );
+
+  const categoryDropdownOptions = useMemo(
+    () => [
+      { value: "", label: "Category" },
+      ...categories.map((c) => ({ value: c, label: c })),
+    ],
+    [categories]
+  );
+
   return (
-    <div className="min-h-screen bg-[#070B14] text-white px-4 md:px-8 lg:px-12 py-8 relative">
-      <div className="max-w-6xl mx-auto">
-        <PageHeader title="Quiz Management" />
+    <div className="space-y-5">
+      <div className="glass rounded-2xl p-4 grid md:grid-cols-[2fr_1.5fr_1fr_auto_auto] gap-3 items-center">
+        <input
+          className={adminInput}
+          placeholder="Quiz title"
+          value={newQuizTitle}
+          onChange={(e) => setNewQuizTitle(e.target.value)}
+        />
+        <input
+          className={adminInput}
+          placeholder="Label (optional, e.g. For Women)"
+          value={newQuizLabel}
+          onChange={(e) => setNewQuizLabel(e.target.value)}
+        />
+        <Dropdown
+          value={newQuizAudience}
+          onChange={setNewQuizAudience}
+          options={audienceDropdownOptions}
+          className="fld w-full rounded-lg px-4 py-2.5 text-sm"
+          align="right"
+        />
+        <button
+          onClick={addQuiz}
+          disabled={!newQuizTitle.trim()}
+          className="btn-lux rounded-full px-5 py-2.5 text-[11px] label uppercase font-medium inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          <IoAdd />
+          Add
+        </button>
+        <button
+          onClick={fetchAll}
+          className="ghost rounded-full px-5 py-2.5 text-[11px] label uppercase inline-flex items-center gap-2"
+        >
+          <IoRefresh />
+          Refresh
+        </button>
+      </div>
 
-        {/* Top bar: Add quiz + refresh */}
-        <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl mb-6 grid md:grid-cols-[2fr,1.5fr,1fr,auto,auto] gap-3 items-center shadow-md shadow-black/40 border border-white/10">
-          <input
-            className="px-3 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 outline-none focus:ring-2 focus:ring-luxury-gold"
-            placeholder="Quiz title"
-            value={newQuizTitle}
-            onChange={(e) => setNewQuizTitle(e.target.value)}
-          />
-          <input
-            className="px-3 py-2 rounded-lg bg-white/10 text-white placeholder-gray-300 outline-none focus:ring-2 focus:ring-luxury-gold"
-            placeholder="Label (optional, e.g. For Women)"
-            value={newQuizLabel}
-            onChange={(e) => setNewQuizLabel(e.target.value)}
-          />
-          <select
-            className="px-3 py-2 rounded-lg bg-white/90 text-gray-900 outline-none text-sm"
-            value={newQuizAudience}
-            onChange={(e) => setNewQuizAudience(e.target.value)}
-          >
-            {AUDIENCE_OPTIONS.map((a) => (
-              <option key={a} value={a}>
-                {formatAudienceLabel(a)}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={addQuiz}
-            disabled={!newQuizTitle.trim()}
-            className="bg-luxury-gold hover:bg-luxury-gold transition px-4 py-2 rounded-lg font-semibold flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shadow-md shadow-luxury-gold/40"
-          >
-            <IoAdd /> Add
-          </button>
-          <button
-            onClick={fetchAll}
-            className="bg-luxury-gold hover:bg-luxury-gold transition px-4 py-2 rounded-lg font-semibold flex items-center gap-2 shadow-md shadow-luxury-gold/40"
-          >
-            <IoRefresh /> Refresh
-          </button>
-        </div>
-
-        {/* Main grid: quizzes | details | questions+answers */}
-        <div className="grid gap-4 md:grid-cols-[1.2fr,2fr,2fr]">
-          {/* ─── Left: Quiz list ─────────────────────────── */}
-          <div className="bg-white/10 rounded-xl p-3 border border-white/10 max-h-[70vh] overflow-y-auto shadow-lg shadow-black/40">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm font-semibold tracking-wide uppercase text-gray-200">
-                Quizzes
-              </h2>
-              <span className="text-[11px] text-gray-400">
-                {quizzes.length} total
-              </span>
-            </div>
-            {quizzes.length === 0 && (
-              <p className="text-xs text-gray-300">
-                No quizzes yet. Create one above.
-              </p>
-            )}
-            <div className="space-y-2">
-              {quizzes.map((quiz) => {
-                const active = quiz.id === selectedQuizId;
-                return (
-                  <div
-                    key={quiz.id}
-                    className={`flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer border text-xs transition-transform ${
-                      active
-                        ? "bg-luxury-gold/25 border-luxury-gold shadow-sm shadow-luxury-gold/60 scale-[1.01]"
-                        : "bg-white/5 border-white/10 hover:bg-white/10 hover:shadow-sm"
-                    }`}
-                    onClick={() => {
-                      setSelectedQuizId(quiz.id);
-                      setSelectedQuestionId(null);
-                    }}
-                  >
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-semibold text-[13px]">
-                        {quiz.title}
+      <div className="grid lg:grid-cols-[1.2fr_2fr_2fr] gap-5">
+        <div className="glass rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <p className="label uppercase text-[10px] text-luxury-mut">Quizzes</p>
+            <span className="text-[11px] text-luxury-mut">
+              {quizzes.length} total
+            </span>
+          </div>
+          {quizzes.length === 0 && (
+            <p className="text-xs text-luxury-mut">
+              No quizzes yet. Create one above.
+            </p>
+          )}
+          <div className="space-y-2">
+            {quizzes.map((quiz) => {
+              const active = quiz.id === selectedQuizId;
+              return (
+                <div
+                  key={quiz.id}
+                  className={`rounded-xl px-4 py-3 cursor-pointer flex items-start justify-between gap-2 border transition ${
+                    active
+                      ? "border-luxury-gold/60 bg-luxury-gold/12"
+                      : "border-white/[0.07] bg-white/[0.03] hover:bg-white/[0.04]"
+                  }`}
+                  onClick={() => {
+                    setSelectedQuizId(quiz.id);
+                    setSelectedQuestionId(null);
+                  }}
+                >
+                  <div className="min-w-0">
+                    <p className="font-serif text-base text-white">
+                      {quiz.title}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-[10px] text-luxury-mut">
+                      <span>{quiz.label || "No label"}</span>
+                      <span>·</span>
+                      <span className="inline-flex rounded-full px-2 py-0.5 border border-luxury-gold/50 text-luxury-gold2 uppercase tracking-wide">
+                        {formatAudienceLabel(quiz.audience)}
                       </span>
-                      <span className="text-[10px] text-gray-300 flex flex-wrap items-center gap-x-1 gap-y-0.5">
-                        <span className="opacity-80">
-                          {quiz.label || "No label"}
-                        </span>
-                        <span>•</span>
-                        <span className="px-1.5 py-0.5 rounded-full text-[9px] bg-luxury-gold/20 border border-luxury-gold/60 uppercase tracking-wide">
-                          {formatAudienceLabel(quiz.audience)}
-                        </span>
-                        <span>•</span>
-                        <span className="opacity-80">
-                          {quiz.allowed_products?.length
-                            ? `${quiz.allowed_products.length} products`
-                            : "All products"}
-                        </span>
+                      <span>·</span>
+                      <span>
+                        {quiz.allowed_products?.length
+                          ? `${quiz.allowed_products.length} products`
+                          : "All products"}
                       </span>
                     </div>
-                    <button
-                      className="text-red-400 hover:text-red-500 ml-2"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteQuiz(quiz.id);
-                      }}
-                    >
-                      <IoTrashOutline size={16} />
-                    </button>
                   </div>
-                );
-              })}
-            </div>
+                  <button
+                    type="button"
+                    className="text-red-300/70 hover:text-red-300 ml-2 shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteQuiz(quiz.id);
+                    }}
+                    aria-label={`Delete ${quiz.title}`}
+                  >
+                    <IoTrashOutline size={16} />
+                  </button>
+                </div>
+              );
+            })}
           </div>
+        </div>
 
-          {/* ─── Middle: Selected quiz details ───────────── */}
-          <div className="bg-white/10 rounded-xl p-4 border border-white/10 max-h-[70vh] overflow-y-auto shadow-lg shadow-black/40">
-            <h2 className="text-sm font-semibold tracking-wide uppercase text-gray-200 mb-3">
-              Quiz Details
-            </h2>
+        <div className="glass rounded-2xl p-5 space-y-5">
+          <p className="label uppercase text-[10px] text-luxury-mut">Quiz Details</p>
 
-            {!selectedQuiz && (
-              <p className="text-xs text-gray-300">
-                Select a quiz from the left to view/edit details.
-              </p>
-            )}
+          {!selectedQuiz && (
+            <p className="text-xs text-luxury-mut">
+              Select a quiz from the left to view/edit details.
+            </p>
+          )}
 
-            {selectedQuiz && (
-              <div className="space-y-4">
-                {/* Basic fields */}
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-300">Title</label>
+          {selectedQuiz && (
+            <>
+              <div className="space-y-3">
+                <AdminField label="Title">
                   <input
-                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-luxury-gold"
+                    className={adminInput}
                     defaultValue={selectedQuiz.title}
                     onBlur={(e) =>
                       e.target.value !== selectedQuiz.title &&
@@ -365,9 +361,10 @@ export default function AdminQuizManagement() {
                       })
                     }
                   />
-                  <label className="text-xs text-gray-300">Label</label>
+                </AdminField>
+                <AdminField label="Label">
                   <input
-                    className="w-full px-3 py-2 rounded-lg bg-white/10 text-white text-sm outline-none focus:ring-2 focus:ring-luxury-gold"
+                    className={adminInput}
                     placeholder="e.g. For Women, For Beginners"
                     defaultValue={selectedQuiz.label || ""}
                     onBlur={(e) =>
@@ -377,289 +374,238 @@ export default function AdminQuizManagement() {
                       })
                     }
                   />
-                  <label className="text-xs text-gray-300">Audience</label>
-                  <select
-                    className="w-full px-3 py-2 rounded-lg bg-white/90 text-gray-900 text-sm outline-none"
-                    defaultValue={selectedQuiz.audience || "ANY"}
-                    onChange={(e) =>
+                </AdminField>
+                <AdminField label="Audience">
+                  <Dropdown
+                    value={selectedQuiz.audience || "ANY"}
+                    onChange={(value) =>
                       updateQuizField(selectedQuiz.id, {
-                        audience: e.target.value,
+                        audience: value,
                       })
                     }
-                  >
-                    {AUDIENCE_OPTIONS.map((a) => (
-                      <option key={a} value={a}>
-                        {formatAudienceLabel(a)}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="flex items-center justify-between mt-2 text-[11px] text-gray-300">
-                    <span>Assigned audience</span>
-                    <span className="px-2 py-0.5 rounded-full bg-luxury-gold/20 border border-luxury-gold/60 uppercase tracking-wide">
-                      {formatAudienceLabel(selectedQuiz.audience)}
-                    </span>
-                  </div>
-                </div>
+                    options={audienceDropdownOptions}
+                    className="fld w-full rounded-lg px-4 py-2.5 text-sm"
+                    align="right"
+                  />
+                </AdminField>
+              </div>
 
-                {/* Allowed products */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs text-gray-300">
-                      Allowed Products (whitelist, optional)
-                    </label>
-                    <span className="text-[10px] text-gray-400">
-                      {selectedQuiz.allowed_products?.length
-                        ? `${selectedQuiz.allowed_products.length} selected`
-                        : "All products"}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="label uppercase text-[10px] text-luxury-mut">
+                    Allowed Products{" "}
+                    <span className="normal-case tracking-normal text-luxury-mut">
+                      (whitelist, optional)
                     </span>
-                  </div>
-                  <div className="max-h-40 overflow-y-auto bg-white/5 border border-white/10 rounded-lg p-2 grid md:grid-cols-2 gap-1 text-xs">
-                    {products.map((p) => {
-                      const active =
-                        selectedQuiz.allowed_products?.includes(p.id);
-                      return (
-                        <label
-                          key={p.id}
-                          className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer ${
-                            active ? "bg-luxury-gold/30" : "hover:bg-white/5"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={!!active}
-                            onChange={() =>
-                              toggleAllowedProduct(selectedQuiz, p.id)
-                            }
-                          />
-                          <span>
-                            {p.name}{" "}
-                            <span className="text-[9px] text-gray-300">
-                              ({p.category} / {p.target})
-                            </span>
-                          </span>
-                        </label>
-                      );
-                    })}
-                    {products.length === 0 && (
-                      <div className="text-gray-400 text-xs">
-                        No products found.
-                      </div>
-                    )}
-                  </div>
+                  </p>
+                  <span className="text-[10px] text-luxury-mut">
+                    {selectedQuiz.allowed_products?.length
+                      ? `${selectedQuiz.allowed_products.length} selected`
+                      : "All products"}
+                  </span>
+                </div>
+                <div className="rounded-xl p-3 grid sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto bg-white/[0.03] border border-white/[0.07]">
+                  {products.map((p) => {
+                    const active = selectedQuiz.allowed_products?.includes(p.id);
+                    return (
+                      <button
+                        type="button"
+                        key={p.id}
+                        onClick={() => toggleAllowedProduct(selectedQuiz, p.id)}
+                        className={`rounded-lg px-3 py-1.5 text-xs text-left transition ${
+                          active
+                            ? "border border-luxury-gold/60 bg-luxury-gold/15 text-luxury-champagne"
+                            : "border border-luxury-mut/40 text-luxury-mut hover:bg-white/[0.04]"
+                        }`}
+                      >
+                        {active && <span className="text-luxury-gold2 mr-2">✓</span>}
+                        {p.name}
+                        <span className="block text-[9px] text-luxury-mut mt-0.5">
+                          {p.category} / {p.target}
+                        </span>
+                      </button>
+                    );
+                  })}
+                  {products.length === 0 && (
+                    <div className="text-luxury-mut text-xs">
+                      No products found.
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-          </div>
+            </>
+          )}
+        </div>
 
-          {/* ─── Right: Questions + Answers ───────────────── */}
-          <div className="bg-white/10 rounded-xl p-4 border border-white/10 flex flex-col max-h-[70vh] overflow-y-auto shadow-lg shadow-black/40">
-            <h2 className="text-sm font-semibold tracking-wide uppercase text-gray-200 mb-3">
-              Questions &amp; Answers
-            </h2>
+        <div className="glass rounded-2xl p-5 flex flex-col">
+          <p className="label uppercase text-[10px] text-luxury-mut mb-3">
+            Questions | Answers
+          </p>
 
-            {!selectedQuiz && (
-              <p className="text-xs text-gray-300">
-                Select a quiz to manage its questions and answers.
-              </p>
-            )}
+          {!selectedQuiz && (
+            <p className="text-xs text-luxury-mut">
+              Select a quiz to manage its questions and answers.
+            </p>
+          )}
 
-            {selectedQuiz && (
-              <>
-                {/* Add Question */}
-                <div className="flex gap-2 mb-4">
-                  <input
-                    className="flex-1 px-3 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 text-sm outline-none focus:ring-2 focus:ring-luxury-gold"
-                    placeholder="Enter new question"
-                    value={newQuestionText}
-                    onChange={(e) => setNewQuestionText(e.target.value)}
-                  />
-                  <button
-                    onClick={addQuestion}
-                    className="bg-luxury-gold hover:bg-luxury-gold transition px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm shadow-md shadow-luxury-gold/40"
-                  >
-                    <IoAdd /> Add
-                  </button>
-                </div>
+          {selectedQuiz && (
+            <>
+              <div className="flex gap-2 mb-4">
+                <input
+                  className={`${adminInput} flex-1`}
+                  placeholder="Enter new question"
+                  value={newQuestionText}
+                  onChange={(e) => setNewQuestionText(e.target.value)}
+                />
+                <button
+                  onClick={addQuestion}
+                  className="btn-lux rounded-full px-4 py-2.5 text-[11px] label uppercase font-medium inline-flex items-center gap-2"
+                >
+                  <IoAdd />
+                  Add
+                </button>
+              </div>
 
-                {/* Questions list + Answers */}
-                <div className="flex-1 flex flex-col gap-3 overflow-visible">
-                  <div className="flex gap-3 flex-1 min-h-0">
-                    {/* Questions column */}
-                    <div className="w-1/2 bg-white/5 rounded-lg p-2 border border-white/10 overflow-y-auto">
-                      <div className="text-[11px] text-gray-300 mb-1">
-                        {quizQuestions.length} question
-                        {quizQuestions.length !== 1 ? "s" : ""}
-                      </div>
-                      {quizQuestions.length === 0 && (
-                        <p className="text-xs text-gray-400">
-                          No questions yet. Add one above.
-                        </p>
-                      )}
-                      <div className="space-y-2">
-                        {quizQuestions.map((q) => {
-                          const active = q.id === selectedQuestionId;
-                          return (
-                            <div
-                              key={q.id}
-                              className={`px-3 py-2 rounded-lg text-xs cursor-pointer flex items-start justify-between gap-2 transition-transform ${
-                                active
-                                  ? "bg-luxury-gold/40 border border-luxury-gold shadow-sm shadow-luxury-gold/60 scale-[1.01]"
-                                  : "bg-white/5 border border-white/10 hover:bg-white/10"
-                              }`}
-                              onClick={() => setSelectedQuestionId(q.id)}
-                            >
-                              <span>{q.text}</span>
-                              <button
-                                className="text-red-400 hover:text-red-500"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteQuestion(q.id);
-                                }}
-                              >
-                                <IoTrashOutline size={14} />
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Answers column */}
-                    <div className="w-1/2 bg-white/5 rounded-lg p-2 border border-white/10 flex flex-col">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[11px] text-gray-300">
-                          Answers
-                        </span>
-                        {selectedQuestion && (
-                          <span className="text-[10px] text-gray-400 line-clamp-1">
-                            Q: {selectedQuestion.text}
-                          </span>
-                        )}
-                      </div>
-
-                      {!selectedQuestion && (
-                        <p className="text-xs text-gray-400">
-                          Select a question on the left to view/add answers.
-                        </p>
-                      )}
-
-                      {selectedQuestion && (
-                        <>
-                          {/* Add answer */}
-                          <div className="mb-3 space-y-2">
-                            {/* Row 1: answer text */}
-                            <input
-                              className="w-full px-3 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 text-xs outline-none"
-                              placeholder="Enter answer text"
-                              value={newAnswerText}
-                              onChange={(e) => setNewAnswerText(e.target.value)}
-                            />
-
-                            {/* Row 2: category + add button */}
-                            <div className="flex gap-2">
-                              <select
-                                className="flex-1 bg-white/90 text-gray-900 px-2 py-2 rounded-lg text-xs outline-none"
-                                value={selectedCategory}
-                                onChange={(e) => setSelectedCategory(e.target.value)}
-                              >
-                                <option value="">Category</option>
-                                {categories.map((c) => (
-                                  <option key={c} value={c}>
-                                    {c}
-                                  </option>
-                                ))}
-                              </select>
-
-                              <button
-                                onClick={addAnswer}
-                                className="bg-luxury-gold hover:bg-luxury-gold transition px-3 py-2 rounded-lg font-semibold flex items-center gap-1 text-xs shadow-md shadow-luxury-gold/40"
-                              >
-                                <IoAdd /> Add
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Answer list */}
-                          <div className="flex-1 overflow-y-auto space-y-2">
-                            {questionAnswers.length === 0 && (
-                              <p className="text-xs text-gray-400">
-                                No answers yet. Add one above.
-                              </p>
-                            )}
-                            {questionAnswers.map((a) => (
-                              <div
-                                key={a.id}
-                                className="flex justify-between items-center bg-white/10 px-3 py-2 rounded-lg text-xs"
-                              >
-                                <p>
-                                  {a.answer_text}{" "}
-                                  <span className="text-[11px] text-gray-300">
-                                    ({a.category})
-                                  </span>
-                                </p>
-                                <button
-                                  onClick={() => deleteAnswer(a.id)}
-                                  className="text-red-400 hover:text-red-500"
-                                >
-                                  <IoTrashOutline size={14} />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        </>
-                      )}
-                    </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl p-2.5 bg-white/[0.03] border border-white/[0.07]">
+                  <p className="text-[10px] text-luxury-mut mb-2 px-1">
+                    {quizQuestions.length} question
+                    {quizQuestions.length !== 1 ? "s" : ""}
+                  </p>
+                  {quizQuestions.length === 0 && (
+                    <p className="text-xs text-luxury-mut">
+                      No questions yet. Add one above.
+                    </p>
+                  )}
+                  <div className="space-y-2">
+                    {quizQuestions.map((q) => {
+                      const active = q.id === selectedQuestionId;
+                      return (
+                        <div
+                          key={q.id}
+                          className={`rounded-lg px-3 py-2 text-xs cursor-pointer flex items-start justify-between gap-2 border transition ${
+                            active
+                              ? "border-luxury-gold/60 bg-luxury-gold/12"
+                              : "border-white/[0.07] bg-white/[0.03] hover:bg-white/[0.04]"
+                          }`}
+                          onClick={() => setSelectedQuestionId(q.id)}
+                        >
+                          <span>{q.text}</span>
+                          <button
+                            type="button"
+                            className="text-red-300/70 hover:text-red-300 shrink-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteQuestion(q.id);
+                            }}
+                            aria-label="Delete question"
+                          >
+                            <IoTrashOutline size={14} />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              </>
-            )}
-          </div>
+
+                <div className="rounded-xl p-2.5 flex flex-col bg-white/[0.03] border border-white/[0.07]">
+                  <p className="text-[10px] text-luxury-mut mb-2 px-1 line-clamp-1">
+                    {selectedQuestion ? `Q: ${selectedQuestion.text}` : "Answers"}
+                  </p>
+
+                  {!selectedQuestion && (
+                    <p className="text-xs text-luxury-mut">
+                      Select a question on the left to view/add answers.
+                    </p>
+                  )}
+
+                  {selectedQuestion && (
+                    <>
+                      <div className="space-y-2 mb-3">
+                        <input
+                          className={`${adminInput} text-xs py-2`}
+                          placeholder="Enter answer text"
+                          value={newAnswerText}
+                          onChange={(e) => setNewAnswerText(e.target.value)}
+                        />
+
+                        <div className="flex gap-2">
+                          <Dropdown
+                            value={selectedCategory}
+                            onChange={setSelectedCategory}
+                            options={categoryDropdownOptions}
+                            className="fld flex-1 rounded-lg px-3 py-2 text-xs"
+                            align="right"
+                          />
+
+                          <button
+                            onClick={addAnswer}
+                            className="btn-lux rounded-full px-3 py-2 text-[10px] label uppercase font-medium inline-flex items-center gap-1"
+                          >
+                            <IoAdd />
+                            Add
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        {questionAnswers.length === 0 && (
+                          <p className="text-xs text-luxury-mut">
+                            No answers yet. Add one above.
+                          </p>
+                        )}
+                        {questionAnswers.map((a) => (
+                          <div
+                            key={a.id}
+                            className="rounded-lg px-3 py-2 text-xs flex justify-between items-center gap-3 bg-white/[0.03] border border-white/[0.07]"
+                          >
+                            <p>
+                              {a.answer_text}{" "}
+                              <span className="text-luxury-mut">
+                                ({a.category})
+                              </span>
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => deleteAnswer(a.id)}
+                              className="text-red-300/70 hover:text-red-300 shrink-0"
+                              aria-label="Delete answer"
+                            >
+                              <IoTrashOutline size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Confirm dialog */}
       {confirmAction && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 text-center max-w-sm border border-white/20 shadow-xl shadow-black/70">
-            <h3 className="text-lg font-semibold mb-3">
-              {confirmAction.message}
-            </h3>
-            <div className="flex justify-center gap-4">
-              <button
-                className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-lg font-semibold"
-                onClick={() => setConfirmAction(null)}
-              >
-                Cancel
-              </button>
-              <button
-                className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-semibold"
-                onClick={() => {
-                  confirmAction.onConfirm();
-                  setConfirmAction(null);
-                }}
-              >
-                Yes
-              </button>
-            </div>
-          </div>
-        </div>
+        <AdminConfirm
+          open
+          title="Confirm Action"
+          message={confirmAction.message}
+          confirmText="Yes"
+          cancelText="Cancel"
+          onConfirm={() => {
+            confirmAction.onConfirm();
+            setConfirmAction(null);
+          }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
 
-      {/* Toast */}
       {toast && (
-        <div
-          className={`fixed bottom-5 right-5 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50 ${
-            toast.type === "success"
-              ? "bg-luxury-gold text-white"
-              : "bg-red-500 text-white"
-          }`}
-        >
-          <span>{toast.message}</span>
-          <IoClose
-            className="cursor-pointer"
-            onClick={() => setToast(null)}
-          />
-        </div>
+        <AdminToast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );
