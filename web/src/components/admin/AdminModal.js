@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { IoClose } from "react-icons/io5";
 
 const SIZES = { sm: "max-w-md", md: "max-w-2xl", lg: "max-w-4xl", xl: "max-w-6xl" };
@@ -11,9 +12,11 @@ export default function AdminModal({ open, title, onClose, children, size = "md"
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
   if (!open) return null;
-  return (
+  // Portal to <body> so the overlay escapes the admin shell's `z-10` stacking
+  // context and can sit above the sticky top nav (z-40) on a top layer (z-50).
+  return createPortal(
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
       onClick={onClose}
     >
       <div
@@ -31,6 +34,7 @@ export default function AdminModal({ open, title, onClose, children, size = "md"
         <div className="rule mb-5" />
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { IoCheckmarkCircle, IoAlertCircle, IoInformationCircle, IoClose } from "react-icons/io5";
 
 const ACCENT = { success: "#D4AF37", error: "#EF4444", info: "#A9B0BE" };
@@ -11,11 +12,11 @@ export default function AdminToast({ message, type = "success", onClose }) {
     return () => clearTimeout(t);
   }, [onClose]);
   const Icon = ICON[type] || ICON.success;
-  return (
+  return createPortal(
     <div
       role="status"
       aria-live="polite"
-      className="glass fixed bottom-5 right-5 z-40 flex items-center gap-3 px-4 py-3 rounded-xl border-l-2 text-sm text-luxury-text"
+      className="glass fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border-l-2 text-sm text-luxury-text"
       style={{ borderLeftColor: ACCENT[type] || ACCENT.success }}
     >
       <Icon className={`text-xl ${TINT[type] || TINT.success}`} />
@@ -23,6 +24,7 @@ export default function AdminToast({ message, type = "success", onClose }) {
       <button onClick={onClose} className="ml-2 text-luxury-mut hover:text-white" aria-label="Dismiss">
         <IoClose />
       </button>
-    </div>
+    </div>,
+    document.body
   );
 }
